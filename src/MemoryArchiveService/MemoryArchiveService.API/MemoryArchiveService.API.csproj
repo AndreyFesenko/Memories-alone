@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MemoryArchiveService.Application\MemoryArchiveService.Application.csproj" />
+    <ProjectReference Include="..\MemoryArchiveService.Domain\MemoryArchiveService.Domain.csproj" />
+    <ProjectReference Include="..\MemoryArchiveService.Infrastructure\MemoryArchiveService.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
