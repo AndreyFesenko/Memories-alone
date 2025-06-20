@@ -1,64 +1,51 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ProfileService.Domain.Entities;
-using ProfileService.Infrastructure.Persistence;
+using ProfileService.Application.Commands;
+using ProfileService.Application.DTOs;
+using MediatR;
 
-namespace ProfileService.API.Controllers;
 
-[ApiController]
-[Route(""api/[controller]"")]
-public class ProfileController : ControllerBase
+namespace ProfileService.API.Controllers
 {
-    private readonly ProfilesDbContext _db;
-
-    public ProfileController(ProfilesDbContext db)
+    [ApiController]
+    [Route("api/[controller]")]
+    public class ProfileController : ControllerBase
     {
-        _db = db;
-    }
+        private readonly IMediator _mediator;
 
-    [HttpGet(""{userId:guid}"")]
-    public async Task<IActionResult> GetProfile(Guid userId)
-    {
-        var profile = await _db.UserProfiles.FirstOrDefaultAsync(x => x.UserId == userId);
-        if (profile == null) return NotFound();
-        return Ok(profile);
-    }
+        public ProfileController(IMediator mediator)
+        {
+            _mediator = mediator;
+        }
 
-    [HttpPost]
-    public async Task<IActionResult> CreateProfile([FromBody] UserProfile profile)
-    {
-        profile.Id = Guid.NewGuid();
-        profile.CreatedAt = DateTime.UtcNow;
-        profile.UpdatedAt = DateTime.UtcNow;
-        _db.UserProfiles.Add(profile);
-        await _db.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetProfile), new { userId = profile.UserId }, profile);
-    }
+        /// <summary>
+        /// Получить профиль пользователя
+        /// </summary>
+        [HttpGet("{userId:guid}")]
+        public async Task<ActionResult<UserProfileDto>> Get(Guid userId)
+        {
+            var result = await _mediator.Send(new GetProfileQuery { UserId = userId });
+            if (result == null) return NotFound();
+            return Ok(result);
+        }
 
-    [HttpPut(""{userId:guid}"")]
-    public async Task<IActionResult> UpdateProfile(Guid userId, [FromBody] UserProfile update)
-    {
-        var profile = await _db.UserProfiles.FirstOrDefaultAsync(x => x.UserId == userId);
-        if (profile == null) return NotFound();
-        profile.FirstName = update.FirstName;
-        profile.LastName = update.LastName;
-        profile.BirthDate = update.BirthDate;
-        profile.DeathDate = update.DeathDate;
-        profile.AccessMode = update.AccessMode;
-        profile.Biography = update.Biography;
-        profile.UpdatedAt = DateTime.UtcNow;
-        await _db.SaveChangesAsync();
-        return Ok(profile);
-    }
+        /// <summary>
+        /// Создать или обновить профиль
+        /// </summary>
+        [HttpPost]
+        public async Task<ActionResult<UserProfileDto>> Upsert([FromBody] UpsertProfileCommand command)
+        {
+            var profile = await _mediator.Send(command);
+            return Ok(profile);
+        }
 
-    [HttpPost(""{userId:guid}/confirm-death"")]
-    public async Task<IActionResult> ConfirmDeath(Guid userId)
-    {
-        var profile = await _db.UserProfiles.FirstOrDefaultAsync(x => x.UserId == userId);
-        if (profile == null) return NotFound();
-        profile.DeathConfirmed = true;
-        profile.UpdatedAt = DateTime.UtcNow;
-        await _db.SaveChangesAsync();
-        return Ok(profile);
+        /// <summary>
+        /// Подтвердить смерть пользователя (MVP)
+        /// </summary>
+        [HttpPost("{userId:guid}/confirm-death")]
+        public async Task<ActionResult> ConfirmDeath(Guid userId)
+        {
+            await _mediator.Send(new ConfirmDeathCommand { UserId = userId });
+            return Ok(new { message = "Death confirmed" });
+        }
     }
 }
