@@ -1,8 +1,8 @@
-﻿using System.Reflection;
-using MediatR;
+﻿// src/NotificationService/NotificationService.Application/DependencyInjection.cs
 using Microsoft.Extensions.DependencyInjection;
+using MediatR;
 using FluentValidation;
-
+using AutoMapper;
 
 namespace NotificationService.Application;
 
@@ -10,15 +10,12 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        services.AddMediatR(cfg =>
-        {
-            cfg.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly());
-        });
+        // Подключаем MediatR, FluentValidation, AutoMapper
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
+        services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
 
-        services.AddValidatorsFromAssemblyContaining<ApplicationAssemblyReference>();
-
-        
-        services.AddAutoMapper(Assembly.GetExecutingAssembly());
+        // AutoMapper 14+ (регистрируем все профили в сборке)
+        services.AddAutoMapper(cfg => cfg.AddMaps(typeof(DependencyInjection).Assembly));
 
         return services;
     }

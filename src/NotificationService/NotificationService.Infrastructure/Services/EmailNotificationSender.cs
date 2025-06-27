@@ -21,7 +21,7 @@ public class EmailNotificationSender : INotificationSender
     {
         try
         {
-            var msg = new MailMessage("no-reply@yourdomain.com", notification.Recipient, notification.Subject ?? "(No subject)", notification.Message)
+            var msg = new MailMessage("no-reply@yourdomain.com", notification.UserId, notification.Subject ?? "(No subject)", notification.Message)
             {
                 IsBodyHtml = true
             };

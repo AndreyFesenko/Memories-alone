@@ -21,13 +21,13 @@ namespace NotificationService.Application.Handlers
         public async Task<List<NotificationTemplateDto>> Handle(GetAllTemplatesQuery request, CancellationToken cancellationToken)
         {
             var templates = await _repo.GetAllAsync(cancellationToken);
-            // Mapping: если нужно, маппь на Dto через AutoMapper или вручную
+            
             return templates.Select(x => new NotificationTemplateDto
             {
                 Id = x.Id,
                 Name = x.Name,
                 Subject = x.Subject,
-                Body = x.Body,
+                BodyTemplate = x.BodyTemplate,
                 Type = x.Type,
                 CreatedAt = x.CreatedAt,
                 UpdatedAt = x.UpdatedAt

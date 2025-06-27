@@ -1,45 +1,37 @@
-﻿using MediatR;
+﻿// src/NotificationService/NotificationService.Application/Handlers/CreateTemplateCommandHandler.cs
+
+using AutoMapper;
+using MediatR;
 using NotificationService.Application.Commands;
 using NotificationService.Application.DTOs;
 using NotificationService.Application.Interfaces;
 using NotificationService.Domain.Entities;
 
-namespace NotificationService.Application.Handlers
+namespace NotificationService.Application.Handlers;
+
+public class CreateTemplateCommandHandler : IRequestHandler<CreateTemplateCommand, NotificationTemplateDto>
 {
-    public class CreateTemplateCommandHandler : IRequestHandler<CreateTemplateCommand, NotificationTemplateDto>
+    private readonly INotificationTemplateRepository _repo;
+    private readonly IMapper _mapper;
+
+    public CreateTemplateCommandHandler(INotificationTemplateRepository repo, IMapper mapper)
     {
-        private readonly INotificationTemplateRepository _repo;
+        _repo = repo;
+        _mapper = mapper;
+    }
 
-        public CreateTemplateCommandHandler(INotificationTemplateRepository repo)
+    public async Task<NotificationTemplateDto> Handle(CreateTemplateCommand command, CancellationToken cancellationToken)
+    {
+        var template = new NotificationTemplate
         {
-            _repo = repo;
-        }
+            Name = command.Name,
+            Subject = command.Subject,
+            BodyTemplate = command.BodyTemplate, 
+            Type = command.Type
+        };
 
-        public async Task<NotificationTemplateDto> Handle(CreateTemplateCommand request, CancellationToken cancellationToken)
-        {
-            var entity = new NotificationTemplate
-            {
-                Id = Guid.NewGuid(),
-                Name = request.Name,
-                Subject = request.Subject,
-                Body = request.Body,
-                Type = request.Type,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = null
-            };
+        await _repo.AddAsync(template, cancellationToken);
 
-            await _repo.AddAsync(entity, cancellationToken);
-
-            return new NotificationTemplateDto
-            {
-                Id = entity.Id,
-                Name = entity.Name,
-                Subject = entity.Subject,
-                Body = entity.Body,
-                Type = entity.Type,
-                CreatedAt = entity.CreatedAt,
-                UpdatedAt = entity.UpdatedAt
-            };
-        }
+        return _mapper.Map<NotificationTemplateDto>(template);
     }
 }

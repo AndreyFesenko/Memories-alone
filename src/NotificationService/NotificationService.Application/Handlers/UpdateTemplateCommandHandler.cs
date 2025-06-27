@@ -25,8 +25,8 @@ namespace NotificationService.Application.Handlers
 
             if (request.Name != null) entity.Name = request.Name;
             if (request.Subject != null) entity.Subject = request.Subject;
-            if (request.Body != null) entity.Body = request.Body;
-            if (request.Type != null) entity.Type = request.Type;
+            if (request.BodyTemplate != null) entity.BodyTemplate = request.BodyTemplate;
+            entity.Type = request.Type;
             entity.UpdatedAt = DateTime.UtcNow;
 
             await _repo.UpdateAsync(entity, cancellationToken);
@@ -36,7 +36,7 @@ namespace NotificationService.Application.Handlers
                 Id = entity.Id,
                 Name = entity.Name,
                 Subject = entity.Subject,
-                Body = entity.Body,
+                BodyTemplate = entity.BodyTemplate,
                 Type = entity.Type,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt

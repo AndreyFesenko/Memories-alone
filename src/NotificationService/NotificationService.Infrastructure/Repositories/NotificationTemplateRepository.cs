@@ -16,9 +16,22 @@ public class NotificationTemplateRepository : INotificationTemplateRepository
     public async Task<NotificationTemplate?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => await _db.Templates.FirstOrDefaultAsync(x => x.Id == id, ct);
 
-    public async Task<NotificationTemplate?> GetByNameAsync(string name, string? type = null, CancellationToken ct = default)
-        => await _db.Templates.FirstOrDefaultAsync(x => x.Name == name && (type == null || x.Type == type), ct);
+    public async Task<NotificationTemplate?> GetByNameAsync(
+    string name,
+    string? type = null,
+    CancellationToken ct = default)
+    {
+        if (string.IsNullOrEmpty(type))
+            return await _db.Templates.FirstOrDefaultAsync(x => x.Name == name, ct);
 
+        if (Enum.TryParse<NotificationType>(type, ignoreCase: true, out var enumType))
+        {
+            return await _db.Templates.FirstOrDefaultAsync(
+                x => x.Name == name && x.Type == enumType, ct);
+        }
+
+        return null;
+    }
     public async Task<List<NotificationTemplate>> GetAllAsync(CancellationToken ct = default)
         => await _db.Templates.ToListAsync(ct);
 
