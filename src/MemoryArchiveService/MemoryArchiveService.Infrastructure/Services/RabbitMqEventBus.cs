@@ -2,17 +2,15 @@
 using MemoryArchiveService.Application.Interfaces;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
+using System.Text;
 using System.Text.Json;
 
 namespace MemoryArchiveService.Infrastructure.Services;
 
-/// <summary>
-/// Event Bus for publishing integration events using RabbitMQ (Fanout pattern)
-/// </summary>
-public class RabbitMqEventBus : IEventBus, IDisposable
+public class RabbitMqEventBus : IEventBus, IAsyncDisposable
 {
     private readonly IConnection _connection;
-    private readonly IModel _channel;
+    private readonly IChannel _channel;
     private readonly string _exchange;
 
     public RabbitMqEventBus(IOptions<RabbitMqOptions> options)
@@ -28,34 +26,42 @@ public class RabbitMqEventBus : IEventBus, IDisposable
             Port = config.Port ?? AmqpTcpEndpoint.UseDefaultPort
         };
 
-        // Асинхронная версия, но ждем результат синхронно — для конструктора
         _connection = factory.CreateConnectionAsync().GetAwaiter().GetResult();
-        _channel = _connection.CreateModel();
-        _channel.ExchangeDeclare(_exchange, ExchangeType.Fanout, durable: true);
+        _channel = _connection.CreateChannelAsync().GetAwaiter().GetResult();
+
+
+        // Создаём exchange (fanout, durable)
+        Task.Run(async () => {
+            await _channel.ExchangeDeclareAsync(_exchange, ExchangeType.Fanout, durable: true);
+        }).GetAwaiter().GetResult();
     }
 
-    public Task PublishAsync<T>(T @event, CancellationToken ct = default) where T : class
+    public async Task PublishAsync<T>(T @event, CancellationToken ct = default) where T : class
     {
-        var body = JsonSerializer.SerializeToUtf8Bytes(@event);
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(@event));
 
-        var props = _channel.CreateBasicProperties();
-        props.ContentType = "application/json";
-        props.DeliveryMode = 2; // persistent
+        var props = new BasicProperties
+        {
+            ContentType = "application/json",
+            DeliveryMode = DeliveryModes.Persistent
+        };
 
-        _channel.BasicPublish(
+        await _channel.BasicPublishAsync(
             exchange: _exchange,
             routingKey: "",
+            mandatory: false,
             basicProperties: props,
-            body: body);
-
-        return Task.CompletedTask;
+            body: body,
+            cancellationToken: ct
+        );
     }
 
-    public void Dispose()
+    public ValueTask DisposeAsync()
     {
         _channel?.Dispose();
         _connection?.Dispose();
         GC.SuppressFinalize(this);
+        return ValueTask.CompletedTask;
     }
 }
 
@@ -68,5 +74,5 @@ public class RabbitMqOptions
     public string User { get; set; } = "guest";
     public string Password { get; set; } = "guest";
     public int? Port { get; set; }
-    public string? Exchange { get; set; } = "memory-events";
+    public string Exchange { get; set; } = "memory-events";
 }

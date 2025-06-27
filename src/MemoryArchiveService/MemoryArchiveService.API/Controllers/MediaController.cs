@@ -2,6 +2,7 @@
 using MediatR;
 using MemoryArchiveService.Application.Commands;
 using MemoryArchiveService.Application.DTOs;
+using MemoryArchiveService.Application.Queries;
 
 namespace MemoryArchiveService.API.Controllers;
 

@@ -39,7 +39,7 @@ public class LoginCommandHandlerTests
         jwt.Setup(j => j.GenerateToken(user.Id, user.Email, It.IsAny<IEnumerable<string>>(), It.IsAny<Dictionary<string, string>>()))
             .Returns("jwt-token");
 
-        var handler = new LoginCommandHandler(userRepo.Object, jwt.Object, profile.Object, logger.Object);
+        var handler = new LoginCommandHandler(userRepo.Object, jwt.Object, profile.Object, logger.Object, new FakeAuditService());
         var command = new LoginCommand { Email = user.Email, Password = "password" };
 
         // Act
@@ -68,7 +68,7 @@ public class LoginCommandHandlerTests
         userRepo.Setup(r => r.FindByEmailAsync(user.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
-        var handler = new LoginCommandHandler(userRepo.Object, jwt.Object, profile.Object, logger.Object);
+        var handler = new LoginCommandHandler(userRepo.Object, jwt.Object, profile.Object, logger.Object, new FakeAuditService());
         var command = new LoginCommand { Email = user.Email, Password = "wrong" };
 
         // Act
@@ -76,5 +76,11 @@ public class LoginCommandHandlerTests
 
         // Assert
         await act.Should().ThrowAsync<UnauthorizedAccessException>();
+    }
+
+    public class FakeAuditService : IAuditService
+    {
+        public Task LogAsync(string action, string details, Guid? userId = null, CancellationToken ct = default)
+            => Task.CompletedTask;
     }
 }
