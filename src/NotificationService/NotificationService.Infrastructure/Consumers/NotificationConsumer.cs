@@ -1,22 +1,32 @@
 ﻿using MassTransit;
 using Microsoft.Extensions.Logging;
+using NotificationService.Application.Interfaces;
 using NotificationService.Domain.Entities;
 
-namespace NotificationService.Infrastructure.Consumers;
+namespace NotificationService.Infrastructure.Services;
 
 public class NotificationConsumer : IConsumer<NotificationMessage>
 {
+    private readonly IEmailSender _emailSender;
     private readonly ILogger<NotificationConsumer> _logger;
 
-    public NotificationConsumer(ILogger<NotificationConsumer> logger)
-        => _logger = logger;
+    public NotificationConsumer(IEmailSender emailSender, ILogger<NotificationConsumer> logger)
+    {
+        _emailSender = emailSender;
+        _logger = logger;
+    }
 
     public async Task Consume(ConsumeContext<NotificationMessage> context)
     {
-        var msg = context.Message;
-        // Здесь логика отправки email/sms/push и аудит
-        _logger.LogInformation("Notification consumed: {Id} {Title}", msg.Id, msg.Title);
-        // TODO: Отправить уведомление
-        await Task.CompletedTask;
+        try
+        {
+            await _emailSender.SendAsync(context.Message);
+            _logger.LogInformation("Notification delivered (UserId: {UserId})", context.Message.UserId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Notification send failed (UserId: {UserId})", context.Message.UserId);
+            throw; // MassTransit автоматически закинет в retry/dlq
+        }
     }
 }

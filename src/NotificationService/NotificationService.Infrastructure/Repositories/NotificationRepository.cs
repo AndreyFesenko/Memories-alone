@@ -15,7 +15,7 @@ public class NotificationRepository : INotificationRepository
     }
 
     public async Task<NotificationMessage?> GetByIdAsync(Guid id, CancellationToken ct = default)
-        => await _db.Notifications.FindAsync(new object[] { id }, ct);
+        => await _db.Notifications.FirstOrDefaultAsync(x => x.Id == id, ct);
 
     public async Task<List<NotificationMessage>> GetByUserIdAsync(string userId, int page, int pageSize, CancellationToken ct = default)
         => await _db.Notifications
@@ -25,9 +25,25 @@ public class NotificationRepository : INotificationRepository
             .Take(pageSize)
             .ToListAsync(ct);
 
-    public async Task AddAsync(NotificationMessage msg, CancellationToken ct = default)
+    public async Task AddAsync(NotificationMessage notification, CancellationToken ct = default)
     {
-        await _db.Notifications.AddAsync(msg, ct);
+        await _db.Notifications.AddAsync(notification, ct);
         await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task UpdateAsync(NotificationMessage notification, CancellationToken ct = default)
+    {
+        _db.Notifications.Update(notification);
+        await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task DeleteAsync(Guid id, CancellationToken ct = default)
+    {
+        var n = await _db.Notifications.FirstOrDefaultAsync(x => x.Id == id, ct);
+        if (n != null)
+        {
+            _db.Notifications.Remove(n);
+            await _db.SaveChangesAsync(ct);
+        }
     }
 }

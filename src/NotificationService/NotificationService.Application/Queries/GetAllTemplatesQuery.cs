@@ -4,6 +4,4 @@ using NotificationService.Application.DTOs;
 
 namespace NotificationService.Application.Queries;
 
-public class GetAllTemplatesQuery : IRequest<List<NotificationTemplateDto>>
-{
-}
+public class GetAllTemplatesQuery : IRequest<List<NotificationTemplateDto>> { }

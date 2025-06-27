@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NotificationService.Application.Interfaces;
-using NotificationService.Infrastructure.Consumers;
 using NotificationService.Infrastructure.Persistence;
 using NotificationService.Infrastructure.Repositories;
 using NotificationService.Infrastructure.Services;
@@ -18,32 +17,41 @@ public static class DependencyInjection
         services.AddDbContext<NotificationDbContext>(opts =>
             opts.UseNpgsql(config.GetConnectionString("Default")));
 
+        // Repositories
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<INotificationTemplateRepository, NotificationTemplateRepository>();
 
-        // MassTransit/RabbitMQ
+        // Email (примитивная реализация, можно расширять)
+        services.AddScoped<IEmailSender, EmailNotificationSender>();
+
+        // MassTransit (RabbitMQ)
         services.AddMassTransit(x =>
         {
             x.AddConsumer<NotificationConsumer>();
-            x.UsingRabbitMq((context, cfg) =>
+            x.SetKebabCaseEndpointNameFormatter();
+            x.UsingRabbitMq((ctx, cfg) =>
             {
-                var section = config.GetSection("RabbitMq");
-                cfg.Host(section["Host"] ?? "localhost", h =>
+                cfg.Host(config.GetSection("RabbitMq")["Host"] ?? "localhost", "/", h =>
                 {
-                    h.Username(section["User"] ?? "guest");
-                    h.Password(section["Password"] ?? "guest");
-                });
-
-                cfg.ReceiveEndpoint("notifications.queue", e =>
-                {
-                    e.ConfigureConsumer<NotificationConsumer>(context);
-                    e.UseMessageRetry(r => r.Interval(5, TimeSpan.FromSeconds(10)));
+                    h.Username(config.GetSection("RabbitMq")["User"] ?? "guest");
+                    h.Password(config.GetSection("RabbitMq")["Password"] ?? "guest");
                 });
             });
         });
 
-        services.AddScoped<INotificationQueuePublisher, MassTransitNotificationPublisher>();
-        services.AddScoped<ITemplateRenderer, HandlebarsTemplateRenderer>();
+        // Rate Limiting (пример, если .NET 7+)
+        services.AddRateLimiter(_ =>
+        {
+            _.AddPolicy("notifications", context => RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: context.User?.Identity?.Name ?? "anonymous",
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 10,
+                    Window = TimeSpan.FromSeconds(5),
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 2,
+                }));
+        });
 
         return services;
     }

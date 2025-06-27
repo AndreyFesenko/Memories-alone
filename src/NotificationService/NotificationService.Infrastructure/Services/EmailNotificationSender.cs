@@ -1,35 +1,33 @@
 ﻿using NotificationService.Application.Interfaces;
 using NotificationService.Domain.Entities;
-using Microsoft.Extensions.Logging;
 using System.Net.Mail;
-using System.Net;
+using Microsoft.Extensions.Logging;
 
 namespace NotificationService.Infrastructure.Services;
 
-public class EmailNotificationSender : INotificationSender
+public class EmailNotificationSender : IEmailSender
 {
-    private readonly SmtpClient _smtp;
     private readonly ILogger<EmailNotificationSender> _logger;
 
-    public EmailNotificationSender(SmtpClient smtp, ILogger<EmailNotificationSender> logger)
+    public EmailNotificationSender(ILogger<EmailNotificationSender> logger)
     {
-        _smtp = smtp;
         _logger = logger;
     }
 
-    public async Task SendAsync(NotificationMessage notification, CancellationToken ct = default)
+    public async Task SendAsync(NotificationMessage message, CancellationToken ct = default)
     {
         try
         {
-            var msg = new MailMessage("no-reply@yourdomain.com", notification.UserId, notification.Subject ?? "(No subject)", notification.Message)
-            {
-                IsBodyHtml = true
-            };
-            await _smtp.SendMailAsync(msg, ct);
+            using var mail = new MailMessage("noreply@memories.com", message.Recipient, message.Subject, message.Body);
+            using var smtp = new SmtpClient("localhost"); // TODO: SMTP настройки
+
+            await smtp.SendMailAsync(mail, ct);
+
+            _logger.LogInformation("Email sent to {To} (Subject: {Subject})", message.Recipient, message.Subject);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка отправки email");
+            _logger.LogError(ex, "Failed to send email to {To}", message.Recipient);
             throw;
         }
     }

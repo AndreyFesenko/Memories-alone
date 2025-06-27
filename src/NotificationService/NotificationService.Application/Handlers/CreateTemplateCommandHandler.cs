@@ -1,6 +1,4 @@
 ﻿// src/NotificationService/NotificationService.Application/Handlers/CreateTemplateCommandHandler.cs
-
-using AutoMapper;
 using MediatR;
 using NotificationService.Application.Commands;
 using NotificationService.Application.DTOs;
@@ -12,26 +10,33 @@ namespace NotificationService.Application.Handlers;
 public class CreateTemplateCommandHandler : IRequestHandler<CreateTemplateCommand, NotificationTemplateDto>
 {
     private readonly INotificationTemplateRepository _repo;
-    private readonly IMapper _mapper;
 
-    public CreateTemplateCommandHandler(INotificationTemplateRepository repo, IMapper mapper)
+    public CreateTemplateCommandHandler(INotificationTemplateRepository repo)
     {
         _repo = repo;
-        _mapper = mapper;
     }
 
-    public async Task<NotificationTemplateDto> Handle(CreateTemplateCommand command, CancellationToken cancellationToken)
+    public async Task<NotificationTemplateDto> Handle(CreateTemplateCommand request, CancellationToken cancellationToken)
     {
-        var template = new NotificationTemplate
+        var entity = new NotificationTemplate
         {
-            Name = command.Name,
-            Subject = command.Subject,
-            BodyTemplate = command.BodyTemplate, 
-            Type = command.Type
+            Id = Guid.NewGuid(),
+            Name = request.Name,
+            Body = request.Body,
+            Type = request.Type,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
+        await _repo.AddAsync(entity, cancellationToken);
 
-        await _repo.AddAsync(template, cancellationToken);
-
-        return _mapper.Map<NotificationTemplateDto>(template);
+        return new NotificationTemplateDto
+        {
+            Id = entity.Id,
+            Name = entity.Name,
+            Body = entity.Body,
+            Type = entity.Type.ToString(),
+            CreatedAt = entity.CreatedAt,
+            UpdatedAt = entity.UpdatedAt
+        };
     }
 }
