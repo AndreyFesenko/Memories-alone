@@ -1,5 +1,4 @@
-﻿// src/NotificationService/NotificationService.Application/Handlers/GetAllTemplatesQueryHandler.cs
-using MediatR;
+﻿using MediatR;
 using NotificationService.Application.DTOs;
 using NotificationService.Application.Queries;
 using NotificationService.Application.Interfaces;

@@ -1,5 +1,4 @@
-﻿// src/NotificationService/NotificationService.Application/Handlers/CreateTemplateCommandHandler.cs
-using MediatR;
+﻿using MediatR;
 using NotificationService.Application.Commands;
 using NotificationService.Application.DTOs;
 using NotificationService.Application.Interfaces;
@@ -18,15 +17,18 @@ public class CreateTemplateCommandHandler : IRequestHandler<CreateTemplateComman
 
     public async Task<NotificationTemplateDto> Handle(CreateTemplateCommand request, CancellationToken cancellationToken)
     {
+        var now = DateTime.UtcNow;
+
         var entity = new NotificationTemplate
         {
             Id = Guid.NewGuid(),
             Name = request.Name,
             Body = request.Body,
             Type = request.Type,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            CreatedAt = now,
+            UpdatedAt = null // либо now, если нужно
         };
+
         await _repo.AddAsync(entity, cancellationToken);
 
         return new NotificationTemplateDto

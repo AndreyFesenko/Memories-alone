@@ -1,4 +1,6 @@
-﻿public interface ITemplateRenderer
+﻿namespace NotificationService.Application.Interfaces;
+
+public interface ITemplateRenderer
 {
-    string Render(string template, object model);
+    string Render(string template, object data);
 }

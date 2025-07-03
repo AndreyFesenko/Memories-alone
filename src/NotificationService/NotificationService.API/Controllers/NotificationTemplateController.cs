@@ -31,6 +31,7 @@ public class NotificationTemplateController : ControllerBase
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        return NoContent();
+        await _mediator.Send(new DeleteTemplateCommand { Id = id });
+        return Ok();
     }
 }

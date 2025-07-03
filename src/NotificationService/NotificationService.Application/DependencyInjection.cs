@@ -22,6 +22,8 @@ public static class DependencyInjection
         // AutoMapper
         services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
+        services.AddValidatorsFromAssemblyContaining<CreateNotificationCommandValidator>();
+
         return services;
     }
 }
