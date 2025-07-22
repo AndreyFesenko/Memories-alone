@@ -1,14 +1,24 @@
-﻿using NotificationService.Application.Interfaces;
+﻿// src/NotificationService/NotificationService.Infrastructure/Services/AuditService.cs
+using NotificationService.Application.Interfaces;
 using NotificationService.Domain.Entities;
 
-namespace NotificationService.Application.Services;
+namespace NotificationService.Infrastructure.Services;
 
 public class AuditService : IAuditService
 {
     private readonly IAuditLogRepository _repo;
-    public AuditService(IAuditLogRepository repo) => _repo = repo;
 
-    public async Task LogAsync(string userId, string action, string target, object? data = null, string? ip = null, string? ua = null, CancellationToken ct = default)
+    public AuditService(IAuditLogRepository repo)
+        => _repo = repo;
+
+    public async Task LogAsync(
+        string userId,
+        string action,
+        string target,
+        object? data = null,
+        string? ip = null,
+        string? ua = null,
+        CancellationToken ct = default)
     {
         var log = new AuditLog
         {
@@ -21,9 +31,4 @@ public class AuditService : IAuditService
         };
         await _repo.AddAsync(log, ct);
     }
-}
-
-public interface IAuditService
-{
-    Task LogAsync(string userId, string action, string target, object? data = null, string? ip = null, string? ua = null, CancellationToken ct = default);
 }

@@ -4,31 +4,26 @@ using NotificationService.Application;
 using NotificationService.Application.Hubs;
 using NotificationService.Infrastructure;
 using NotificationService.Infrastructure.Services;
-using static MassTransit.Monitoring.Performance.BuiltInCounters;
 using NotificationService.Application.Consumers;
 using Serilog;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// JSON enum as strings
 builder.Services.AddControllers()
-    .AddJsonOptions(o =>
-    {
+    .AddJsonOptions(o => {
         o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
-// DI для слоев приложения
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
-// Swagger, SignalR, CORS
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
 
-builder.Services.AddCors(opts =>
-{
+builder.Services.AddCors(opts => {
     opts.AddPolicy("AllowAll", p => p
         .AllowAnyHeader()
         .AllowAnyMethod()
@@ -36,10 +31,9 @@ builder.Services.AddCors(opts =>
         .SetIsOriginAllowed(_ => true));
 });
 
-// Rate Limiting — только один вызов AddRateLimiter
+// RateLimiter (один раз!)
 builder.Services.AddRateLimiter(options =>
 {
-    // Глобальный лимит по IP или User.Identity.Name
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
     {
         var user = context.User.Identity?.Name ?? context.Connection.RemoteIpAddress?.ToString() ?? "anon";
@@ -51,8 +45,6 @@ builder.Services.AddRateLimiter(options =>
             QueueLimit = 2
         });
     });
-
-    // Именованная политика для атрибутов
     options.AddFixedWindowLimiter("notifications", opts =>
     {
         opts.PermitLimit = 10;
@@ -62,21 +54,27 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
+// --- OpenAPI + Scalar ---
+builder.Services.AddOpenApi(); // генерирует swagger.json и включает Scalar UI
+
 // MassTransit + RabbitMQ + Consumer
+var rabbitCfg = builder.Configuration.GetSection("RabbitMq");
+
 builder.Services.AddMassTransit(x =>
 {
-    x.AddConsumer<NotificationMessageConsumer>(); // <-- Укажи свой реальный consumer!
-    // x.AddConsumer<ДругиеConsumers>(); // если есть другие
-
+    x.AddConsumer<NotificationMessageConsumer>();
     x.UsingRabbitMq((context, cfg) =>
     {
-        cfg.Host("localhost", "/", h =>
-        {
-            h.Username("guest");
-            h.Password("guest");
-        });
+        cfg.Host(
+            rabbitCfg["Host"],
+            rabbitCfg["VirtualHost"] ?? "/",
+            h =>
+            {
+                h.Username(rabbitCfg["User"]);
+                h.Password(rabbitCfg["Password"]);
+            });
 
-        cfg.ReceiveEndpoint("notifications", e =>
+        cfg.ReceiveEndpoint(rabbitCfg["Queue"], e =>
         {
             e.ConfigureConsumer<NotificationMessageConsumer>(context);
         });
@@ -87,14 +85,21 @@ builder.Host.UseSerilog((ctx, lc) => lc.ReadFrom.Configuration(ctx.Configuration
 
 var app = builder.Build();
 
-// Middleware, Endpoints, CORS
-app.UseMiddleware<ErrorHandlingMiddleware>(); // обязательно реализуй!
-app.UseSwagger();
-app.UseSwaggerUI();
-app.UseRateLimiter();
-app.UseAuthorization();
+app.UseMiddleware<ErrorHandlingMiddleware>();
+
+// Используем только Scalar (Swagger UI и app.UseSwaggerUI() убраны)
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
+app.UseRateLimiter();
 app.UseCors("AllowAll");
+app.UseAuthorization();
+
+// Scalar и OpenAPI только в DEV/DEBUG (можно убрать условие для PROD)
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();                // генерируем openapi/v1.json
+    app.MapScalarApiReference();     // UI: /scalar/v1
+    // Можно: app.MapScalarApiReference("/docs"); // если нужен кастомный путь
+}
 
 app.Run();
