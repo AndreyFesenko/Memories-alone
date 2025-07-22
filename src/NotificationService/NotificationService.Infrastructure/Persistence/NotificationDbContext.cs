@@ -8,6 +8,8 @@ public class NotificationDbContext : DbContext
     public DbSet<NotificationMessage> Notifications { get; set; }
     public DbSet<NotificationTemplate> Templates { get; set; }
 
+    public DbSet<AuditLog> AuditLogs { get; set; } = default!;
+
     public NotificationDbContext(DbContextOptions<NotificationDbContext> options)
         : base(options)
     {
