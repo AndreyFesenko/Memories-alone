@@ -1,14 +1,14 @@
+using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using MassTransit;
 using Microsoft.AspNetCore.RateLimiting;
 using NotificationService.Application;
+using NotificationService.Application.Consumers;
 using NotificationService.Application.Hubs;
 using NotificationService.Infrastructure;
-using NotificationService.Infrastructure.Services;
-using NotificationService.Application.Consumers;
-using Serilog;
-using System.Text.Json.Serialization;
-using System.Threading.RateLimiting;
+using RabbitMQ.Client;
 using Scalar.AspNetCore;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +21,10 @@ builder.Services.AddControllers()
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
-builder.Services.AddSignalR();
+// --- SignalR + Redis Backplane ---
+builder.Services.AddSignalR()
+    .AddStackExchangeRedis(builder.Configuration.GetConnectionString("Redis")!);
+
 
 builder.Services.AddCors(opts => {
     opts.AddPolicy("AllowAll", p => p
@@ -31,7 +34,7 @@ builder.Services.AddCors(opts => {
         .SetIsOriginAllowed(_ => true));
 });
 
-// RateLimiter (один раз!)
+// RateLimiter
 builder.Services.AddRateLimiter(options =>
 {
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
@@ -54,10 +57,10 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
-// --- OpenAPI + Scalar ---
-builder.Services.AddOpenApi(); // генерирует swagger.json и включает Scalar UI
+// OpenAPI + Scalar
+builder.Services.AddOpenApi();
 
-// MassTransit + RabbitMQ + Consumer
+// MassTransit + RabbitMQ
 var rabbitCfg = builder.Configuration.GetSection("RabbitMq");
 
 builder.Services.AddMassTransit(x =>
@@ -81,25 +84,99 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
+// RabbitMQ Connection Factory
+builder.Services.AddSingleton<ConnectionFactory>(sp => new ConnectionFactory()
+{
+    Uri = new Uri($"amqp://{rabbitCfg["User"]}:{rabbitCfg["Password"]}@{rabbitCfg["Host"]}/{rabbitCfg["VirtualHost"] ?? "/"}")
+});
+
+// RabbitMQ Connection Service
+builder.Services.AddSingleton<RabbitMqConnectionService>();
+builder.Services.AddSingleton<IConnection>(sp => sp.GetRequiredService<RabbitMqConnectionService>().Connection);
+
+// Health Checks Ч используем теги!
+builder.Services.AddHealthChecks()
+    .AddNpgSql(
+        builder.Configuration.GetConnectionString("Default")!,
+        name: "postgres",
+        tags: new[] { "ready" }
+    )
+    .AddRabbitMQ(
+        factory: sp => sp.GetRequiredService<IConnection>(),
+        name: "rabbitmq",
+        tags: new[] { "ready" }
+    );
+
 builder.Host.UseSerilog((ctx, lc) => lc.ReadFrom.Configuration(ctx.Configuration));
 
 var app = builder.Build();
 
+// »нициализаци€ RabbitMQ
+var rabbitMqService = app.Services.GetRequiredService<RabbitMqConnectionService>();
+await rabbitMqService.InitializeAsync();
+
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
-// »спользуем только Scalar (Swagger UI и app.UseSwaggerUI() убраны)
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
 app.UseRateLimiter();
 app.UseCors("AllowAll");
 app.UseAuthorization();
 
-// Scalar и OpenAPI только в DEV/DEBUG (можно убрать условие дл€ PROD)
+// ---- HEALTH endpoints ----
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = _ => false // ѕросто факт, что сервис подн€т
+});
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
+
+// Scalar и OpenAPI только в DEV/DEBUG
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();                // генерируем openapi/v1.json
-    app.MapScalarApiReference();     // UI: /scalar/v1
-    // ћожно: app.MapScalarApiReference("/docs"); // если нужен кастомный путь
+    app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.Run();
+
+/// <summary>
+/// Service to handle persistent RabbitMQ connection.
+/// </summary>
+public class RabbitMqConnectionService : IAsyncDisposable
+{
+    private readonly ConnectionFactory _factory;
+    private IConnection? _connection;
+
+    public RabbitMqConnectionService(ConnectionFactory factory)
+    {
+        _factory = factory;
+    }
+
+    public IConnection Connection => _connection ?? throw new InvalidOperationException("RabbitMQ connection not initialized");
+
+    public async Task InitializeAsync()
+    {
+        try
+        {
+            _connection = await _factory.CreateConnectionAsync();
+            Log.Information("RabbitMQ connection established");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to establish RabbitMQ connection");
+            throw;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_connection != null)
+        {
+            await _connection.CloseAsync();
+            _connection.Dispose();
+        }
+    }
+}
