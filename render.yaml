@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: notification-service
+    runtime: docker
+    repo: https://github.com/AndreyFesenko/Memories-alone
+    region: frankfurt
+    branch: master
+    rootDir: src/NotificationService/NotificationService.API
+    plan: free
+    envVars:
+      - key: ConnectionStrings__Default
+        sync: false
+      - key: RabbitMq__Host
+        sync: false
+      - key: RabbitMq__User
+        sync: false
+      - key: RabbitMq__Password
+        sync: false
+      - key: RabbitMq__Queue
+        sync: false
+      - key: Redis__Host
+        sync: false
+      - key: Redis__Port
+        sync: false
+      - key: Redis__Password
+        sync: false
+      - key: Redis__Ssl
+        sync: false
