@@ -1,7 +1,6 @@
-﻿FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Копируем всё содержимое текущего контекста
 COPY . .
 
 WORKDIR /src/NotificationService.API

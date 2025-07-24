@@ -78,6 +78,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModerationService.Infrastructure", "src\ModerationService\ModerationService.Infrastructure\ModerationService.Infrastructure.csproj", "{03F62FF6-B9E0-4323-BA11-E7ABC42651FF}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NotificationService", "NotificationService", "{9ED238A0-938C-9A3F-DDEA-9079E74DEC51}"
+	ProjectSection(SolutionItems) = preProject
+		src\NotificationService\NotificationService.API\Dockerfile = src\NotificationService\NotificationService.API\Dockerfile
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotificationService.API", "src\NotificationService\NotificationService.API\NotificationService.API.csproj", "{46DE35F4-D7F7-4D5C-B02F-2DD9FE2E7092}"
 EndProject
