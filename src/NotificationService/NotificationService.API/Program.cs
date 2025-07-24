@@ -2,6 +2,9 @@ using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using MassTransit;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using NotificationService.Application;
 using NotificationService.Application.Consumers;
 using NotificationService.Application.Hubs;
@@ -9,6 +12,7 @@ using NotificationService.Infrastructure;
 using RabbitMQ.Client;
 using Scalar.AspNetCore;
 using Serilog;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,14 +22,28 @@ builder.Services.AddControllers()
         o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
+// App services
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
-// --- SignalR + Redis Backplane ---
+// Redis config
+var redisCfg = builder.Configuration.GetSection("Redis");
+var redisOptions = new ConfigurationOptions
+{
+    EndPoints = { $"{redisCfg["Host"]}:{redisCfg["Port"]}" },
+    Password = redisCfg["Password"],
+    Ssl = redisCfg.GetValue<bool>("Ssl"),
+    AbortOnConnectFail = false
+};
+
+// SignalR + Redis backplane
 builder.Services.AddSignalR()
-    .AddStackExchangeRedis(builder.Configuration.GetConnectionString("Redis")!);
+    .AddStackExchangeRedis(redisOptions.ToString());
 
+// Redis connection singleton (для HealthCheck)
+builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisOptions));
 
+// CORS
 builder.Services.AddCors(opts => {
     opts.AddPolicy("AllowAll", p => p
         .AllowAnyHeader()
@@ -34,7 +52,7 @@ builder.Services.AddCors(opts => {
         .SetIsOriginAllowed(_ => true));
 });
 
-// RateLimiter
+// Rate Limiting
 builder.Services.AddRateLimiter(options =>
 {
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
@@ -48,6 +66,7 @@ builder.Services.AddRateLimiter(options =>
             QueueLimit = 2
         });
     });
+
     options.AddFixedWindowLimiter("notifications", opts =>
     {
         opts.PermitLimit = 10;
@@ -62,20 +81,16 @@ builder.Services.AddOpenApi();
 
 // MassTransit + RabbitMQ
 var rabbitCfg = builder.Configuration.GetSection("RabbitMq");
-
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<NotificationMessageConsumer>();
     x.UsingRabbitMq((context, cfg) =>
     {
-        cfg.Host(
-            rabbitCfg["Host"],
-            rabbitCfg["VirtualHost"] ?? "/",
-            h =>
-            {
-                h.Username(rabbitCfg["User"]);
-                h.Password(rabbitCfg["Password"]);
-            });
+        cfg.Host(rabbitCfg["Host"], rabbitCfg["VirtualHost"] ?? "/", h =>
+        {
+            h.Username(rabbitCfg["User"]);
+            h.Password(rabbitCfg["Password"]);
+        });
 
         cfg.ReceiveEndpoint(rabbitCfg["Queue"], e =>
         {
@@ -84,17 +99,16 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
-// RabbitMQ Connection Factory
-builder.Services.AddSingleton<ConnectionFactory>(sp => new ConnectionFactory()
+// RabbitMQ connection
+builder.Services.AddSingleton<ConnectionFactory>(sp => new ConnectionFactory
 {
     Uri = new Uri($"amqp://{rabbitCfg["User"]}:{rabbitCfg["Password"]}@{rabbitCfg["Host"]}/{rabbitCfg["VirtualHost"] ?? "/"}")
 });
 
-// RabbitMQ Connection Service
 builder.Services.AddSingleton<RabbitMqConnectionService>();
 builder.Services.AddSingleton<IConnection>(sp => sp.GetRequiredService<RabbitMqConnectionService>().Connection);
 
-// Health Checks — используем теги!
+// HealthChecks
 builder.Services.AddHealthChecks()
     .AddNpgSql(
         builder.Configuration.GetConnectionString("Default")!,
@@ -105,35 +119,42 @@ builder.Services.AddHealthChecks()
         factory: sp => sp.GetRequiredService<IConnection>(),
         name: "rabbitmq",
         tags: new[] { "ready" }
+    )
+    .AddRedis(
+        redisConnectionString: redisOptions.ToString(),
+        name: "redis",
+        tags: new[] { "ready" }
     );
 
+// Serilog
 builder.Host.UseSerilog((ctx, lc) => lc.ReadFrom.Configuration(ctx.Configuration));
 
+// Build App
 var app = builder.Build();
 
-// Инициализация RabbitMQ
+// Init RabbitMQ
 var rabbitMqService = app.Services.GetRequiredService<RabbitMqConnectionService>();
 await rabbitMqService.InitializeAsync();
 
+// Middleware & endpoints
 app.UseMiddleware<ErrorHandlingMiddleware>();
-
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
 app.UseRateLimiter();
 app.UseCors("AllowAll");
 app.UseAuthorization();
 
-// ---- HEALTH endpoints ----
+// Health endpoints
 app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
 {
-    Predicate = _ => false // Просто факт, что сервис поднят
+    Predicate = _ => false
 });
 app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
 {
     Predicate = check => check.Tags.Contains("ready")
 });
 
-// Scalar и OpenAPI только в DEV/DEBUG
+// Swagger & Scalar (dev only)
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
