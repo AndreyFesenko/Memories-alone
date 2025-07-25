@@ -7,6 +7,8 @@ using MemoryArchiveService.Application.Interfaces;
 using MemoryArchiveService.Infrastructure.Persistence;
 using MemoryArchiveService.Infrastructure.Repositories;
 using MemoryArchiveService.Infrastructure.Services;
+using Amazon;
+using Amazon.S3;
 
 namespace MemoryArchiveService.Infrastructure;
 
@@ -43,6 +45,21 @@ public static class DependencyInjection
         // RabbitMQ Event Bus (через опции)
         services.Configure<RabbitMqOptions>(config.GetSection("RabbitMq"));
         services.AddSingleton<IEventBus, RabbitMqEventBus>();
+
+        services.AddSingleton<IAmazonS3>(sp =>
+        {
+            var config = sp.GetRequiredService<IConfiguration>();
+            return new AmazonS3Client(
+                config["Supabase:S3:AccessKey"],
+                config["Supabase:S3:SecretKey"],
+                new AmazonS3Config
+                {
+                    ServiceURL = config["Supabase:S3:Endpoint"],
+                    ForcePathStyle = true
+                });
+        });
+
+        services.AddScoped<IStorageService, SupabaseStorageService>();
 
         return services;
     }

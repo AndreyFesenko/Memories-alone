@@ -1,8 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using MediatR;
+﻿using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using MemoryArchiveService.Application.Commands;
-using MemoryArchiveService.Application.Queries;
-using MemoryArchiveService.Application.DTOs;
+using MemoryArchiveService.API.Models;
 
 namespace MemoryArchiveService.API.Controllers;
 
@@ -11,36 +10,38 @@ namespace MemoryArchiveService.API.Controllers;
 public class MemoryController : ControllerBase
 {
     private readonly IMediator _mediator;
-    public MemoryController(IMediator mediator) => _mediator = mediator;
+    private readonly ILogger<MemoryController> _logger;
 
-    // Получить память по Id
-    [HttpGet("{id}")]
-    public async Task<ActionResult<MemoryDto>> Get(Guid id)
-        => Ok(await _mediator.Send(new GetMemoryQuery { Id = id }));
-
-    // Получить все воспоминания пользователя
-    [HttpGet("user/{userId}")]
-    public async Task<ActionResult<List<MemoryDto>>> GetByUser(Guid userId)
-        => Ok(await _mediator.Send(new GetMemoriesByUserQuery { UserId = userId }));
-
-    // Создать память
-    [HttpPost]
-    public async Task<ActionResult<MemoryDto>> Create([FromBody] CreateMemoryCommand cmd)
-        => Ok(await _mediator.Send(cmd));
-
-    // Обновить
-    [HttpPut("{id}")]
-    public async Task<ActionResult<MemoryDto>> Update(Guid id, [FromBody] UpdateMemoryCommand cmd)
+    public MemoryController(IMediator mediator, ILogger<MemoryController> logger)
     {
-        cmd.Id = id;
-        return Ok(await _mediator.Send(cmd));
+        _mediator = mediator;
+        _logger = logger;
     }
 
-    // Удалить
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(Guid id)
+    [HttpPost]
+    [DisableRequestSizeLimit]
+    public async Task<IActionResult> Create([FromForm] CreateMemoryForm form)
     {
-        await _mediator.Send(new DeleteMemoryCommand { Id = id });
-        return NoContent();
+        if (form.File == null || form.File.Length == 0)
+            return BadRequest("Файл обязателен");
+
+        using var stream = form.File.OpenReadStream();
+
+        var command = new CreateMemoryCommand
+        {
+            OwnerId = form.OwnerId,
+            Title = form.Title,
+            Description = form.Description,
+            AccessLevel = form.AccessLevel ?? "Private",
+            Tags = form.Tags?.ToList(),
+
+            FileName = form.File.FileName,
+            ContentType = form.File.ContentType,
+            MediaType = form.MediaType,
+            FileStream = stream
+        };
+
+        var result = await _mediator.Send(command);
+        return Ok(result);
     }
 }
