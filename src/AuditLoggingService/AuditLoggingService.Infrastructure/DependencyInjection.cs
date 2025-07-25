@@ -10,12 +10,15 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, string connectionString)
     {
+        // 👇 Регистрируем DbContext с PostgreSQL-провайдером
         services.AddDbContext<AuditLoggingDbContext>(options =>
-            options.UseNpgsql(connectionString));
+            options.UseNpgsql(connectionString, npgsql =>
+            {
+                npgsql.MigrationsAssembly(typeof(AuditLoggingDbContext).Assembly.FullName);
+            }));
 
+        // 👇 Добавляем репозиторий
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
-
-        // Добавь другие инфраструктурные сервисы если нужно
 
         return services;
     }

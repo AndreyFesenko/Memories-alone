@@ -21,7 +21,7 @@ public class MemoriesDbContext : DbContext
         // User
         modelBuilder.Entity<User>(b =>
         {
-            b.ToTable("users", "identity");
+            b.ToTable("users");
             b.HasKey(x => x.Id);
             b.Property(x => x.Id).HasColumnName("id");
             b.Property(x => x.UserName).HasColumnName("username");
@@ -43,7 +43,7 @@ public class MemoriesDbContext : DbContext
         // Role
         modelBuilder.Entity<Role>(b =>
         {
-            b.ToTable("roles", "identity");
+            b.ToTable("roles");
             b.HasKey(x => x.Id);
             b.Property(x => x.Id).HasColumnName("id");
             b.Property(x => x.Name).HasColumnName("name");
@@ -55,7 +55,7 @@ public class MemoriesDbContext : DbContext
         // UserRole
         modelBuilder.Entity<UserRole>(b =>
         {
-            b.ToTable("userroles", "identity");
+            b.ToTable("userroles");
             b.HasKey(x => new { x.UserId, x.RoleId });
             b.Property(x => x.UserId).HasColumnName("userid");
             b.Property(x => x.RoleId).HasColumnName("roleid");
@@ -70,7 +70,7 @@ public class MemoriesDbContext : DbContext
         // RefreshToken
         modelBuilder.Entity<RefreshToken>(b =>
         {
-            b.ToTable("refreshtokens", "identity");
+            b.ToTable("refreshtokens");
             b.HasKey(x => x.Id);
             b.Property(x => x.Id).HasColumnName("id");
             b.Property(x => x.UserId).HasColumnName("userid");

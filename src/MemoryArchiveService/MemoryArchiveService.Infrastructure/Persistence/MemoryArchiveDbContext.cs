@@ -1,8 +1,7 @@
 ﻿// src/MemoryArchiveService/MemoryArchiveService.Infrastructure/Persistence/MemoryArchiveDbContext.cs
-using MemoryArchiveService.Domain.Entities;
+
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Reflection.Emit;
+using MemoryArchiveService.Domain.Entities;
 
 namespace MemoryArchiveService.Infrastructure.Persistence;
 
@@ -14,11 +13,13 @@ public class MemoryArchiveDbContext : DbContext
     public DbSet<Memory> Memories => Set<Memory>();
     public DbSet<MediaFile> MediaFiles => Set<MediaFile>();
     public DbSet<Tag> Tags => Set<Tag>();
-
-    public DbSet<MemoryTag> MemoryTags { get; set; } = default!;
+    public DbSet<MemoryTag> MemoryTags => Set<MemoryTag>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // Устанавливаем схему по умолчанию
+        modelBuilder.HasDefaultSchema("memory");
+
         modelBuilder.Entity<MediaFile>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -49,6 +50,23 @@ public class MemoryArchiveDbContext : DbContext
                   .WithMany(m => m.MediaFiles)
                   .HasForeignKey(e => e.MemoryId);
         });
-    }
 
+        modelBuilder.Entity<MemoryTag>(entity =>
+        {
+            entity.HasKey(mt => new { mt.MemoryId, mt.TagId });
+
+            entity.HasOne(mt => mt.Memory)
+                  .WithMany(m => m.MemoryTags)
+                  .HasForeignKey(mt => mt.MemoryId);
+
+            entity.HasOne(mt => mt.Tag)
+                  .WithMany(t => t.MemoryTags)
+                  .HasForeignKey(mt => mt.TagId);
+        });
+
+        // Подключение внешних конфигураций при необходимости
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(MemoryArchiveDbContext).Assembly);
+
+        base.OnModelCreating(modelBuilder);
+    }
 }

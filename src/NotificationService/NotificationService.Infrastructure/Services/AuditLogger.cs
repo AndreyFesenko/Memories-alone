@@ -1,5 +1,6 @@
 ﻿using NotificationService.Application.Interfaces;
 using Microsoft.Extensions.Logging;
+//using Shared.Messaging.Messages;
 
 public class AuditLogger : IAuditLogger
 {

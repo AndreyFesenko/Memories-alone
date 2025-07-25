@@ -1,8 +1,7 @@
-﻿namespace AuditLoggingService.Domain.Entities;
+﻿namespace NotificationService.Application.Messages;
 
-public class AuditLog
+public class AuditLogMessage
 {
-    public Guid Id { get; set; }
     public string UserId { get; set; } = default!;
     public string Action { get; set; } = default!;
     public string Target { get; set; } = default!;

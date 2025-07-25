@@ -5,5 +5,5 @@ public class Tag
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = default!;
-    public List<MemoryTag> MemoryTags { get; set; } = new();
+    public ICollection<MemoryTag> MemoryTags { get; set; } = new List<MemoryTag>();
 }

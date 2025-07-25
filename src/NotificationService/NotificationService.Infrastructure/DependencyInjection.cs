@@ -26,7 +26,7 @@ public static class DependencyInjection
         services.AddSingleton<ITemplateRenderer, TemplateRenderer>();
         services.AddScoped<IEmailSender, EmailNotificationSender>();
 
-        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+        
         services.AddScoped<IAuditService, AuditService>();
 
         //для динамического рендеринга шаблонов уведомлений.

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿//C:\Users\user\Source\Repos\Memories-alone\src\NotificationService\NotificationService.Infrastructure\Persistence\NotificationDbContext.cs
+using Microsoft.EntityFrameworkCore;
 using NotificationService.Domain.Entities;
 
 namespace NotificationService.Infrastructure.Persistence;
@@ -7,8 +8,7 @@ public class NotificationDbContext : DbContext
 {
     public DbSet<NotificationMessage> Notifications { get; set; }
     public DbSet<NotificationTemplate> Templates { get; set; }
-
-    public DbSet<AuditLog> AuditLogs { get; set; } = default!;
+    
 
     public NotificationDbContext(DbContextOptions<NotificationDbContext> options)
         : base(options)
@@ -17,6 +17,10 @@ public class NotificationDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // 👇 Устанавливаем схему по умолчанию
+        modelBuilder.HasDefaultSchema("notification");
+
+        // 📨 Уведомления
         modelBuilder.Entity<NotificationMessage>(e =>
         {
             e.HasKey(x => x.Id);
@@ -30,6 +34,7 @@ public class NotificationDbContext : DbContext
             e.Property(x => x.CreatedAt).IsRequired();
         });
 
+        // 📋 Шаблоны уведомлений
         modelBuilder.Entity<NotificationTemplate>(e =>
         {
             e.HasKey(x => x.Id);
@@ -39,6 +44,12 @@ public class NotificationDbContext : DbContext
             e.Property(x => x.CreatedAt).IsRequired();
             e.Property(x => x.UpdatedAt).IsRequired();
         });
+
+        // 📜 Логирование действий (если включено в этот сервис)
+
+
+        // Подключаем конфигурации (если появятся отдельные классы конфигурации)
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(NotificationDbContext).Assembly);
 
         base.OnModelCreating(modelBuilder);
     }

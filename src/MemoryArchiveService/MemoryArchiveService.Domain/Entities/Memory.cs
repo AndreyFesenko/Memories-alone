@@ -11,6 +11,8 @@ public class Memory
     public List<MediaFile> MediaFiles { get; set; } = new();
     public List<Tag> Tags { get; set; } = new();
     public AccessLevel AccessLevel { get; set; } = AccessLevel.Private;
+    public ICollection<MemoryTag> MemoryTags { get; set; } = new List<MemoryTag>();
+
 }
 
 public enum AccessLevel

@@ -1,15 +1,17 @@
 ﻿// src/NotificationService/NotificationService.Infrastructure/Services/AuditService.cs
+using MassTransit;
 using NotificationService.Application.Interfaces;
-using NotificationService.Domain.Entities;
+using NotificationService.Application.Messages;
+using System.Text.Json;
 
 namespace NotificationService.Infrastructure.Services;
 
 public class AuditService : IAuditService
 {
-    private readonly IAuditLogRepository _repo;
+    private readonly IPublishEndpoint _publish;
 
-    public AuditService(IAuditLogRepository repo)
-        => _repo = repo;
+    public AuditService(IPublishEndpoint publish)
+        => _publish = publish;
 
     public async Task LogAsync(
         string userId,
@@ -20,15 +22,17 @@ public class AuditService : IAuditService
         string? ua = null,
         CancellationToken ct = default)
     {
-        var log = new AuditLog
+        var message = new AuditLogMessage
         {
             UserId = userId,
             Action = action,
             Target = target,
-            Data = data != null ? System.Text.Json.JsonSerializer.Serialize(data) : null,
+            Data = data != null ? JsonSerializer.Serialize(data) : null,
             IpAddress = ip,
-            UserAgent = ua
+            UserAgent = ua,
+            Timestamp = DateTime.UtcNow
         };
-        await _repo.AddAsync(log, ct);
+
+        await _publish.Publish(message, ct);
     }
 }
