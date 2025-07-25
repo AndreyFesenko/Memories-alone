@@ -29,12 +29,15 @@ public class AuditLogRepository : IAuditLogRepository
 
         if (!string.IsNullOrEmpty(action))
             query = query.Where(x => x.Action == action);
+
         if (userId.HasValue)
-            query = query.Where(x => x.UserId == userId);
+            query = query.Where(x => x.UserId == userId.Value.ToString());
+
         if (from.HasValue)
-            query = query.Where(x => x.CreatedAt >= from);
+            query = query.Where(x => x.CreatedAt >= from.Value);
+
         if (to.HasValue)
-            query = query.Where(x => x.CreatedAt <= to);
+            query = query.Where(x => x.CreatedAt <= to.Value);
 
         var total = await query.CountAsync(ct);
         var items = await query

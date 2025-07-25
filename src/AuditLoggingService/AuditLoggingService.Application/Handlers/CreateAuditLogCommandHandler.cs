@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿//C:\Users\user\source\repos\Memories-alone\src\AuditLoggingService\AuditLoggingService.Application\Handlers\CreateAuditLogCommandHandler.cs
+using MediatR;
 using AuditLoggingService.Application.Commands;
 using AuditLoggingService.Application.DTOs;
 using AuditLoggingService.Application.Interfaces;
@@ -18,24 +19,32 @@ public class CreateAuditLogCommandHandler : IRequestHandler<CreateAuditLogComman
         {
             Id = Guid.NewGuid(),
             Action = request.Action,
+            Target = request.Target,
             Details = request.Details,
-            UserId = request.UserId,
-            CreatedAt = DateTime.UtcNow,
+            Result = request.Result,
+            Data = request.Data,
             IpAddress = request.IpAddress,
             UserAgent = request.UserAgent,
-            Result = request.Result
+            Timestamp = DateTime.UtcNow,
+            CreatedAt = DateTime.UtcNow,
+            UserId = request.UserId?.ToString()
         };
+
         await _repo.CreateAsync(log, ct);
+
         return new AuditLogDto
         {
             Id = log.Id,
             Action = log.Action,
+            Target = log.Target,
             Details = log.Details,
-            UserId = log.UserId,
-            CreatedAt = log.CreatedAt,
+            Result = log.Result,
+            Data = log.Data ?? string.Empty,
             IpAddress = log.IpAddress,
             UserAgent = log.UserAgent,
-            Result = log.Result
+            Timestamp = log.Timestamp,
+            CreatedAt = log.CreatedAt,
+            UserId = log.UserId
         };
     }
 }

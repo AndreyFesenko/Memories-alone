@@ -21,7 +21,9 @@ builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration.GetConnectionString("Default")!);
 
 // 👇 MassTransit + RabbitMQ
-var rabbitSection = builder.Configuration.GetSection("RabbitMq");
+
+
+var rabbitSection = builder.Configuration.GetSection("RabbitMQ");
 
 builder.Services.AddMassTransit(x =>
 {
@@ -29,13 +31,19 @@ builder.Services.AddMassTransit(x =>
 
     x.UsingRabbitMq((context, cfg) =>
     {
-        cfg.Host(rabbitSection["Host"], rabbitSection["VirtualHost"] ?? "/", h =>
+        var host = rabbitSection["Host"] ?? throw new ArgumentNullException("RabbitMQ:Host is not set");
+        var vhost = rabbitSection["VirtualHost"] ?? "/";
+        var user = rabbitSection["User"] ?? "guest";
+        var pass = rabbitSection["Password"] ?? "guest";
+        var queue = rabbitSection["Queue"] ?? "audit-log-queue";
+
+        cfg.Host(host, vhost, h =>
         {
-            h.Username(rabbitSection["User"]);
-            h.Password(rabbitSection["Password"]);
+            h.Username(user);
+            h.Password(pass);
         });
 
-        cfg.ReceiveEndpoint(rabbitSection["Queue"] ?? "audit-log-queue", e =>
+        cfg.ReceiveEndpoint(queue, e =>
         {
             e.ConfigureConsumer<AuditLogMessageConsumer>(context);
         });

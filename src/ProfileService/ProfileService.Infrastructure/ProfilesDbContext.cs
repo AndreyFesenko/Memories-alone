@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿//C:\Users\user\Source\Repos\Memories-alone\src\ProfileService\ProfileService.Infrastructure\ProfilesDbContext.cs
+using Microsoft.EntityFrameworkCore;
 using ProfileService.Domain.Entities;
 
 namespace ProfileService.Infrastructure;
