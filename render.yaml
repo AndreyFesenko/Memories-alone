@@ -8,7 +8,7 @@ services:
     branch: master
     plan: free
     dockerfilePath: ./src/APIGateway/Dockerfile
-    dockerContext: ./
+    dockerContext: ./src/APIGateway
     envVars:
       - key: DOCKER_CONFIG_SECRET
         value: user-gcr-docker-config
@@ -21,8 +21,8 @@ services:
     region: frankfurt
     branch: master
     plan: free
-    dockerfilePath: ./src/IdentityService/IdentityService.API/Dockerfile
-    dockerContext: ./
+    dockerfilePath: ./src/IdentityService/Dockerfile
+    dockerContext: ./src/IdentityService
     envVars:
       - key: DOCKER_CONFIG_SECRET
         value: user-gcr-docker-config
@@ -37,8 +37,8 @@ services:
     region: frankfurt
     branch: master
     plan: free
-    dockerfilePath: ./src/ProfileService/ProfileService.API/Dockerfile
-    dockerContext: ./
+    dockerfilePath: ./src/ProfileService/Dockerfile
+    dockerContext: ./src/ProfileService
     envVars:
       - key: DOCKER_CONFIG_SECRET
         value: user-gcr-docker-config
@@ -53,8 +53,8 @@ services:
     region: frankfurt
     branch: master
     plan: free
-    dockerfilePath: ./src/MemoryArchiveService/MemoryArchiveService.API/Dockerfile
-    dockerContext: ./
+    dockerfilePath: ./src/MemoryArchiveService/Dockerfile
+    dockerContext: ./src/MemoryArchiveService
     envVars:
       - key: DOCKER_CONFIG_SECRET
         value: user-gcr-docker-config
@@ -75,8 +75,8 @@ services:
     region: frankfurt
     branch: master
     plan: free
-    dockerfilePath: ./src/NotificationService/NotificationService.API/Dockerfile
-    dockerContext: ./
+    dockerfilePath: ./src/NotificationService/Dockerfile
+    dockerContext: ./src/NotificationService
     envVars:
       - key: DOCKER_CONFIG_SECRET
         value: user-gcr-docker-config
@@ -107,8 +107,8 @@ services:
     region: frankfurt
     branch: master
     plan: free
-    dockerfilePath: ./src/AccessControlService/AccessControlService.API/Dockerfile
-    dockerContext: ./
+    dockerfilePath: ./src/AccessControlService/Dockerfile
+    dockerContext: ./src/AccessControlService
     envVars:
       - key: DOCKER_CONFIG_SECRET
         value: user-gcr-docker-config
@@ -123,8 +123,8 @@ services:
     region: frankfurt
     branch: master
     plan: free
-    dockerfilePath: ./src/AuditLoggingService/AuditLoggingService.API/Dockerfile
-    dockerContext: ./
+    dockerfilePath: ./src/AuditLoggingService/Dockerfile
+    dockerContext: ./src/AuditLoggingService
     envVars:
       - key: DOCKER_CONFIG_SECRET
         value: user-gcr-docker-config
