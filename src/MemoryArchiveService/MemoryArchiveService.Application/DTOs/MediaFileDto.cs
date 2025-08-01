@@ -1,4 +1,5 @@
-﻿namespace MemoryArchiveService.Application.DTOs;
+﻿//C:\Users\user\Source\Repos\Memories-alone\src\MemoryArchiveService\MemoryArchiveService.Application\DTOs\MediaFileDto.cs
+namespace MemoryArchiveService.Application.DTOs;
 
 public class MediaFileDto
 {

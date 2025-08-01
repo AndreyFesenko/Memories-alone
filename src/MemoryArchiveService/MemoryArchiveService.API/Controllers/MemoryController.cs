@@ -1,7 +1,11 @@
-﻿using MediatR;
+﻿//C:\Users\user\Source\Repos\Memories-alone\src\MemoryArchiveService\MemoryArchiveService.API\Controllers\MemoryController.cs
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using MemoryArchiveService.Application.Commands;
 using MemoryArchiveService.API.Models;
+using MemoryArchiveService.API.Mapping;
+using MemoryArchiveService.Application.DTOs;
+using MemoryArchiveService.Application.Queries;
 
 namespace MemoryArchiveService.API.Controllers;
 
@@ -18,30 +22,63 @@ public class MemoryController : ControllerBase
         _logger = logger;
     }
 
+    /// <summary>
+    /// Создание нового воспоминания с файлом
+    /// </summary>
     [HttpPost]
     [DisableRequestSizeLimit]
-    public async Task<IActionResult> Create([FromForm] CreateMemoryForm form)
+    [ProducesResponseType(typeof(MemoryDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Create([FromForm] CreateMemoryForm form, CancellationToken ct)
     {
         if (form.File == null || form.File.Length == 0)
             return BadRequest("Файл обязателен");
 
-        using var stream = form.File.OpenReadStream();
+        var command = await form.MapToCommandAsync(ct);
+        var result = await _mediator.Send(command, ct);
 
-        var command = new CreateMemoryCommand
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Получить воспоминание по Id
+    /// </summary>
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(MemoryDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
+    {
+        var query = new GetMemoryByIdQuery { Id = id };
+        var result = await _mediator.Send(query, ct);
+
+        if (result == null)
+            return NotFound();
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Получить воспоминания пользователя с фильтром и пагинацией
+    /// </summary>
+    [HttpGet("user/{userId:guid}")]
+    [ProducesResponseType(typeof(PagedResult<MemoryDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetByUser(
+        Guid userId,
+        [FromQuery] string? accessLevel,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        CancellationToken ct = default)
+    {
+        var query = new GetMemoriesByUserQuery
         {
-            OwnerId = form.OwnerId,
-            Title = form.Title,
-            Description = form.Description,
-            AccessLevel = form.AccessLevel ?? "Private",
-            Tags = form.Tags?.ToList(),
-
-            FileName = form.File.FileName,
-            ContentType = form.File.ContentType,
-            MediaType = form.MediaType,
-            FileStream = stream
+            UserId = userId,
+            AccessLevel = accessLevel,
+            Page = page,
+            PageSize = pageSize
         };
 
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(query, ct);
+
         return Ok(result);
     }
 }

@@ -1,4 +1,75 @@
 services:
+  # 1. API Gateway
+  - type: web
+    name: api-gateway
+    runtime: docker
+    repo: https://github.com/AndreyFesenko/Memories-alone
+    region: frankfurt
+    branch: master
+    rootDir: src/APIGateway
+    plan: free
+    dockerfilePath: ./src/APIGateway/Dockerfile
+    dockerContext: ./src
+    envVars:
+      - key: DOTNET_RUNNING_IN_CONTAINER
+        value: true
+      - key: DOTNET_USE_POLLING_FILE_WATCHER
+        value: true
+      - key: DOTNET_HOST_PATH
+        value: /usr/share/dotnet
+
+  # 2. IdentityService
+  - type: web
+    name: identity-service
+    runtime: docker
+    repo: https://github.com/AndreyFesenko/Memories-alone
+    region: frankfurt
+    branch: master
+    rootDir: src/IdentityService/IdentityService.API
+    plan: free
+    dockerfilePath: ./src/IdentityService/IdentityService.API/Dockerfile
+    dockerContext: ./src
+    envVars:
+      - key: ConnectionStrings__Default
+        sync: false
+
+  # 3. ProfileService
+  - type: web
+    name: profile-service
+    runtime: docker
+    repo: https://github.com/AndreyFesenko/Memories-alone
+    region: frankfurt
+    branch: master
+    rootDir: src/ProfileService/ProfileService.API
+    plan: free
+    dockerfilePath: ./src/ProfileService/ProfileService.API/Dockerfile
+    dockerContext: ./src
+    envVars:
+      - key: ConnectionStrings__Default
+        sync: false
+
+  # 4. MemoryArchiveService
+  - type: web
+    name: memory-service
+    runtime: docker
+    repo: https://github.com/AndreyFesenko/Memories-alone
+    region: frankfurt
+    branch: master
+    rootDir: src/MemoryArchiveService/MemoryArchiveService.API
+    plan: free
+    dockerfilePath: ./src/MemoryArchiveService/MemoryArchiveService.API/Dockerfile
+    dockerContext: ./src
+    envVars:
+      - key: ConnectionStrings__Default
+        sync: false
+      - key: Supabase__S3__Endpoint
+        sync: false
+      - key: Supabase__S3__AccessKey
+        sync: false
+      - key: Supabase__S3__SecretKey
+        sync: false
+
+  # 5. NotificationService
   - type: web
     name: notification-service
     runtime: docker
@@ -7,6 +78,8 @@ services:
     branch: master
     rootDir: src/NotificationService/NotificationService.API
     plan: free
+    dockerfilePath: ./src/NotificationService/NotificationService.API/Dockerfile
+    dockerContext: ./src
     envVars:
       - key: ConnectionStrings__Default
         sync: false
@@ -25,4 +98,42 @@ services:
       - key: Redis__Password
         sync: false
       - key: Redis__Ssl
+        sync: false
+
+  # 6. AccessControlService
+  - type: web
+    name: access-control-service
+    runtime: docker
+    repo: https://github.com/AndreyFesenko/Memories-alone
+    region: frankfurt
+    branch: master
+    rootDir: src/AccessControlService/AccessControlService.API
+    plan: free
+    dockerfilePath: ./src/AccessControlService/AccessControlService.API/Dockerfile
+    dockerContext: ./src
+    envVars:
+      - key: ConnectionStrings__Default
+        sync: false
+
+  # 7. AuditLoggingService
+  - type: web
+    name: audit-logging-service
+    runtime: docker
+    repo: https://github.com/AndreyFesenko/Memories-alone
+    region: frankfurt
+    branch: master
+    rootDir: src/AuditLoggingService/AuditLoggingService.API
+    plan: free
+    dockerfilePath: ./src/AuditLoggingService/AuditLoggingService.API/Dockerfile
+    dockerContext: ./src
+    envVars:
+      - key: ConnectionStrings__Default
+        sync: false
+      - key: RabbitMq__Host
+        sync: false
+      - key: RabbitMq__User
+        sync: false
+      - key: RabbitMq__Password
+        sync: false
+      - key: RabbitMq__Queue
         sync: false

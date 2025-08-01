@@ -21,8 +21,8 @@ namespace MemoryArchiveService.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     OwnerId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Title = table.Column<string>(type: "text", nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: true),
+                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     AccessLevel = table.Column<int>(type: "integer", nullable: false)
                 },
@@ -44,7 +44,7 @@ namespace MemoryArchiveService.Infrastructure.Migrations
                     UploadedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     OwnerId = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
                     StorageUrl = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Size = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
@@ -65,7 +65,7 @@ namespace MemoryArchiveService.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     MemoryId = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>

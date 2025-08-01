@@ -17,55 +17,52 @@ public class MemoryArchiveDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // Устанавливаем схему по умолчанию
         modelBuilder.HasDefaultSchema("memory");
 
-        modelBuilder.Entity<MediaFile>(entity =>
+        // Memory
+        modelBuilder.Entity<Memory>(entity =>
         {
-            entity.HasKey(e => e.Id);
+            entity.HasKey(m => m.Id);
+            entity.Property(m => m.Title).IsRequired().HasMaxLength(200);
+            entity.Property(m => m.Description).HasMaxLength(2000);
 
-            entity.Property(e => e.FileName)
-                  .IsRequired()
-                  .HasMaxLength(255);
-
-            entity.Property(e => e.Url)
-                  .IsRequired()
-                  .HasMaxLength(1000);
-
-            entity.Property(e => e.StorageUrl)
-                  .IsRequired()
-                  .HasMaxLength(2000);
-
-            entity.Property(e => e.OwnerId)
-                  .IsRequired()
-                  .HasMaxLength(64);
-
-            entity.Property(e => e.MediaType)
-                  .IsRequired();
-
-            entity.Property(e => e.CreatedAt)
-                  .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-            entity.HasOne(e => e.Memory)
-                  .WithMany(m => m.MediaFiles)
-                  .HasForeignKey(e => e.MemoryId);
+            // Memory ↔ Tag (через MemoryTag)
+            entity.HasMany(m => m.MemoryTags)
+                  .WithOne(mt => mt.Memory)
+                  .HasForeignKey(mt => mt.MemoryId);
         });
 
-        modelBuilder.Entity<MemoryTag>(entity =>
+        // MediaFile
+        modelBuilder.Entity<MediaFile>(entity =>
         {
-            entity.HasKey(mt => new { mt.MemoryId, mt.TagId });
+            entity.HasKey(mf => mf.Id);
+            entity.Property(mf => mf.FileName).IsRequired().HasMaxLength(255);
+            entity.Property(mf => mf.Url).IsRequired().HasMaxLength(1000);
+            entity.Property(mf => mf.StorageUrl).IsRequired().HasMaxLength(2000);
+            entity.Property(mf => mf.OwnerId).IsRequired().HasMaxLength(64);
 
-            entity.HasOne(mt => mt.Memory)
-                  .WithMany(m => m.MemoryTags)
-                  .HasForeignKey(mt => mt.MemoryId);
+            entity.HasOne(mf => mf.Memory)
+                  .WithMany(m => m.MediaFiles)
+                  .HasForeignKey(mf => mf.MemoryId);
+        });
 
-            entity.HasOne(mt => mt.Tag)
-                  .WithMany(t => t.MemoryTags)
+        // Tag
+        modelBuilder.Entity<Tag>(entity =>
+        {
+            entity.HasKey(t => t.Id);
+            entity.Property(t => t.Name).IsRequired().HasMaxLength(100);
+
+            entity.HasMany(t => t.MemoryTags)
+                  .WithOne(mt => mt.Tag)
                   .HasForeignKey(mt => mt.TagId);
         });
 
-        // Подключение внешних конфигураций при необходимости
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(MemoryArchiveDbContext).Assembly);
+        // MemoryTag (связующая таблица)
+        modelBuilder.Entity<MemoryTag>(entity =>
+        {
+            entity.ToTable("MemoryTags", "memory");
+            entity.HasKey(mt => new { mt.MemoryId, mt.TagId });
+        });
 
         base.OnModelCreating(modelBuilder);
     }
