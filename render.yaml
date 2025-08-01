@@ -1,65 +1,63 @@
 services:
-  # API Gateway
+  # 1. API Gateway
   - type: web
     name: api-gateway
     runtime: docker
     repo: https://github.com/AndreyFesenko/Memories-alone
     region: frankfurt
     branch: master
-    rootDir: src
     plan: free
-    dockerfilePath: src/APIGateway/Dockerfile
+    dockerfilePath: ./src/APIGateway/Dockerfile
+    dockerContext: ./src/APIGateway
     envVars:
-      - key: ConnectionStrings__Default
-        sync: false
-      - key: RabbitMq__Host
-        sync: false
-      - key: RabbitMq__User
-        sync: false
-      - key: RabbitMq__Password
-        sync: false
-      - key: RabbitMq__Queue
-        sync: false
+      - key: DOCKER_CONFIG_SECRET
+        value: user-gcr-docker-config
 
-  # Identity Service
+  # 2. IdentityService
   - type: web
     name: identity-service
     runtime: docker
     repo: https://github.com/AndreyFesenko/Memories-alone
     region: frankfurt
     branch: master
-    rootDir: src
     plan: free
-    dockerfilePath: src/IdentityService/Dockerfile
+    dockerfilePath: ./src/IdentityService/Dockerfile
+    dockerContext: ./src/IdentityService
     envVars:
+      - key: DOCKER_CONFIG_SECRET
+        value: user-gcr-docker-config
       - key: ConnectionStrings__Default
         sync: false
 
-  # Profile Service
+  # 3. ProfileService
   - type: web
     name: profile-service
     runtime: docker
     repo: https://github.com/AndreyFesenko/Memories-alone
     region: frankfurt
     branch: master
-    rootDir: src
     plan: free
-    dockerfilePath: src/ProfileService/Dockerfile
+    dockerfilePath: ./src/ProfileService/Dockerfile
+    dockerContext: ./src/ProfileService
     envVars:
+      - key: DOCKER_CONFIG_SECRET
+        value: user-gcr-docker-config
       - key: ConnectionStrings__Default
         sync: false
 
-  # Memory Archive Service
+  # 4. MemoryArchiveService
   - type: web
     name: memory-service
     runtime: docker
     repo: https://github.com/AndreyFesenko/Memories-alone
     region: frankfurt
     branch: master
-    rootDir: src
     plan: free
-    dockerfilePath: src/MemoryArchiveService/Dockerfile
+    dockerfilePath: ./src/MemoryArchiveService/Dockerfile
+    dockerContext: ./src/MemoryArchiveService
     envVars:
+      - key: DOCKER_CONFIG_SECRET
+        value: user-gcr-docker-config
       - key: ConnectionStrings__Default
         sync: false
       - key: Supabase__S3__Endpoint
@@ -69,17 +67,19 @@ services:
       - key: Supabase__S3__SecretKey
         sync: false
 
-  # Notification Service
+  # 5. NotificationService
   - type: web
     name: notification-service
     runtime: docker
     repo: https://github.com/AndreyFesenko/Memories-alone
     region: frankfurt
     branch: master
-    rootDir: src
     plan: free
-    dockerfilePath: src/NotificationService/Dockerfile
+    dockerfilePath: ./src/NotificationService/Dockerfile
+    dockerContext: ./src/NotificationService
     envVars:
+      - key: DOCKER_CONFIG_SECRET
+        value: user-gcr-docker-config
       - key: ConnectionStrings__Default
         sync: false
       - key: RabbitMq__Host
@@ -99,31 +99,35 @@ services:
       - key: Redis__Ssl
         sync: false
 
-  # Access Control Service
+  # 6. AccessControlService
   - type: web
     name: access-control-service
     runtime: docker
     repo: https://github.com/AndreyFesenko/Memories-alone
     region: frankfurt
     branch: master
-    rootDir: src
     plan: free
-    dockerfilePath: src/AccessControlService/Dockerfile
+    dockerfilePath: ./src/AccessControlService/Dockerfile
+    dockerContext: ./src/AccessControlService
     envVars:
+      - key: DOCKER_CONFIG_SECRET
+        value: user-gcr-docker-config
       - key: ConnectionStrings__Default
         sync: false
 
-  # Audit Logging Service
+  # 7. AuditLoggingService
   - type: web
     name: audit-logging-service
     runtime: docker
     repo: https://github.com/AndreyFesenko/Memories-alone
     region: frankfurt
     branch: master
-    rootDir: src
     plan: free
-    dockerfilePath: src/AuditLoggingService/Dockerfile
+    dockerfilePath: ./src/AuditLoggingService/Dockerfile
+    dockerContext: ./src/AuditLoggingService
     envVars:
+      - key: DOCKER_CONFIG_SECRET
+        value: user-gcr-docker-config
       - key: ConnectionStrings__Default
         sync: false
       - key: RabbitMq__Host
