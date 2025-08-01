@@ -9,7 +9,7 @@ services:
     rootDir: src/APIGateway
     plan: free
     dockerfilePath: ./src/APIGateway/Dockerfile
-    dockerContext: ./src
+    dockerContext: ./ 
     envVars:
       - key: DOCKER_CONFIG_SECRET
         value: user-gcr-docker-config
@@ -24,7 +24,7 @@ services:
     rootDir: src/IdentityService/IdentityService.API
     plan: free
     dockerfilePath: ./src/IdentityService/IdentityService.API/Dockerfile
-    dockerContext: ./src
+    dockerContext: ./
     envVars:
       - key: DOCKER_CONFIG_SECRET
         value: user-gcr-docker-config
@@ -41,7 +41,7 @@ services:
     rootDir: src/ProfileService/ProfileService.API
     plan: free
     dockerfilePath: ./src/ProfileService/ProfileService.API/Dockerfile
-    dockerContext: ./src
+    dockerContext: ./
     envVars:
       - key: DOCKER_CONFIG_SECRET
         value: user-gcr-docker-config
@@ -58,7 +58,7 @@ services:
     rootDir: src/MemoryArchiveService/MemoryArchiveService.API
     plan: free
     dockerfilePath: ./src/MemoryArchiveService/MemoryArchiveService.API/Dockerfile
-    dockerContext: ./src
+    dockerContext: ./
     envVars:
       - key: DOCKER_CONFIG_SECRET
         value: user-gcr-docker-config
@@ -81,7 +81,7 @@ services:
     rootDir: src/NotificationService/NotificationService.API
     plan: free
     dockerfilePath: ./src/NotificationService/NotificationService.API/Dockerfile
-    dockerContext: ./src
+    dockerContext: ./
     envVars:
       - key: DOCKER_CONFIG_SECRET
         value: user-gcr-docker-config
@@ -114,7 +114,7 @@ services:
     rootDir: src/AccessControlService/AccessControlService.API
     plan: free
     dockerfilePath: ./src/AccessControlService/AccessControlService.API/Dockerfile
-    dockerContext: ./src
+    dockerContext: ./
     envVars:
       - key: DOCKER_CONFIG_SECRET
         value: user-gcr-docker-config
@@ -131,7 +131,7 @@ services:
     rootDir: src/AuditLoggingService/AuditLoggingService.API
     plan: free
     dockerfilePath: ./src/AuditLoggingService/AuditLoggingService.API/Dockerfile
-    dockerContext: ./src
+    dockerContext: ./
     envVars:
       - key: DOCKER_CONFIG_SECRET
         value: user-gcr-docker-config
