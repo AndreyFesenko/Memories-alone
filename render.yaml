@@ -11,12 +11,8 @@ services:
     dockerfilePath: ./src/APIGateway/Dockerfile
     dockerContext: ./src
     envVars:
-      - key: DOTNET_RUNNING_IN_CONTAINER
-        value: true
-      - key: DOTNET_USE_POLLING_FILE_WATCHER
-        value: true
-      - key: DOTNET_HOST_PATH
-        value: /usr/share/dotnet
+      - key: DOCKER_CONFIG_SECRET
+        value: user-gcr-docker-config
 
   # 2. IdentityService
   - type: web
@@ -30,6 +26,8 @@ services:
     dockerfilePath: ./src/IdentityService/IdentityService.API/Dockerfile
     dockerContext: ./src
     envVars:
+      - key: DOCKER_CONFIG_SECRET
+        value: user-gcr-docker-config
       - key: ConnectionStrings__Default
         sync: false
 
@@ -45,6 +43,8 @@ services:
     dockerfilePath: ./src/ProfileService/ProfileService.API/Dockerfile
     dockerContext: ./src
     envVars:
+      - key: DOCKER_CONFIG_SECRET
+        value: user-gcr-docker-config
       - key: ConnectionStrings__Default
         sync: false
 
@@ -60,6 +60,8 @@ services:
     dockerfilePath: ./src/MemoryArchiveService/MemoryArchiveService.API/Dockerfile
     dockerContext: ./src
     envVars:
+      - key: DOCKER_CONFIG_SECRET
+        value: user-gcr-docker-config
       - key: ConnectionStrings__Default
         sync: false
       - key: Supabase__S3__Endpoint
@@ -81,6 +83,8 @@ services:
     dockerfilePath: ./src/NotificationService/NotificationService.API/Dockerfile
     dockerContext: ./src
     envVars:
+      - key: DOCKER_CONFIG_SECRET
+        value: user-gcr-docker-config
       - key: ConnectionStrings__Default
         sync: false
       - key: RabbitMq__Host
@@ -112,6 +116,8 @@ services:
     dockerfilePath: ./src/AccessControlService/AccessControlService.API/Dockerfile
     dockerContext: ./src
     envVars:
+      - key: DOCKER_CONFIG_SECRET
+        value: user-gcr-docker-config
       - key: ConnectionStrings__Default
         sync: false
 
@@ -127,6 +133,8 @@ services:
     dockerfilePath: ./src/AuditLoggingService/AuditLoggingService.API/Dockerfile
     dockerContext: ./src
     envVars:
+      - key: DOCKER_CONFIG_SECRET
+        value: user-gcr-docker-config
       - key: ConnectionStrings__Default
         sync: false
       - key: RabbitMq__Host
