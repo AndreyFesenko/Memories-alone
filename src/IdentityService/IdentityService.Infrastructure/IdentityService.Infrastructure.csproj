@@ -29,5 +29,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+	<ItemGroup>
+		<None Remove="appsettings.json" />
+		<None Remove="appsettings.Development.json" />
+	</ItemGroup>
+
 
 </Project>

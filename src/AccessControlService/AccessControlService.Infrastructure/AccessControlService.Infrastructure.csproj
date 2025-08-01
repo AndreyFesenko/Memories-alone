@@ -31,5 +31,10 @@
 	  <Folder Include="Repositories\Migrations\" />
 	  <Folder Include="Persistence\" />
 	</ItemGroup>
+	<ItemGroup>
+		<None Remove="appsettings.json" />
+		<None Remove="appsettings.Development.json" />
+	</ItemGroup>
+
 
 </Project>
