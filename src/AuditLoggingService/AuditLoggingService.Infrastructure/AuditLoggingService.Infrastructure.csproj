@@ -26,6 +26,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\AuditLoggingService.Domain\AuditLoggingService.Domain.csproj" />
 		<ProjectReference Include="..\AuditLoggingService.Application\AuditLoggingService.Application.csproj" />
+		<ProjectReference Include="..\..\Shared.Messaging\Shared.Messaging.csproj" />
 	</ItemGroup>
 
 </Project>

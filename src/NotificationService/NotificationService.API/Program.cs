@@ -1,10 +1,8 @@
+//C:\Users\user\Source\Repos\Memories-alone\src\NotificationService\NotificationService.API\Program.cs
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using MassTransit;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 using NotificationService.Application;
 using NotificationService.Application.Consumers;
 using NotificationService.Application.Hubs;
@@ -18,7 +16,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // JSON enum as strings
 builder.Services.AddControllers()
-    .AddJsonOptions(o => {
+    .AddJsonOptions(o =>
+    {
         o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
@@ -41,10 +40,12 @@ builder.Services.AddSignalR()
     .AddStackExchangeRedis(redisOptions.ToString());
 
 // Redis connection singleton (для HealthCheck)
-builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisOptions));
+builder.Services.AddSingleton<IConnectionMultiplexer>(
+    ConnectionMultiplexer.Connect(redisOptions));
 
 // CORS
-builder.Services.AddCors(opts => {
+builder.Services.AddCors(opts =>
+{
     opts.AddPolicy("AllowAll", p => p
         .AllowAnyHeader()
         .AllowAnyMethod()
@@ -84,16 +85,31 @@ var rabbitCfg = builder.Configuration.GetSection("RabbitMq");
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<NotificationMessageConsumer>();
+
     x.UsingRabbitMq((context, cfg) =>
     {
-        cfg.Host(rabbitCfg["Host"], rabbitCfg["VirtualHost"] ?? "/", h =>
+        var host = rabbitCfg["Host"] ?? throw new ArgumentNullException("RabbitMQ:Host is not set");
+        var vhost = rabbitCfg["VirtualHost"] ?? "/";
+        var user = rabbitCfg["User"] ?? "guest";
+        var pass = rabbitCfg["Password"] ?? "guest";
+        var queue = rabbitCfg["Queue"] ?? "notifications.queue";
+        var exchange = rabbitCfg["Exchange"] ?? "notifications";
+
+        cfg.Host(host, vhost, h =>
         {
-            h.Username(rabbitCfg["User"]);
-            h.Password(rabbitCfg["Password"]);
+            h.Username(user);
+            h.Password(pass);
         });
 
-        cfg.ReceiveEndpoint(rabbitCfg["Queue"], e =>
+        cfg.ReceiveEndpoint(queue, e =>
         {
+            e.ConfigureConsumeTopology = false;
+            e.Bind(exchange, s =>
+            {
+                s.ExchangeType = "topic";
+                s.RoutingKey = "notification.*";
+            });
+
             e.ConfigureConsumer<NotificationMessageConsumer>(context);
         });
     });
@@ -201,3 +217,4 @@ public class RabbitMqConnectionService : IAsyncDisposable
         }
     }
 }
+
