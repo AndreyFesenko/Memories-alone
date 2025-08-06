@@ -1,7 +1,10 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
+
 COPY . .
-WORKDIR /src/MemoryArchiveService/MemoryArchiveService.API
+
+WORKDIR /src/MemoryArchiveService.API
+
 RUN dotnet restore "MemoryArchiveService.API.csproj"
 RUN dotnet build "MemoryArchiveService.API.csproj" -c Release -o /app/build
 RUN dotnet publish "MemoryArchiveService.API.csproj" -c Release -o /app/publish
