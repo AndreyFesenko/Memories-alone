@@ -9,4 +9,5 @@ RUN dotnet publish "APIGateway.API.csproj" -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/publish .
+COPY /src/APIGateway/wwwroot ./wwwroot
 ENTRYPOINT ["dotnet", "APIGateway.API.dll"]
