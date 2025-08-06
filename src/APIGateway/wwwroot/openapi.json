@@ -1,0 +1,187 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Memories API Gateway",
+    "version": "v1",
+    "description": "Unified API Gateway for all microservices in the Memories project"
+  },
+  "servers": [
+    { "url": "https://api-gateway-cqvi.onrender.com" }
+  ],
+  "paths": {
+    "/identity/login": {
+      "post": {
+        "tags": ["Identity"],
+        "summary": "User login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string" },
+                  "password": { "type": "string" }
+                },
+                "required": ["username", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JWT token",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "properties": { "token": { "type": "string" } } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profile/{userId}": {
+      "get": {
+        "tags": ["Profile"],
+        "summary": "Get user profile",
+        "parameters": [
+          { "name": "userId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserProfile" } } }
+          }
+        }
+      }
+    },
+    "/memory/{id}": {
+      "get": {
+        "tags": ["Memory"],
+        "summary": "Get memory by Id",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Memory details",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Memory" } } }
+          }
+        }
+      }
+    },
+    "/memory": {
+      "post": {
+        "tags": ["Memory"],
+        "summary": "Create new memory with media file",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ownerId": { "type": "string", "format": "uuid" },
+                  "title": { "type": "string" },
+                  "description": { "type": "string" },
+                  "accessLevel": { "type": "string", "enum": ["Private", "FriendsOnly", "Public", "Custom"] },
+                  "tags": { "type": "array", "items": { "type": "string" } },
+                  "file": { "type": "string", "format": "binary" }
+                },
+                "required": ["ownerId", "title", "file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Created memory",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Memory" } } }
+          }
+        }
+      }
+    },
+    "/notification/user/{userId}": {
+      "get": {
+        "tags": ["Notification"],
+        "summary": "Get notifications for a user",
+        "parameters": [
+          { "name": "userId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of notifications",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Notification" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/live": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Live health check",
+        "responses": {
+          "200": {
+            "description": "Service is alive",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string" } } } } }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Ready health check",
+        "responses": {
+          "200": {
+            "description": "Service is ready",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string" } } } } }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Bearer": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" }
+    },
+    "schemas": {
+      "UserProfile": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "displayName": { "type": "string" },
+          "bio": { "type": "string" }
+        }
+      },
+      "Memory": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Notification": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "subject": { "type": "string" },
+          "body": { "type": "string" },
+          "status": { "type": "string" }
+        }
+      }
+    }
+  },
+  "security": [
+    { "Bearer": [] }
+  ]
+}

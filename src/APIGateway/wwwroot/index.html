@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Memories Project Test UI</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 20px; color: #333; }
+    h1 { color: #2c3e50; }
+    .section {
+      background: #fff; padding: 20px; margin-bottom: 20px;
+      border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    input, select, button, textarea { margin: 5px 0; padding: 8px; font-size: 14px; }
+    textarea { width: 100%; height: 200px; }
+    .btn-group button { margin-right: 8px; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Memories Project API Test UI</h1>
+
+  <!-- JWT Section -->
+  <div class="section">
+    <h3>JWT Token</h3>
+    <input type="text" id="jwtToken" placeholder="Paste JWT token here" style="width:80%">
+    <button onclick="saveToken()">Save</button>
+  </div>
+
+  <!-- GUID Section -->
+  <div class="section">
+    <h3>Saved GUIDs</h3>
+    <input type="text" id="newGuid" placeholder="Enter GUID">
+    <button onclick="saveGuid()">Save GUID</button><br>
+    <select id="guidList" onchange="selectGuid()"></select>
+  </div>
+
+  <!-- Health + Scalar -->
+  <div class="section">
+    <h3>Service Health & Docs</h3>
+    <div class="btn-group">
+      <button onclick="testHealth('identity')">Identity Health</button>
+      <button onclick="openScalar('identity')">Identity Docs</button>
+    </div>
+    <div class="btn-group">
+      <button onclick="testHealth('profile')">Profile Health</button>
+      <button onclick="openScalar('profile')">Profile Docs</button>
+    </div>
+    <div class="btn-group">
+      <button onclick="testHealth('memory')">Memory Health</button>
+      <button onclick="openScalar('memory')">Memory Docs</button>
+    </div>
+    <div class="btn-group">
+      <button onclick="testHealth('notification')">Notification Health</button>
+      <button onclick="openScalar('notification')">Notification Docs</button>
+    </div>
+    <div class="btn-group">
+      <button onclick="testHealth('access-control')">AccessControl Health</button>
+      <button onclick="openScalar('access-control')">AccessControl Docs</button>
+    </div>
+    <div class="btn-group">
+      <button onclick="testHealth('audit-logging')">AuditLogging Health</button>
+      <button onclick="openScalar('audit-logging')">AuditLogging Docs</button>
+    </div>
+  </div>
+
+  <!-- Memory Create -->
+  <div class="section">
+    <h3>Create Memory</h3>
+    <form id="memoryForm">
+      <input type="text" name="OwnerId" placeholder="OwnerId (GUID)" required><br>
+      <input type="text" name="Title" placeholder="Title" required><br>
+      <input type="text" name="Description" placeholder="Description"><br>
+      <input type="text" name="AccessLevel" placeholder="AccessLevel (Private/Public/etc)" value="Private"><br>
+      <input type="text" name="Tags" placeholder="Tags (comma-separated)"><br>
+      <input type="file" name="File" required><br>
+      <button type="button" onclick="createMemory()">Upload</button>
+    </form>
+  </div>
+
+  <!-- Output -->
+  <div class="section">
+    <h3>Result</h3>
+    <textarea id="output" readonly></textarea>
+  </div>
+
+<script>
+  const gatewayUrl = "https://api-gateway-cqvi.onrender.com";
+
+  window.onload = () => {
+    document.getElementById("jwtToken").value = localStorage.getItem("jwtToken") || "";
+    loadGuids();
+  };
+
+  function saveToken() {
+    const token = document.getElementById("jwtToken").value;
+    localStorage.setItem("jwtToken", token);
+    log("JWT Token saved!");
+  }
+
+  function saveGuid() {
+    const guid = document.getElementById("newGuid").value;
+    if (!guid) return;
+    let guids = JSON.parse(localStorage.getItem("guids") || "[]");
+    if (!guids.includes(guid)) guids.push(guid);
+    localStorage.setItem("guids", JSON.stringify(guids));
+    loadGuids();
+    log("GUID saved!");
+  }
+
+  function loadGuids() {
+    const guids = JSON.parse(localStorage.getItem("guids") || "[]");
+    const list = document.getElementById("guidList");
+    list.innerHTML = "";
+    guids.forEach(g => {
+      const opt = document.createElement("option");
+      opt.value = g;
+      opt.text = g;
+      list.add(opt);
+    });
+  }
+
+  function selectGuid() {
+    document.getElementById("newGuid").value = document.getElementById("guidList").value;
+  }
+
+  async function testHealth(service) {
+    try {
+      const res = await fetch(`${gatewayUrl}/${service}/health/ready`);
+      const text = await res.text();
+      log(`Health [${service}]: ${res.status}\n${text}`);
+    } catch (e) {
+      log(`Error checking health [${service}]: ${e}`);
+    }
+  }
+
+  function openScalar(service) {
+    const token = localStorage.getItem("jwtToken");
+    const url = `${gatewayUrl}/${service}/scalar/v1?token=${encodeURIComponent(token)}`;
+    window.open(url, "_blank");
+  }
+
+  async function createMemory() {
+    const form = document.getElementById("memoryForm");
+    const formData = new FormData(form);
+
+    if (formData.get("Tags")) {
+      formData.set("Tags", formData.get("Tags").split(",").map(t => t.trim()));
+    }
+
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const res = await fetch(`${gatewayUrl}/memory/api/memory`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}` },
+        body: formData
+      });
+      const text = await res.text();
+      log(`Create Memory: ${res.status}\n${text}`);
+    } catch (e) {
+      log(`Error creating memory: ${e}`);
+    }
+  }
+
+  function log(msg) {
+    document.getElementById("output").value = msg;
+  }
+</script>
+</body>
+</html>
