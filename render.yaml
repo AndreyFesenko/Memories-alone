@@ -8,7 +8,7 @@ services:
     branch: master
     plan: free
     dockerfilePath: ./src/APIGateway/Dockerfile
-    dockerContext: ./src/APIGateway
+    dockerContext: ./src
     envVars:
       - key: DOCKER_CONFIG_SECRET
         value: user-gcr-docker-config
@@ -22,7 +22,7 @@ services:
     branch: master
     plan: free
     dockerfilePath: ./src/IdentityService/Dockerfile
-    dockerContext: ./src/IdentityService
+    dockerContext: ./src
     envVars:
       - key: DOCKER_CONFIG_SECRET
         value: user-gcr-docker-config
@@ -38,7 +38,7 @@ services:
     branch: master
     plan: free
     dockerfilePath: ./src/ProfileService/Dockerfile
-    dockerContext: ./src/ProfileService
+    dockerContext: ./src
     envVars:
       - key: DOCKER_CONFIG_SECRET
         value: user-gcr-docker-config
@@ -54,7 +54,7 @@ services:
     branch: master
     plan: free
     dockerfilePath: ./src/MemoryArchiveService/Dockerfile
-    dockerContext: ./src/MemoryArchiveService
+    dockerContext: ./src
     envVars:
       - key: DOCKER_CONFIG_SECRET
         value: user-gcr-docker-config
@@ -76,7 +76,7 @@ services:
     branch: master
     plan: free
     dockerfilePath: ./src/NotificationService/Dockerfile
-    dockerContext: ./src/NotificationService
+    dockerContext: ./src
     envVars:
       - key: DOCKER_CONFIG_SECRET
         value: user-gcr-docker-config
@@ -108,7 +108,7 @@ services:
     branch: master
     plan: free
     dockerfilePath: ./src/AccessControlService/Dockerfile
-    dockerContext: ./src/AccessControlService
+    dockerContext: ./src
     envVars:
       - key: DOCKER_CONFIG_SECRET
         value: user-gcr-docker-config
@@ -124,7 +124,7 @@ services:
     branch: master
     plan: free
     dockerfilePath: ./src/AuditLoggingService/Dockerfile
-    dockerContext: ./src/AuditLoggingService
+    dockerContext: ./src
     envVars:
       - key: DOCKER_CONFIG_SECRET
         value: user-gcr-docker-config
