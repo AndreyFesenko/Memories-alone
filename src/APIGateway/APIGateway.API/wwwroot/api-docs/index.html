@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Memories API Docs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Swagger UI CDN -->
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+  <style>
+    body { margin:0; background:#f7f7f7; }
+    #topbar { display:none; } /* чище без верхней полосы */
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script>
+    // Путь к OpenAPI (лежит рядом в wwwroot)
+    const specUrl = "/openapi.json";
+
+    // Конфиг Swagger UI
+    window.ui = SwaggerUIBundle({
+      url: specUrl,
+      dom_id: "#swagger-ui",
+      deepLinking: true,
+      displayRequestDuration: true,
+      filter: true,
+      persistAuthorization: true, // сохранять токен в UI на время сессии
+      docExpansion: "none",
+      layout: "BaseLayout",
+      tryItOutEnabled: true, // включаем Try it out
+      requestInterceptor: (req) => {
+        // Если пользователь сохранил токен в localStorage — подставим его автоматически
+        const saved = localStorage.getItem("memories_jwt");
+        if (saved && !req.headers.Authorization) {
+          req.headers["Authorization"] = `Bearer ${saved}`;
+        }
+        return req;
+      },
+      presets: [
+        SwaggerUIBundle.presets.apis,
+        SwaggerUIBundle.SwaggerUIStandalonePreset
+      ],
+      // Поддержка Bearer; также можно выбрать схему в самом OpenAPI (components.securitySchemes)
+      // Здесь просто обеспечиваем UI-часть; спецификация должна описывать "Bearer".
+    });
+
+    // Маленький виджет для ручного сохранения токена в localStorage
+    (function addTokenHelper() {
+      const bar = document.createElement("div");
+      bar.style.cssText = "position:fixed;right:16px;bottom:16px;background:#fff;border:1px solid #ddd;border-radius:8px;box-shadow:0 4px 10px rgba(0,0,0,.08);padding:12px;z-index:9999;font:14px/1.4 Arial, sans-serif;";
+      bar.innerHTML = `
+        <div style="margin-bottom:8px;font-weight:600;">JWT Helper</div>
+        <input id="jwt-input" type="text" placeholder="Paste JWT here" style="width:260px;padding:6px;border:1px solid #ccc;border-radius:6px;" />
+        <div style="margin-top:8px;text-align:right;">
+          <button id="jwt-save" style="padding:6px 10px;border:1px solid #1f6feb;background:#1f6feb;color:#fff;border-radius:6px;cursor:pointer;">Save</button>
+          <button id="jwt-clear" style="padding:6px 10px;border:1px solid #ccc;background:#fff;color:#333;border-radius:6px;cursor:pointer;margin-left:6px;">Clear</button>
+        </div>
+      `;
+      document.body.appendChild(bar);
+
+      const input = document.getElementById("jwt-input");
+      const saved = localStorage.getItem("memories_jwt");
+      if (saved) input.value = saved;
+
+      document.getElementById("jwt-save").onclick = () => {
+        localStorage.setItem("memories_jwt", input.value.trim());
+        alert("JWT saved to localStorage. It will be auto-applied to requests.");
+      };
+      document.getElementById("jwt-clear").onclick = () => {
+        localStorage.removeItem("memories_jwt");
+        input.value = "";
+        alert("JWT cleared.");
+      };
+    })();
+  </script>
+</body>
+</html>

@@ -1,52 +1,79 @@
-﻿// C:\Users\user\Source\Repos\Memories-alone\src\APIGateway\APIGateway.API\Program.cs
+﻿using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
 using Yarp.ReverseProxy;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Serilog в консоль
+// ---------- Serilog в консоль ----------
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
     .Enrich.FromLogContext()
     .WriteTo.Console()
     .CreateLogger();
-
 builder.Host.UseSerilog();
 
-// YARP Reverse Proxy
-builder.Services.AddReverseProxy()
+// ---------- YARP из appsettings ----------
+builder.Services
+    .AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 
-// CORS (разрешаем всё)
+// ---------- CORS (пока всё разрешаем) ----------
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
-        policy.AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowAnyOrigin());
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod());
 });
 
-// Rate Limiting (по желанию)
+// ---------- Rate Limiting (глобально, мягко) ----------
 builder.Services.AddRateLimiter(options =>
 {
     options.AddFixedWindowLimiter("global", opts =>
     {
-        opts.PermitLimit = 100;
+        opts.PermitLimit = 200;
         opts.Window = TimeSpan.FromMinutes(1);
     });
 });
 
+// ---------- Response Compression ----------
+builder.Services.AddResponseCompression();
+
+// ---------- Http Logging (диагностика прокси) ----------
+builder.Services.AddHttpLogging(o =>
+{
+    o.LoggingFields = HttpLoggingFields.RequestPropertiesAndHeaders |
+                      HttpLoggingFields.ResponsePropertiesAndHeaders |
+                      HttpLoggingFields.RequestBody |
+                      HttpLoggingFields.ResponseBody;
+    o.RequestBodyLogLimit = 1024 * 64;
+    o.ResponseBodyLogLimit = 1024 * 64;
+});
+
 var app = builder.Build();
 
+// ---------- Проксируемые сценарии требуют: ----------
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+    // при необходимости можно указать KnownProxies/KnownNetworks
+});
+
+app.UseSerilogRequestLogging();
+app.UseHttpLogging();
+app.UseResponseCompression();
 app.UseCors("AllowAll");
+
+// WebSockets (для NotificationService/SignalR через гейтвей)
+app.UseWebSockets();
+
+// Rate Limiter до прокси
 app.UseRateLimiter();
 
-// Отдаём статику (openapi.json и swagger-ui) ДО прокси
-app.UseDefaultFiles();   // ищет index.* в wwwroot и подпапках при прямом заходе на папку
-app.UseStaticFiles();
-
-// Health
+// ---------- Health ----------
 app.MapGet("/health/live", () =>
 {
     Log.Information("Health check: Live");
@@ -59,14 +86,28 @@ app.MapGet("/health/ready", () =>
     return Results.Ok(new { status = "Ready" });
 });
 
-// Редирект /api-docs -> /api-docs/
-app.MapGet("/api-docs", ctx =>
+// ---------- Прокси ----------
+app.MapReverseProxy();
+
+// ---------- Статика (docs) ----------
+app.UseDefaultFiles();   // подключает index.html по умолчанию для / и /api-docs, если настроен default file
+app.UseStaticFiles();    // раздаёт /wwwroot
+
+// Явный маршрут на /api-docs -> наш single-page тестер
+app.MapGet("/api-docs", async context =>
 {
-    ctx.Response.Redirect("/api-docs/", permanent: false);
-    return Task.CompletedTask;
+    context.Response.ContentType = "text/html; charset=utf-8";
+    await context.Response.SendFileAsync("wwwroot/index.html");
 });
 
-// Прокси (последним)
-app.MapReverseProxy();
+// Маршрут на OpenAPI агрегат (статический файл)
+app.MapGet("/openapi.json", async context =>
+{
+    context.Response.ContentType = "application/json; charset=utf-8";
+    await context.Response.SendFileAsync("wwwroot/openapi.json");
+});
+
+// Полезный fallback на корень
+app.MapGet("/", () => Results.Redirect("/api-docs"));
 
 app.Run();
