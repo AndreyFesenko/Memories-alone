@@ -1,16 +1,15 @@
-﻿//C: \Users\user\Source\Repos\Memories-alone\src\APIGateway\APIGateway.API\Program.cs
+﻿// C:\Users\user\Source\Repos\Memories-alone\src\APIGateway\APIGateway.API\Program.cs
 using Microsoft.AspNetCore.RateLimiting;
-using Scalar.AspNetCore;
 using Serilog;
 using Yarp.ReverseProxy;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Подключаем Serilog с выводом в консоль
+// Serilog в консоль
 Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Debug() // уровень логирования
-    .WriteTo.Console()    // вывод в консоль
+    .MinimumLevel.Debug()
     .Enrich.FromLogContext()
+    .WriteTo.Console()
     .CreateLogger();
 
 builder.Host.UseSerilog();
@@ -19,18 +18,16 @@ builder.Host.UseSerilog();
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 
-// Разрешаем все CORS
+// CORS (разрешаем всё)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
-    {
         policy.AllowAnyHeader()
               .AllowAnyMethod()
-              .AllowAnyOrigin();
-    });
+              .AllowAnyOrigin());
 });
 
-// Rate Limiting
+// Rate Limiting (по желанию)
 builder.Services.AddRateLimiter(options =>
 {
     options.AddFixedWindowLimiter("global", opts =>
@@ -44,9 +41,12 @@ var app = builder.Build();
 
 app.UseCors("AllowAll");
 app.UseRateLimiter();
-app.MapReverseProxy();
 
-// Health endpoints
+// Отдаём статику (openapi.json и swagger-ui) ДО прокси
+app.UseDefaultFiles();   // ищет index.* в wwwroot и подпапках при прямом заходе на папку
+app.UseStaticFiles();
+
+// Health
 app.MapGet("/health/live", () =>
 {
     Log.Information("Health check: Live");
@@ -59,19 +59,14 @@ app.MapGet("/health/ready", () =>
     return Results.Ok(new { status = "Ready" });
 });
 
-// Подключаем статику
-app.UseDefaultFiles();
-app.UseStaticFiles();
-
-// Scalar UI + OpenAPI
-if (app.Environment.IsDevelopment() || true)
+// Редирект /api-docs -> /api-docs/
+app.MapGet("/api-docs", ctx =>
 {
-    app.MapOpenApi("/openapi.json");
+    ctx.Response.Redirect("/api-docs/", permanent: false);
+    return Task.CompletedTask;
+});
 
-    app.MapScalarApiReference(options =>
-    {
-        options.Title = "Memories API Gateway";
-    });
-}
+// Прокси (последним)
+app.MapReverseProxy();
 
 app.Run();

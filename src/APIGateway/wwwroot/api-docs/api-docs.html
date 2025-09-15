@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Memories — Unified API Docs</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>body{margin:0;padding:0;} .topbar{position:fixed;top:0;left:0;right:0;height:56px;background:#111;color:#fff;display:flex;align-items:center;padding:0 16px;z-index:10;font:14px/1.4 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Inter,Helvetica,Arial;} .brand{font-weight:600} .right a{color:#fff;margin-left:12px;text-decoration:none;opacity:.9} .right a:hover{opacity:1} .holder{position:absolute;top:56px;bottom:0;left:0;right:0;}</style>
+    <script src="https://cdn.jsdelivr.net/npm/redoc@2.1.5/bundles/redoc.standalone.js"></script>
+  </head>
+  <body>
+    <div class="topbar">
+      <div class="brand">Memories — Unified API</div>
+      <div class="right" style="margin-left:auto">
+        <a href="/health/ready" target="_blank">Gateway Health</a>
+        <a href="/openapi.json" target="_blank">openapi.json</a>
+      </div>
+    </div>
+    <div class="holder">
+      <redoc spec-url="/openapi.json"></redoc>
+    </div>
+  </body>
+</html>

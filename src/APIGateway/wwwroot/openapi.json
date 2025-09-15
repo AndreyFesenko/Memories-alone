@@ -1,187 +1,464 @@
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "Memories API Gateway",
-    "version": "v1",
-    "description": "Unified API Gateway for all microservices in the Memories project"
+    "title": "Memories – Unified API",
+    "version": "1.0.0",
+    "description": "API Gateway spec combining all microservices: Identity, Profile, MemoryArchive, Notification, AccessControl, AuditLogging"
   },
   "servers": [
-    { "url": "https://api-gateway-cqvi.onrender.com" }
+    { "url": "http://localhost:8080", "description": "Local Gateway" }
+  ],
+  "tags": [
+    { "name": "Identity" },
+    { "name": "Profile" },
+    { "name": "Memory" },
+    { "name": "Notification" },
+    { "name": "AccessControl" },
+    { "name": "AuditLogging" },
+    { "name": "System" }
   ],
   "paths": {
-    "/identity/login": {
-      "post": {
-        "tags": ["Identity"],
-        "summary": "User login",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "username": { "type": "string" },
-                  "password": { "type": "string" }
-                },
-                "required": ["username", "password"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "JWT token",
-            "content": {
-              "application/json": {
-                "schema": { "type": "object", "properties": { "token": { "type": "string" } } }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/profile/{userId}": {
-      "get": {
-        "tags": ["Profile"],
-        "summary": "Get user profile",
-        "parameters": [
-          { "name": "userId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "User profile",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserProfile" } } }
-          }
-        }
-      }
-    },
-    "/memory/{id}": {
-      "get": {
-        "tags": ["Memory"],
-        "summary": "Get memory by Id",
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Memory details",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Memory" } } }
-          }
-        }
-      }
-    },
-    "/memory": {
-      "post": {
-        "tags": ["Memory"],
-        "summary": "Create new memory with media file",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "ownerId": { "type": "string", "format": "uuid" },
-                  "title": { "type": "string" },
-                  "description": { "type": "string" },
-                  "accessLevel": { "type": "string", "enum": ["Private", "FriendsOnly", "Public", "Custom"] },
-                  "tags": { "type": "array", "items": { "type": "string" } },
-                  "file": { "type": "string", "format": "binary" }
-                },
-                "required": ["ownerId", "title", "file"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Created memory",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Memory" } } }
-          }
-        }
-      }
-    },
-    "/notification/user/{userId}": {
-      "get": {
-        "tags": ["Notification"],
-        "summary": "Get notifications for a user",
-        "parameters": [
-          { "name": "userId", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of notifications",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/Notification" }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/health/live": {
       "get": {
         "tags": ["System"],
-        "summary": "Live health check",
-        "responses": {
-          "200": {
-            "description": "Service is alive",
-            "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string" } } } } }
-          }
-        }
+        "summary": "Gateway liveness",
+        "responses": { "200": { "description": "OK" } }
       }
     },
     "/health/ready": {
       "get": {
         "tags": ["System"],
-        "summary": "Ready health check",
+        "summary": "Gateway readiness",
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+
+    "/identity/login": {
+      "post": {
+        "tags": ["Identity"],
+        "summary": "User login (returns JWT)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Authenticated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/JwtResponse" } } } },
+          "401": { "description": "Invalid credentials" }
+        }
+      }
+    },
+    "/identity/register": {
+      "post": {
+        "tags": ["Identity"],
+        "summary": "Create a new user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/RegisterRequest" } }
+          }
+        },
+        "responses": {
+          "201": { "description": "User created" },
+          "409": { "description": "User already exists" }
+        }
+      }
+    },
+    "/identity/refresh": {
+      "post": {
+        "tags": ["Identity"],
+        "summary": "Refresh JWT",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/RefreshRequest" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "New token", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/JwtResponse" } } } }
+        }
+      }
+    },
+    "/identity/me": {
+      "get": {
+        "tags": ["Identity"],
+        "summary": "Get current user profile (from token)",
+        "security": [{ "Bearer": [] }],
+        "responses": {
+          "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MeResponse" } } } },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+
+    "/profile/{userId}": {
+      "get": {
+        "tags": ["Profile"],
+        "summary": "Get user profile by Id",
+        "security": [{ "Bearer": [] }],
+        "parameters": [
+          { "name": "userId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Profile", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserProfile" } } } },
+          "404": { "description": "Not found" }
+        }
+      },
+      "put": {
+        "tags": ["Profile"],
+        "summary": "Update user profile",
+        "security": [{ "Bearer": [] }],
+        "parameters": [
+          { "name": "userId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/UpdateUserProfileRequest" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserProfile" } } } },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/profile/health/ready": {
+      "get": { "tags": ["Profile"], "summary": "Profile readiness via gateway", "responses": { "200": { "description": "OK" } } }
+    },
+    "/profile/health/live": {
+      "get": { "tags": ["Profile"], "summary": "Profile liveness via gateway", "responses": { "200": { "description": "OK" } } }
+    },
+
+    "/memory/api/memory": {
+      "post": {
+        "tags": ["Memory"],
+        "summary": "Create memory (multipart upload to storage + save metadata)",
+        "security": [{ "Bearer": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": { "$ref": "#/components/schemas/CreateMemoryForm" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Created memory", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoryDto" } } } },
+          "400": { "description": "Validation error" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/memory/api/memory/{id}": {
+      "get": {
+        "tags": ["Memory"],
+        "summary": "Get memory by Id",
+        "security": [{ "Bearer": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": { "description": "Memory", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoryDto" } } } },
+          "404": { "description": "Not found" }
+        }
+      }
+    },
+    "/memory/api/memory/user/{userId}": {
+      "get": {
+        "tags": ["Memory"],
+        "summary": "List memories by user",
+        "security": [{ "Bearer": [] }],
+        "parameters": [
+          { "name": "userId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
+          { "name": "accessLevel", "in": "query", "required": false, "schema": { "$ref": "#/components/schemas/AccessLevel" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1, "minimum": 1 } },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 10, "minimum": 1, "maximum": 100 } }
+        ],
         "responses": {
           "200": {
-            "description": "Service is ready",
-            "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string" } } } } }
+            "description": "Memories",
+            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/MemoryDto" } } } }
           }
         }
       }
-    }
+    },
+    "/memory/health/ready": { "get": { "tags": ["Memory"], "summary": "Memory readiness", "responses": { "200": { "description": "OK" } } } },
+    "/memory/health/live":  { "get": { "tags": ["Memory"], "summary": "Memory liveness",  "responses": { "200": { "description": "OK" } } } },
+
+    "/notification/user/{userId}": {
+      "get": {
+        "tags": ["Notification"],
+        "summary": "Get notifications for user",
+        "security": [{ "Bearer": [] }],
+        "parameters": [
+          { "name": "userId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notifications",
+            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Notification" } } } }
+          }
+        }
+      }
+    },
+    "/notification/health/ready": { "get": { "tags": ["Notification"], "summary": "Notification readiness", "responses": { "200": { "description": "OK" } } } },
+    "/notification/health/live":  { "get": { "tags": ["Notification"], "summary": "Notification liveness",  "responses": { "200": { "description": "OK" } } } },
+
+    "/access-control/api/rules": {
+      "get": {
+        "tags": ["AccessControl"],
+        "summary": "List access rules",
+        "security": [{ "Bearer": [] }],
+        "responses": {
+          "200": { "description": "Rules", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/AccessRule" } } } } }
+        }
+      },
+      "post": {
+        "tags": ["AccessControl"],
+        "summary": "Create access rule",
+        "security": [{ "Bearer": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AccessRuleCreate" } } }
+        },
+        "responses": {
+          "201": { "description": "Created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AccessRule" } } } }
+        }
+      }
+    },
+    "/access-control/api/rules/{id}": {
+      "get": {
+        "tags": ["AccessControl"],
+        "summary": "Get access rule",
+        "security": [{ "Bearer": [] }],
+        "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ],
+        "responses": {
+          "200": { "description": "Rule", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AccessRule" } } } },
+          "404": { "description": "Not found" }
+        }
+      },
+      "put": {
+        "tags": ["AccessControl"],
+        "summary": "Update access rule",
+        "security": [{ "Bearer": [] }],
+        "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AccessRuleUpdate" } } } },
+        "responses": { "200": { "description": "Updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AccessRule" } } } } }
+      },
+      "delete": {
+        "tags": ["AccessControl"],
+        "summary": "Delete access rule",
+        "security": [{ "Bearer": [] }],
+        "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } } ],
+        "responses": { "204": { "description": "Deleted" } }
+      }
+    },
+    "/access-control/health/ready": { "get": { "tags": ["AccessControl"], "summary": "AccessControl readiness", "responses": { "200": { "description": "OK" } } } },
+    "/access-control/health/live":  { "get": { "tags": ["AccessControl"], "summary": "AccessControl liveness",  "responses": { "200": { "description": "OK" } } } },
+
+    "/audit-logging/api/logs/search": {
+      "get": {
+        "tags": ["AuditLogging"],
+        "summary": "Search audit logs",
+        "security": [{ "Bearer": [] }],
+        "parameters": [
+          { "name": "action", "in": "query", "schema": { "type": "string" } },
+          { "name": "userId", "in": "query", "schema": { "type": "string", "format": "uuid" } },
+          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date-time" } },
+          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date-time" } },
+          { "name": "offset", "in": "query", "schema": { "type": "integer", "default": 0, "minimum": 0 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 50, "minimum": 1, "maximum": 200 } }
+        ],
+        "responses": {
+          "200": { "description": "Paged logs", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PagedAuditLogResult" } } } }
+        }
+      }
+    },
+    "/audit-logging/health/ready": { "get": { "tags": ["AuditLogging"], "summary": "AuditLogging readiness", "responses": { "200": { "description": "OK" } } } },
+    "/audit-logging/health/live":  { "get": { "tags": ["AuditLogging"], "summary": "AuditLogging liveness",  "responses": { "200": { "description": "OK" } } } }
   },
   "components": {
     "securitySchemes": {
-      "Bearer": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" }
+      "Bearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Provide JWT as: Bearer {token}"
+      }
     },
     "schemas": {
+      "LoginRequest": {
+        "type": "object",
+        "required": ["username", "password"],
+        "properties": {
+          "username": { "type": "string" },
+          "password": { "type": "string", "format": "password" }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "required": ["username", "password"],
+        "properties": {
+          "username": { "type": "string" },
+          "password": { "type": "string", "format": "password" },
+          "email": { "type": "string", "format": "email" },
+          "displayName": { "type": "string" }
+        }
+      },
+      "RefreshRequest": {
+        "type": "object",
+        "required": ["refreshToken"],
+        "properties": {
+          "refreshToken": { "type": "string" }
+        }
+      },
+      "JwtResponse": {
+        "type": "object",
+        "properties": {
+          "token": { "type": "string" },
+          "expiresAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "MeResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "username": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "roles": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+
       "UserProfile": {
         "type": "object",
         "properties": {
           "id": { "type": "string", "format": "uuid" },
           "displayName": { "type": "string" },
-          "bio": { "type": "string" }
+          "bio": { "type": "string" },
+          "accessMode": { "type": "string", "description": "e.g. AfterDeath (default)" }
         }
       },
-      "Memory": {
+      "UpdateUserProfileRequest": {
+        "type": "object",
+        "properties": {
+          "displayName": { "type": "string" },
+          "bio": { "type": "string" },
+          "accessMode": { "type": "string" }
+        }
+      },
+
+      "AccessLevel": {
+        "type": "string",
+        "enum": ["Private", "FriendsOnly", "Public", "Custom"]
+      },
+      "MediaFileDto": {
         "type": "object",
         "properties": {
           "id": { "type": "string", "format": "uuid" },
-          "title": { "type": "string" },
-          "description": { "type": "string" },
-          "createdAt": { "type": "string", "format": "date-time" }
+          "memoryId": { "type": "string", "format": "uuid" },
+          "fileName": { "type": "string" },
+          "mediaType": { "type": "string" },
+          "url": { "type": "string", "format": "uri" },
+          "uploadedAt": { "type": "string", "format": "date-time" }
         }
       },
+      "MemoryDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "ownerId": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "mediaFiles": { "type": "array", "items": { "$ref": "#/components/schemas/MediaFileDto" } },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "accessLevel": { "$ref": "#/components/schemas/AccessLevel" },
+          "mediaCount": { "type": "integer" }
+        }
+      },
+      "CreateMemoryForm": {
+        "type": "object",
+        "required": ["OwnerId", "Title", "File"],
+        "properties": {
+          "OwnerId": { "type": "string", "format": "uuid" },
+          "Title": { "type": "string" },
+          "Description": { "type": "string" },
+          "AccessLevel": { "$ref": "#/components/schemas/AccessLevel" },
+          "Tags": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Comma-separated in UI; API accepts array"
+          },
+          "File": { "type": "string", "format": "binary" }
+        }
+      },
+
       "Notification": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
+          "id": { "type": "string", "format": "uuid" },
           "subject": { "type": "string" },
           "body": { "type": "string" },
-          "status": { "type": "string" }
+          "status": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+
+      "AccessRule": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "subjectId": { "type": "string", "format": "uuid" },
+          "resourceId": { "type": "string", "format": "uuid" },
+          "permission": { "type": "string", "description": "read|write|owner|..." },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "AccessRuleCreate": {
+        "type": "object",
+        "required": ["subjectId", "resourceId", "permission"],
+        "properties": {
+          "subjectId": { "type": "string", "format": "uuid" },
+          "resourceId": { "type": "string", "format": "uuid" },
+          "permission": { "type": "string" }
+        }
+      },
+      "AccessRuleUpdate": {
+        "type": "object",
+        "properties": {
+          "permission": { "type": "string" }
+        }
+      },
+
+      "AuditLog": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "action": { "type": "string" },
+          "target": { "type": "string" },
+          "details": { "type": "string" },
+          "result": { "type": "string" },
+          "data": { "type": "string" },
+          "ipAddress": { "type": "string" },
+          "userAgent": { "type": "string" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "userId": { "type": "string", "format": "uuid" }
+        }
+      },
+      "PagedAuditLogResult": {
+        "type": "object",
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/AuditLog" } },
+          "total": { "type": "integer" },
+          "offset": { "type": "integer" },
+          "limit": { "type": "integer" }
         }
       }
     }
-  },
-  "security": [
-    { "Bearer": [] }
-  ]
+  }
 }
