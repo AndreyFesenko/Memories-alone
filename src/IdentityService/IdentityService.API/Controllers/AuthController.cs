@@ -1,147 +1,87 @@
-using IdentityService.Application.Commands;
-using IdentityService.Application.DTOs;
-using MediatR;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Swashbuckle.AspNetCore.Annotations;
-using IdentityService.Application.Interfaces;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 
-namespace IdentityService.API.Controllers
+namespace IdentityService.API.Controllers;
+
+[ApiController]
+[Route("identity")]
+public class AuthController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class AuthController : ControllerBase
+    private readonly IConfiguration _cfg;
+
+    public AuthController(IConfiguration cfg) => _cfg = cfg;
+
+    public record LoginRequest(string Username, string Password);
+    public record TokenResponse(string AccessToken, string RefreshToken);
+
+    [HttpPost("login")]
+    [AllowAnonymous]
+    public ActionResult<TokenResponse> Login([FromBody] LoginRequest req)
     {
-        private readonly IMediator _mediator;
-        private readonly IRefreshTokenService _refreshTokens;
+        // TODO: реальная проверка пользователя (хэш пароля и т.д.)
+        if (string.IsNullOrWhiteSpace(req.Username) || req.Password != "pass")
+            return Unauthorized();
 
-        public AuthController(IRefreshTokenService refreshTokens, IMediator mediator)
-        {
-            _refreshTokens = refreshTokens;
-            _mediator = mediator;
-        }
+        return Ok(GenerateTokens(req.Username));
+    }
 
-        /// <summary>
-        /// Вход пользователя (login)
-        /// </summary>
-        /// <remarks>
-        /// Введите email и пароль для получения JWT и refresh token.
-        /// </remarks>
-        [HttpPost("login")]
-        [SwaggerOperation(Summary = "Вход пользователя", Description = "Выполняет вход и выдаёт access/refresh токены")]
-        [ProducesResponseType(typeof(LoginResponse), 200)]
-        [ProducesResponseType(401)]
-        public async Task<IActionResult> Login([FromBody] LoginCommand command)
-        {
-            var response = await _mediator.Send(command);
-            return Ok(response);
-        }
+    [HttpPost("refresh")]
+    [AllowAnonymous]
+    public ActionResult<TokenResponse> Refresh([FromBody] Dictionary<string, string> body)
+    {
+        // TODO: валидировать refreshToken (хранить в БД/кеше)
+        if (!body.TryGetValue("refreshToken", out var refresh) || string.IsNullOrEmpty(refresh))
+            return BadRequest("refreshToken required");
 
-        /// <summary>
-        /// Регистрация нового пользователя
-        /// </summary>
-        /// <remarks>
-        /// После регистрации пользователь получает свой Id и email.
-        /// </remarks>
-        [HttpPost("register")]
-        [SwaggerOperation(Summary = "Регистрация нового пользователя")]
-        [ProducesResponseType(typeof(RegisterResponse), 200)]
-        [ProducesResponseType(400)]
-        public async Task<IActionResult> Register([FromBody] RegisterCommand command)
-        {
-            var response = await _mediator.Send(command);
-            return Ok(response);
-        }
+        return Ok(GenerateTokens("demo-user"));
+    }
 
-        /// <summary>
-        /// Обновить токен доступа по refresh-токену
-        /// </summary>
-        [HttpPost("refresh")]
-        [SwaggerOperation(Summary = "Обновить access token по refresh")]
-        [ProducesResponseType(typeof(LoginResponse), 200)]
-        [ProducesResponseType(401)]
-        public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest command)
+    [HttpGet("me")]
+    [Authorize]
+    public IActionResult Me()
+    {
+        return Ok(new
         {
-            var response = await _mediator.Send(command);
-            return Ok(response);
-        }
+            name = User.Identity?.Name ?? "(no name)",
+            claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList()
+        });
+    }
 
-        /// <summary>
-        /// Logout (инвалидирует refresh-токен)
-        /// </summary>
-        [HttpPost("logout")]
-        [SwaggerOperation(Summary = "Выход (logout)")]
-        public async Task<IActionResult> Logout([FromBody] LogoutCommand cmd)
-        {
-            await _mediator.Send(cmd);
-            return Ok(new { message = "Logged out" });
-        }
+    private TokenResponse GenerateTokens(string username)
+    {
+        var jwt = _cfg.GetSection("Jwt");
+        var issuer = jwt["Issuer"]!;
+        var audience = jwt["Audience"]!;
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!));
 
-        /// <summary>
-        /// Запросить подтверждение email
-        /// </summary>
-        [HttpPost("request-confirmation")]
-        [SwaggerOperation(Summary = "Запросить подтверждение email")]
-        public async Task<IActionResult> RequestConfirmation([FromBody] RequestEmailConfirmationCommand cmd, CancellationToken ct)
-        {
-            await _mediator.Send(cmd, ct);
-            return Ok(new { message = "Confirmation link sent (check console for MVP)" });
-        }
+        var accessMinutes = int.TryParse(jwt["AccessTokenLifetimeMinutes"], out var m) ? m : 60;
+        var refreshDays = int.TryParse(jwt["RefreshTokenLifetimeDays"], out var d) ? d : 7;
 
-        /// <summary>
-        /// Сменить пароль
-        /// </summary>
-        [HttpPost("change-password")]
-        [SwaggerOperation(Summary = "Сменить пароль")]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordCommand command)
-        {
-            await _mediator.Send(command);
-            return Ok("Пароль успешно изменён");
-        }
+        var now = DateTime.UtcNow;
 
-        /// <summary>
-        /// Подтвердить email
-        /// </summary>
-        [HttpPost("confirm-email")]
-        [SwaggerOperation(Summary = "Подтвердить email")]
-        public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailCommand cmd, CancellationToken ct)
+        var claims = new List<Claim>
         {
-            await _mediator.Send(cmd, ct);
-            return Ok(new { message = "Email confirmed!" });
-        }
+            new Claim(JwtRegisteredClaimNames.Sub, username),
+            new Claim(ClaimTypes.Name, username),
+        };
 
-        /// <summary>
-        /// Запросить сброс пароля
-        /// </summary>
-        [HttpPost("request-password-reset")]
-        [SwaggerOperation(Summary = "Запросить сброс пароля")]
-        public async Task<IActionResult> RequestPasswordReset([FromBody] RequestPasswordResetCommand cmd, CancellationToken ct)
-        {
-            await _mediator.Send(cmd, ct);
-            return Ok(new { message = "Reset link sent (check console for MVP)" });
-        }
+        var accessToken = new JwtSecurityToken(
+            issuer: issuer,
+            audience: audience,
+            claims: claims,
+            notBefore: now,
+            expires: now.AddMinutes(accessMinutes),
+            signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
+        );
 
-        /// <summary>
-        /// Сбросить пароль
-        /// </summary>
-        [HttpPost("reset-password")]
-        [SwaggerOperation(Summary = "Сбросить пароль")]
-        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordCommand cmd, CancellationToken ct)
-        {
-            await _mediator.Send(cmd, ct);
-            return Ok(new { message = "Password changed!" });
-        }
+        var accessTokenStr = new JwtSecurityTokenHandler().WriteToken(accessToken);
+        var refreshToken = Guid.NewGuid().ToString("N"); // TODO: хранить/инвалидировать при logout
 
-        /// <summary>
-        /// Получить свои claims и роли (пример защищённого метода)
-        /// </summary>
-        [Authorize]
-        [HttpGet("me")]
-        [SwaggerOperation(Summary = "Информация о пользователе из токена")]
-        public IActionResult Me()
-        {
-            var claims = User.Claims.Select(x => new { x.Type, x.Value }).ToList();
-            return Ok(new { Claims = claims });
-        }
+        return new TokenResponse(accessTokenStr, refreshToken);
     }
 }

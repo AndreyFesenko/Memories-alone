@@ -1,106 +1,127 @@
-using IdentityService.Application.Interfaces;
+// src/IdentityService/IdentityService.API/Program.cs
+using System.Text;
+using System.Text.Json.Serialization;
+using IdentityService.Application;
+using IdentityService.Infrastructure;
 using IdentityService.Infrastructure.Persistence;
-using IdentityService.Infrastructure.Repositories;
-using IdentityService.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Reflection;
-using System.Text;
-using FluentValidation;
-using FluentValidation.AspNetCore;
-using IdentityService.Application.Validators;
 using Serilog;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// JWT config
-var jwtKey = builder.Configuration["Jwt:Key"];
-var jwtIssuer = builder.Configuration["Jwt:Issuer"];
-var jwtAudience = builder.Configuration["Jwt:Audience"];
-
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtIssuer,
-            ValidAudience = jwtAudience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey!))
-        };
-    });
-
-// Serilog config
+// ---- Serilog ----
 Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
+    .MinimumLevel.Information()
     .WriteTo.Console()
     .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 
 builder.Host.UseSerilog();
 
-builder.Services.AddControllers();
+// ---- Config ----
+var cfg = builder.Configuration;
+var jwt = cfg.GetSection("Jwt");
+var issuer = jwt["Issuer"] ?? "memories-issuer";
+var audience = jwt["Audience"] ?? "memories-audience";
+var key = jwt["Key"] ?? "super-secret-dev-key-change-it";
+var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+
+// ---- Controllers + JSON ----
+builder.Services.AddControllers()
+    .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddOpenApi(); // только JSON, без SwaggerUI
 
-// ========== ONLY THIS FOR OPENAPI/SCALAR ==========
-builder.Services.AddOpenApi();         // <-- вместо AddSwaggerGen/SwaggerUI
-// ================================================
-
-builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
-builder.Services.AddValidatorsFromAssemblyContaining<LoginCommandValidator>();
-builder.Services.AddFluentValidationAutoValidation();
-builder.Services.AddScoped<IAuditService, AuditService>();
-builder.Services.AddScoped<IProfileServiceClient, ProfileServiceStub>();
-
-builder.Services.AddMediatR(cfg =>
+// ---- CORS (dev) ----
+builder.Services.AddCors(options =>
 {
-    cfg.RegisterServicesFromAssemblies(
-        Assembly.Load("IdentityService.Application")
-    );
+    options.AddPolicy("AllowAll", p => p.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
 });
+
+// ---- AuthN/AuthZ ----
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(o =>
+    {
+        o.RequireHttpsMetadata = false; // локально
+        o.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = issuer,
+            ValidateAudience = true,
+            ValidAudience = audience,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = signingKey,
+            ValidateLifetime = true
+        };
+    });
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("DeathConfirmedOnly", policy =>
-        policy.RequireClaim("DeathConfirmed", "true"));
-    options.AddPolicy("AccessAnytimeOnly", policy =>
-        policy.RequireClaim("AccessMode", "Anytime"));
+    options.AddPolicy("DeathConfirmedOnly", policy => policy.RequireClaim("DeathConfirmed", "true"));
+    options.AddPolicy("AccessAnytimeOnly", policy => policy.RequireClaim("AccessMode", "Anytime"));
 });
 
-builder.Services.AddDbContext<MemoriesDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+// ---- DI из слоёв ----
+builder.Services.AddApplicationServices(cfg);
+builder.Services.AddInfrastructureServices(cfg);
 
-builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+// (необязательно) миграции при старте — если нужно
+builder.Services.AddHostedService<DbInitHostedService>();
 
 var app = builder.Build();
 
-app.UseMiddleware<ExceptionMiddleware>();
+app.UseSerilogRequestLogging();
+app.UseCors("AllowAll");
 
-app.UseHttpsRedirection();
-
+// порядок важен: AuthN -> AuthZ
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
-// ======== Монтируем OpenAPI и Scalar UI ========
+// Health (минимально, без внешних пакетов)
+app.MapGet("/health/live", () => Results.Ok(new { status = "Live" }));
+app.MapGet("/health/ready", async (MemoriesDbContext db) =>
+{
+    // Быстрый ping к БД как readiness
+    var canConnect = await db.Database.CanConnectAsync();
+    return canConnect ? Results.Ok(new { status = "Ready" }) : Results.StatusCode(503);
+});
+
+// OpenAPI JSON + Scalar (если хочешь, можно включить всегда)
 if (app.Environment.IsDevelopment())
 {
-    // OpenAPI JSON: /openapi/v1.json
-    app.MapOpenApi();
-
-    // Scalar UI: http://localhost:5035/scalar/v1
-    app.MapScalarApiReference();
+    app.MapOpenApi("/openapi.json");
+    app.MapScalarApiReference(options =>
+    {
+        options.Title = "Identity Service";
+        // Scalar сам возьмёт /openapi.json по умолчанию
+    });
 }
-// ==============================================
 
 app.Run();
+
+/// <summary>
+/// Опционально: инициализация БД/миграции при старте приложения.
+/// </summary>
+public sealed class DbInitHostedService : IHostedService
+{
+    private readonly IServiceProvider _sp;
+
+    public DbInitHostedService(IServiceProvider sp) => _sp = sp;
+
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        using var scope = _sp.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MemoriesDbContext>();
+        await db.Database.MigrateAsync(cancellationToken);
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+}
