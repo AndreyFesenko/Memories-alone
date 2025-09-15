@@ -24,11 +24,17 @@ builder.Host.UseSerilog();
 
 // ---- Config ----
 var cfg = builder.Configuration;
+
 var jwt = cfg.GetSection("Jwt");
 var issuer = jwt["Issuer"] ?? "memories-issuer";
 var audience = jwt["Audience"] ?? "memories-audience";
 var key = jwt["Key"] ?? "super-secret-dev-key-change-it";
+
+// читаем срок жизни токена как int (по умолчанию 60 минут)
+var expiresMinutes = int.TryParse(jwt["ExpiresInMinutes"], out var exp) ? exp : 60;
+
 var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+
 
 // ---- Controllers + JSON ----
 builder.Services.AddControllers()
