@@ -38,6 +38,8 @@ public class MemoriesDbContext : DbContext
             b.Property(x => x.AccessFailedCount).HasColumnName("accessfailedcount");
             b.Property(x => x.CreatedAt).HasColumnName("createdat");
             b.Property(x => x.LastLoginAt).HasColumnName("lastloginat");
+            b.Property(u => u.DisplayName)
+         .HasMaxLength(128);
         });
 
         // Role

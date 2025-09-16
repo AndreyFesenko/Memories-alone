@@ -1,3 +1,4 @@
+//C:\_C_Sharp\MyOtus_Prof\Memories_alone\src\IdentityService\IdentityService.Application\Interfaces\IRoleRepository.cs
 using IdentityService.Domain.Entities;
 
 namespace IdentityService.Application.Interfaces;

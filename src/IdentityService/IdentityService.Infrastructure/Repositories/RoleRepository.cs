@@ -1,3 +1,4 @@
+//C:\_C_Sharp\MyOtus_Prof\Memories_alone\src\IdentityService\IdentityService.Infrastructure\Repositories\RoleRepository.cs
 using IdentityService.Application.Interfaces;
 using IdentityService.Domain.Entities;
 using IdentityService.Infrastructure.Persistence;

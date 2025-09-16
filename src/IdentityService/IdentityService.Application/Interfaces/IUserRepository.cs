@@ -1,3 +1,4 @@
+//C:\_C_Sharp\MyOtus_Prof\Memories_alone\src\IdentityService\IdentityService.Application\Interfaces\IUserRepository.cs
 using IdentityService.Domain.Entities;
 
 namespace IdentityService.Application.Interfaces;
@@ -15,5 +16,6 @@ public interface IUserRepository
     Task<List<Guid>> GetUsersByRoleAsync(Guid roleId, CancellationToken ct);
     Task RemoveUserRoleAsync(Guid userId, Guid roleId, CancellationToken ct);
     Task<User?> FindByEmailAsync(string email, CancellationToken ct);
+ 
 
 }

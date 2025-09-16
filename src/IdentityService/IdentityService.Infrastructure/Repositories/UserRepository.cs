@@ -1,3 +1,4 @@
+//C:\_C_Sharp\MyOtus_Prof\Memories_alone\src\IdentityService\IdentityService.Infrastructure\Repositories\UserRepository.cs
 using IdentityService.Application.Interfaces;
 using IdentityService.Domain.Entities;
 using IdentityService.Infrastructure.Persistence;
@@ -81,5 +82,7 @@ public class UserRepository : IUserRepository
     {
         return await _db.Users.FirstOrDefaultAsync(x => x.Id == userId, ct);
     }
+
+
 
 }

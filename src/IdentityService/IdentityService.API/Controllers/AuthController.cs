@@ -1,3 +1,4 @@
+// C:\_C_Sharp\MyOtus_Prof\Memories_alone\src\IdentityService\IdentityService.API\Controllers\AuthController.cs
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -7,7 +8,7 @@ using IdentityService.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using IdentityService.Application.Interfaces; // IJwtTokenGenerator
+using IdentityService.Application.Interfaces; // IJwtTokenGenerator, IUserRepository, IRoleRepository
 
 namespace IdentityService.API.Controllers;
 
@@ -18,12 +19,21 @@ public class AuthController : ControllerBase
     private readonly IConfiguration _cfg;
     private readonly MemoriesDbContext _db;
     private readonly IJwtTokenGenerator _jwt;
+    private readonly IUserRepository _users;
+    private readonly IRoleRepository _roles;
 
-    public AuthController(IConfiguration cfg, MemoriesDbContext db, IJwtTokenGenerator jwt)
+    public AuthController(
+        IConfiguration cfg,
+        MemoriesDbContext db,
+        IJwtTokenGenerator jwt,
+        IUserRepository users,
+        IRoleRepository roles)
     {
         _cfg = cfg;
         _db = db;
         _jwt = jwt;
+        _users = users;
+        _roles = roles;
     }
 
     // ===== DTOs =====
@@ -38,8 +48,7 @@ public class AuthController : ControllerBase
         [Required, MinLength(6)]
         public string Password { get; set; } = null!;
 
-        // Ранее был DisplayName — в твоей сущности User его нет. Оставляю опционально,
-        // но в БД не сохраняю, чтобы не ломать компиляцию.
+        // Опционально. В сущности User поля нет — не сохраняем.
         public string? DisplayName { get; set; }
     }
 
@@ -66,17 +75,17 @@ public class AuthController : ControllerBase
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
-        // дубликаты
-        var emailExists = await _db.Users.AnyAsync(u => u.Email == req.Email, ct);
-        if (emailExists) return Conflict(new { message = "Email already registered" });
+        // проверки на дубликаты
+        if (await _users.EmailExistsAsync(req.Email, ct))
+            return Conflict(new { message = "Email already registered" });
 
-        var usernameExists = await _db.Users.AnyAsync(u => u.UserName == req.Username, ct);
-        if (usernameExists) return Conflict(new { message = "Username already taken" });
+        if (await _db.Users.AnyAsync(u => u.UserName == req.Username, ct))
+            return Conflict(new { message = "Username already taken" });
 
         // хэш пароля (в проде лучше BCrypt/Argon2)
         var pwdHash = HashPasswordSha256(req.Password);
 
-        var user = new Domain.Entities.User
+        var user = new IdentityService.Domain.Entities.User
         {
             Id = Guid.NewGuid(),
             Email = req.Email,
@@ -86,13 +95,15 @@ public class AuthController : ControllerBase
             CreatedAt = DateTime.UtcNow
         };
 
-        _db.Users.Add(user);
-        await _db.SaveChangesAsync(ct);
+        // создаём пользователя через репозиторий
+        await _users.AddUserAsync(user, ct);
 
-        // TODO: если есть таблицы Roles/UserRoles — здесь добавить базовую роль "User"
+        // назначаем базовую роль "User"
+        var roleId = await GetOrCreateRoleIdAsync("User", ct);
+        await _users.AddUserRoleAsync(user.Id, roleId, ct);
 
-        // роли для токена (пока пусто, чтобы не гадать по схеме)
-        var roles = Array.Empty<string>();
+        // генерим токен с ролями
+        var roles = await _users.GetUserRolesAsync(user.Id, ct);
         var access = _jwt.GenerateToken(user.Id, user.Email!, roles);
 
         return Created($"/identity/users/{user.Id}", new TokenResponse
@@ -111,6 +122,7 @@ public class AuthController : ControllerBase
         if (string.IsNullOrWhiteSpace(req.Username) || string.IsNullOrWhiteSpace(req.Password))
             return BadRequest("Username and password are required.");
 
+        // поиск по Username — через DbContext (в интерфейсе нет FindByUsername)
         var user = await _db.Users.FirstOrDefaultAsync(u => u.UserName == req.Username, ct);
         if (user is null) return Unauthorized();
 
@@ -118,8 +130,7 @@ public class AuthController : ControllerBase
         if (!CryptEquals(incomingHash, user.PasswordHash ?? string.Empty))
             return Unauthorized();
 
-        // TODO: вытянуть роли пользователя, если есть схема ролей
-        var roles = Array.Empty<string>();
+        var roles = await _users.GetUserRolesAsync(user.Id, ct);
         var token = _jwt.GenerateToken(user.Id, user.Email!, roles);
 
         return Ok(new TokenResponse
@@ -135,7 +146,7 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     public ActionResult<TokenResponse> Refresh([FromBody] RefreshRequest body)
     {
-        // TODO: подключить IRefreshTokenService и валидировать refresh token из БД/кеша.
+        // TODO: подключить IRefreshTokenService и валидировать refresh-токен
         if (string.IsNullOrEmpty(body.RefreshToken))
             return BadRequest("refreshToken required");
 
@@ -170,6 +181,20 @@ public class AuthController : ControllerBase
     }
 
     // ===== helpers =====
+
+    private async Task<Guid> GetOrCreateRoleIdAsync(string roleName, CancellationToken ct)
+    {
+        try
+        {
+            return await _roles.GetRoleIdByNameAsync(roleName, ct);
+        }
+        catch
+        {
+            var role = await _roles.CreateAsync(roleName, ct);
+            return role.Id;
+        }
+    }
+
     private static string HashPasswordSha256(string password)
     {
         using var sha = SHA256.Create();
