@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Scalar.AspNetCore;
+using Microsoft.AspNetCore.Routing;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -85,6 +86,13 @@ var app = builder.Build();
 app.UseSerilogRequestLogging();
 app.UseCors("AllowAll");
 
+var eds = app.Services.GetRequiredService<EndpointDataSource>();
+foreach (var e in eds.Endpoints)
+{
+    var route = (e as RouteEndpoint)?.RoutePattern?.RawText ?? e.DisplayName;
+    Log.Information("Mapped endpoint: {Route}", route);
+}
+
 // порядок важен: AuthN -> AuthZ
 app.UseAuthentication();
 app.UseAuthorization();
@@ -110,6 +118,8 @@ if (app.Environment.IsDevelopment())
         // Scalar сам возьмёт /openapi.json по умолчанию
     });
 }
+
+
 
 app.Run();
 

@@ -109,10 +109,10 @@
             "application/json": {
               "schema": { "$ref": "#/components/schemas/RegisterRequest" },
               "example": {
-                "username": "newuser",
-                "password": "StrongP@ss!",
-                "email": "newuser@example.com",
-                "displayName": "New User"
+                "username": "andrey",
+                "password": "andrey256!",
+                "email": "andrey@andrey.com",
+                "displayName": "andrey"
               }
             }
           }
