@@ -1,17 +1,24 @@
-﻿using Microsoft.AspNetCore.HttpLogging;
+﻿// C:\_C_Sharp\MyOtus_Prof\Memories_alone\src\APIGateway\APIGateway.API\Program.cs
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
+using Serilog.Events;
 using Yarp.ReverseProxy;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ---------- Serilog в консоль ----------
 Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Debug()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Override("System", LogEventLevel.Warning)
+    .MinimumLevel.Override("Yarp", LogEventLevel.Warning)
     .Enrich.FromLogContext()
     .WriteTo.Console()
     .CreateLogger();
+
 builder.Host.UseSerilog();
 
 // ---------- YARP из appsettings ----------
@@ -23,10 +30,7 @@ builder.Services
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
-        policy
-            .AllowAnyOrigin()
-            .AllowAnyHeader()
-            .AllowAnyMethod());
+        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 });
 
 // ---------- Rate Limiting (глобально, мягко) ----------
@@ -42,15 +46,15 @@ builder.Services.AddRateLimiter(options =>
 // ---------- Response Compression ----------
 builder.Services.AddResponseCompression();
 
-// ---------- Http Logging (диагностика прокси) ----------
+// ---------- Http Logging (без тел, чтобы не ловить бинарь) ----------
 builder.Services.AddHttpLogging(o =>
 {
-    o.LoggingFields = HttpLoggingFields.RequestPropertiesAndHeaders |
-                      HttpLoggingFields.ResponsePropertiesAndHeaders |
-                      HttpLoggingFields.RequestBody |
-                      HttpLoggingFields.ResponseBody;
-    o.RequestBodyLogLimit = 1024 * 64;
-    o.ResponseBodyLogLimit = 1024 * 64;
+    o.LoggingFields =
+        HttpLoggingFields.RequestPropertiesAndHeaders |
+        HttpLoggingFields.ResponsePropertiesAndHeaders;
+    // тела отключены тут — ниже есть мини-middleware для текстовых ответов
+    o.RequestBodyLogLimit = 0;
+    o.ResponseBodyLogLimit = 0;
 });
 
 var app = builder.Build();
@@ -59,11 +63,11 @@ var app = builder.Build();
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-    // при необходимости можно указать KnownProxies/KnownNetworks
+    // KnownProxies/KnownNetworks можно добавить при деплое за реальным прокси
 });
 
-app.UseSerilogRequestLogging();
-app.UseHttpLogging();
+app.UseSerilogRequestLogging(); // красивый сводный лог по запросам
+app.UseHttpLogging();           // заголовки запр/ответа
 app.UseResponseCompression();
 app.UseCors("AllowAll");
 
@@ -86,11 +90,55 @@ app.MapGet("/health/ready", () =>
     return Results.Ok(new { status = "Ready" });
 });
 
+// ---------- (Опционально) логируем ТОЛЬКО текстовые ответы, если они не были сжаты ----------
+static bool IsTextContent(string? ct) =>
+    !string.IsNullOrWhiteSpace(ct) &&
+    (ct.StartsWith("text/", StringComparison.OrdinalIgnoreCase) ||
+     ct.Contains("json", StringComparison.OrdinalIgnoreCase) ||
+     ct.Contains("xml", StringComparison.OrdinalIgnoreCase) ||
+     ct.Contains("html", StringComparison.OrdinalIgnoreCase));
+
+app.Use(async (ctx, next) =>
+{
+    // пусть downstream сформирует ответ в буфер
+    var originalBody = ctx.Response.Body;
+    await using var buffer = new MemoryStream();
+    ctx.Response.Body = buffer;
+
+    try
+    {
+        await next();
+    }
+    finally
+    {
+        // если ответ НЕ сжат и похож на текст — логируем начало тела (до 4 КБ)
+        var hasEncoding = ctx.Response.Headers.ContainsKey("Content-Encoding");
+        var ct = ctx.Response.ContentType;
+
+        if (!hasEncoding && IsTextContent(ct))
+        {
+            buffer.Position = 0;
+            using var reader = new StreamReader(buffer, Encoding.UTF8, leaveOpen: true);
+            var body = await reader.ReadToEndAsync();
+            var max = Math.Min(body.Length, 4096);
+            if (max > 0)
+            {
+                Log.Information("ResponseBody (first {Len} chars) for {Method} {Path}: {Body}",
+                    max, ctx.Request.Method, ctx.Request.Path, body[..max]);
+            }
+        }
+
+        buffer.Position = 0;
+        await buffer.CopyToAsync(originalBody);
+        ctx.Response.Body = originalBody;
+    }
+});
+
 // ---------- Прокси ----------
 app.MapReverseProxy();
 
 // ---------- Статика (docs) ----------
-app.UseDefaultFiles();   // подключает index.html по умолчанию для / и /api-docs, если настроен default file
+app.UseDefaultFiles();   // index.html по умолчанию
 app.UseStaticFiles();    // раздаёт /wwwroot
 
 // Явный маршрут на /api-docs -> наш single-page тестер

@@ -73,8 +73,8 @@
             "application/json": {
               "schema": { "$ref": "#/components/schemas/LoginRequest" },
               "example": {
-                "username": "testuser",
-                "password": "P@ssw0rd!"
+                "username": "fes",
+                "password": "fes256!"
               }
             }
           }
