@@ -1,6 +1,4 @@
 // src/IdentityService/IdentityService.API/Program.cs
-using System.Text;
-using System.Text.Json.Serialization;
 using IdentityService.Application;               // ваши DI-расширени€
 using IdentityService.Infrastructure;            // ваши DI-расширени€
 using IdentityService.Infrastructure.Persistence;
@@ -10,6 +8,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using Serilog;
+using System.Security.Claims;
+using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,7 +54,7 @@ builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o =>
     {
-        o.RequireHttpsMetadata = false; // локально
+        o.RequireHttpsMetadata = false;
         o.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -62,7 +63,11 @@ builder.Services
             ValidAudience = audience,
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = signingKey,
-            ValidateLifetime = true
+            ValidateLifetime = true,
+
+            // ¬ј∆Ќќ: говорим, какие клеймы считать "именем" и "ролью"
+            NameClaimType = ClaimTypes.Name, // из sub (который мапитс€ в NameIdentifier по умолчанию)
+            RoleClaimType = ClaimTypes.Role            // у теб€ роли добавл€ютс€ как ClaimTypes.Role
         };
     });
 

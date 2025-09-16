@@ -12,10 +12,7 @@ public class JwtTokenGenerator : IJwtTokenGenerator
 {
     private readonly IConfiguration _config;
 
-    public JwtTokenGenerator(IConfiguration config)
-    {
-        _config = config;
-    }
+    public JwtTokenGenerator(IConfiguration config) => _config = config;
 
     public string GenerateToken(
         Guid userId,
@@ -24,7 +21,6 @@ public class JwtTokenGenerator : IJwtTokenGenerator
         Dictionary<string, string>? customClaims = null
     )
     {
-        // ---- Read JWT settings with safe fallbacks ----
         var jwtSection = _config.GetSection("Jwt");
 
         var keyString = jwtSection["Key"];
@@ -33,24 +29,24 @@ public class JwtTokenGenerator : IJwtTokenGenerator
 
         var issuer = jwtSection["Issuer"] ?? "memories-issuer";
         var audience = jwtSection["Audience"] ?? "memories-audience";
+        var expiresMinutes = int.TryParse(jwtSection["ExpiresInMinutes"], out var parsed) ? parsed : 60;
 
-        var expiresMinutes = 60;
-        if (int.TryParse(jwtSection["ExpiresInMinutes"], out var parsed))
-            expiresMinutes = parsed;
-
-        // ---- Build security credentials ----
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
         var now = DateTime.UtcNow;
 
-        // ---- Build claims ----
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new(JwtRegisteredClaimNames.Email, email),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new(JwtRegisteredClaimNames.Iat, ((DateTimeOffset)now).ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
+            new(JwtRegisteredClaimNames.Iat, ((DateTimeOffset)now).ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
+
+            // важно: чтобы User.Identity.Name не был null
+            new(ClaimTypes.Name, email),
+            // опционально: “читаемое” имя для клиентов
+            new("preferred_username", email)
         };
 
         foreach (var role in roles ?? Enumerable.Empty<string>())
@@ -59,7 +55,7 @@ public class JwtTokenGenerator : IJwtTokenGenerator
                 claims.Add(new Claim(ClaimTypes.Role, role));
         }
 
-        if (customClaims != null)
+        if (customClaims is not null)
         {
             foreach (var kv in customClaims)
             {
@@ -68,7 +64,6 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             }
         }
 
-        // ---- Create token ----
         var token = new JwtSecurityToken(
             issuer: issuer,
             audience: audience,

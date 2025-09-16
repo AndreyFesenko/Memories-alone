@@ -173,14 +173,20 @@ public class AuthController : ControllerBase
     [Authorize]
     public IActionResult Me()
     {
-        var subject = User.FindFirstValue(JwtRegisteredClaimNames.Sub)
-                     ?? User.Identity?.Name
-                     ?? "(unknown)";
+        var userId =
+            User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+            User.FindFirstValue(JwtRegisteredClaimNames.Sub) ??
+            "(unknown)";
+
+        var displayName =
+            User.Identity?.Name ??
+            User.FindFirstValue(ClaimTypes.Name) ??
+            User.FindFirstValue(JwtRegisteredClaimNames.Email);
 
         return Ok(new
         {
-            id = subject,
-            name = User.Identity?.Name,
+            id = userId,
+            name = displayName,
             claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList()
         });
     }
