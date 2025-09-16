@@ -1,5 +1,4 @@
-﻿// src/IdentityService/IdentityService.Infrastructure/DependencyInjection.cs
-using IdentityService.Application.Interfaces;
+﻿using IdentityService.Application.Interfaces;
 using IdentityService.Infrastructure.Persistence;
 using IdentityService.Infrastructure.Repositories;
 using IdentityService.Infrastructure.Services;
@@ -11,24 +10,25 @@ namespace IdentityService.Infrastructure;
 
 public static class DependencyInjection
 {
-    /// <summary>
-    /// Регистрация сервисов уровня Infrastructure:
-    /// - DbContext (Npgsql)
-    /// - Репозитории (User/Role)
-    /// - Сервисы (Auth/JWT/Refresh/Audit/Profile stub)
-    /// </summary>
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // DbContext
         var connStr = configuration.GetConnectionString("Default")
             ?? throw new InvalidOperationException("ConnectionStrings:Default is missing");
-        services.AddDbContext<MemoriesDbContext>(opts => opts.UseNpgsql(connStr));
+
+        services.AddDbContext<MemoriesDbContext>(opts =>
+        {
+            opts.UseNpgsql(connStr);
+#if DEBUG
+            opts.EnableDetailedErrors();
+            opts.EnableSensitiveDataLogging();
+#endif
+        });
 
         // Репозитории
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
 
-        // Сервисы (то, что было в Program.cs)
+        // Сервисы
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();

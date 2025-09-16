@@ -1,3 +1,4 @@
+//C:\_C_Sharp\MyOtus_Prof\Memories_alone\src\IdentityService\IdentityService.Domain\Entities\Role.cs
 namespace IdentityService.Domain.Entities;
 
 public class Role

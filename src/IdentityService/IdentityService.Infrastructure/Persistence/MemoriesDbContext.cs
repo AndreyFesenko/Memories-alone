@@ -64,7 +64,7 @@ public class MemoriesDbContext : DbContext
             b.Property(x => x.NormalizedName).HasColumnName("normalizedname").HasMaxLength(256);
             b.Property(x => x.Description).HasColumnName("description");
 
-            b.HasIndex(x => x.Name).IsUnique();
+            b.HasIndex(x => x.NormalizedName).IsUnique();
         });
 
         // ----- UserRole -----

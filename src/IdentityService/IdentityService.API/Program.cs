@@ -1,15 +1,15 @@
 // src/IdentityService/IdentityService.API/Program.cs
 using System.Text;
 using System.Text.Json.Serialization;
-using IdentityService.Application;
-using IdentityService.Infrastructure;
+using IdentityService.Application;               // ваши DI-расширения
+using IdentityService.Infrastructure;            // ваши DI-расширения
 using IdentityService.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Serilog;
 using Scalar.AspNetCore;
-using Microsoft.AspNetCore.Routing;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,24 +30,22 @@ var jwt = cfg.GetSection("Jwt");
 var issuer = jwt["Issuer"] ?? "memories-issuer";
 var audience = jwt["Audience"] ?? "memories-audience";
 var key = jwt["Key"] ?? "super-secret-dev-key-change-it";
-
-// читаем срок жизни токена как int (по умолчанию 60 минут)
-var expiresMinutes = int.TryParse(jwt["ExpiresInMinutes"], out var exp) ? exp : 60;
-
 var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
-
 
 // ---- Controllers + JSON ----
 builder.Services.AddControllers()
     .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddOpenApi(); // только JSON, без SwaggerUI
+builder.Services.AddOpenApi(); // только OpenAPI JSON
 
-// ---- CORS (dev) ----
+// ---- CORS (Dev) ----
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", p => p.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
+    options.AddPolicy("AllowAll", p => p
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowAnyOrigin());
 });
 
 // ---- AuthN/AuthZ ----
@@ -70,15 +68,15 @@ builder.Services
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("DeathConfirmedOnly", policy => policy.RequireClaim("DeathConfirmed", "true"));
-    options.AddPolicy("AccessAnytimeOnly", policy => policy.RequireClaim("AccessMode", "Anytime"));
+    options.AddPolicy("DeathConfirmedOnly", p => p.RequireClaim("DeathConfirmed", "true"));
+    options.AddPolicy("AccessAnytimeOnly", p => p.RequireClaim("AccessMode", "Anytime"));
 });
 
-// ---- DI из слоёв ----
+// ---- DI из ваших слоёв ----
 builder.Services.AddApplicationServices(cfg);
 builder.Services.AddInfrastructureServices(cfg);
 
-// (необязательно) миграции при старте — если нужно
+// ---- Миграции при старте ----
 builder.Services.AddHostedService<DbInitHostedService>();
 
 var app = builder.Build();
@@ -86,6 +84,7 @@ var app = builder.Build();
 app.UseSerilogRequestLogging();
 app.UseCors("AllowAll");
 
+// Просто логируем, какие endpoints смонтированы
 var eds = app.Services.GetRequiredService<EndpointDataSource>();
 foreach (var e in eds.Endpoints)
 {
@@ -93,43 +92,39 @@ foreach (var e in eds.Endpoints)
     Log.Information("Mapped endpoint: {Route}", route);
 }
 
-// порядок важен: AuthN -> AuthZ
+// Порядок важен: AuthN -> AuthZ
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
-// Health (минимально, без внешних пакетов)
+// ---- Health (простые, без внешних пакетов) ----
 app.MapGet("/health/live", () => Results.Ok(new { status = "Live" }));
 app.MapGet("/health/ready", async (MemoriesDbContext db) =>
 {
-    // Быстрый ping к БД как readiness
-    var canConnect = await db.Database.CanConnectAsync();
-    return canConnect ? Results.Ok(new { status = "Ready" }) : Results.StatusCode(503);
+    var ok = await db.Database.CanConnectAsync();
+    return ok ? Results.Ok(new { status = "Ready" }) : Results.StatusCode(503);
 });
 
-// OpenAPI JSON + Scalar (если хочешь, можно включить всегда)
+// ---- OpenAPI + Scalar (Dev) ----
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi("/openapi.json");
-    app.MapScalarApiReference(options =>
+    app.MapScalarApiReference(opts =>
     {
-        options.Title = "Identity Service";
-        // Scalar сам возьмёт /openapi.json по умолчанию
+        opts.Title = "Identity Service";
+        // Scalar сам возьмёт /openapi.json по умолчанию, но путь выше уже явно смонтирован.
     });
 }
-
-
 
 app.Run();
 
 /// <summary>
-/// Опционально: инициализация БД/миграции при старте приложения.
+/// Инициализация БД/миграции при старте приложения.
 /// </summary>
 public sealed class DbInitHostedService : IHostedService
 {
     private readonly IServiceProvider _sp;
-
     public DbInitHostedService(IServiceProvider sp) => _sp = sp;
 
     public async Task StartAsync(CancellationToken cancellationToken)
