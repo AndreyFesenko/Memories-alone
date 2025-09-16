@@ -95,6 +95,9 @@ public class AuthController : ControllerBase
             CreatedAt = DateTime.UtcNow
         };
 
+        user.NormalizedUserName = req.Username.ToUpperInvariant();
+        user.NormalizedEmail = req.Email.ToUpperInvariant();
+
         // создаём пользователя через репозиторий
         await _users.AddUserAsync(user, ct);
 
@@ -123,7 +126,9 @@ public class AuthController : ControllerBase
             return BadRequest("Username and password are required.");
 
         // поиск по Username — через DbContext (в интерфейсе нет FindByUsername)
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.UserName == req.Username, ct);
+        var norm = req.Username.ToUpperInvariant();
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.NormalizedUserName == norm, ct);
+
         if (user is null) return Unauthorized();
 
         var incomingHash = HashPasswordSha256(req.Password);

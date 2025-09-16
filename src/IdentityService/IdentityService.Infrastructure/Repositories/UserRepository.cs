@@ -13,7 +13,7 @@ public class UserRepository : IUserRepository
     public UserRepository(MemoriesDbContext db) => _db = db;
 
     public async Task<bool> EmailExistsAsync(string email, CancellationToken ct) =>
-        await _db.Users.AnyAsync(u => u.Email == email, ct);
+        await _db.Users.AnyAsync(u => u.NormalizedEmail == email.ToUpperInvariant(), ct);
 
     public async Task<List<User>> GetAllAsync(CancellationToken ct)
     {
