@@ -1,20 +1,10 @@
-﻿{
-  "$schema": "https://json.schemastore.org/launchsettings.json",
+{
   "profiles": {
-    "http": {
+    "AuditLoggingService.API": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": false,
-      "applicationUrl": "http://localhost:5230",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
-    },
-    "https": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "launchBrowser": false,
-      "applicationUrl": "https://localhost:7181;http://localhost:5230",
+      "applicationUrl": "http://localhost:5601;https://localhost:7601",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

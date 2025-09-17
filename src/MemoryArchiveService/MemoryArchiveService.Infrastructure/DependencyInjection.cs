@@ -1,14 +1,12 @@
-﻿// src/MemoryArchiveService/MemoryArchiveService.Infrastructure/DependencyInjection.cs
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.EntityFrameworkCore;
-using Minio;
+﻿// src\MemoryArchiveService\MemoryArchiveService.Infrastructure\DependencyInjection.cs
+using Amazon.S3;
 using MemoryArchiveService.Application.Interfaces;
 using MemoryArchiveService.Infrastructure.Persistence;
 using MemoryArchiveService.Infrastructure.Repositories;
 using MemoryArchiveService.Infrastructure.Services;
-using Amazon;
-using Amazon.S3;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MemoryArchiveService.Infrastructure;
 
@@ -25,41 +23,27 @@ public static class DependencyInjection
         services.AddScoped<IMediaRepository, MediaRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
 
-        // MinIO
-        services.AddSingleton<IMinioClient>(sp =>
-        {
-            var minioConfig = config.GetSection("Minio");
-            var endpoint = minioConfig.GetValue<string>("Endpoint") ?? "localhost:9000";
-            var accessKey = minioConfig.GetValue<string>("AccessKey") ?? "minioadmin";
-            var secretKey = minioConfig.GetValue<string>("SecretKey") ?? "minioadmin";
-            var useSSL = minioConfig.GetValue<bool?>("UseSSL") ?? false;
-            return new MinioClient()
-                .WithEndpoint(endpoint)
-                .WithCredentials(accessKey, secretKey)
-                .WithSSL(useSSL)
-                .Build();
-        });
-        services.AddScoped<IFileStorageService, MinioStorageService>();
-        services.AddScoped<IMediaStorageService, MediaStorageService>();
-
-        // RabbitMQ Event Bus (через опции)
+        // --- RabbitMQ Event Bus (через IOptions<RabbitMqOptions>) ---
         services.Configure<RabbitMqOptions>(config.GetSection("RabbitMq"));
         services.AddSingleton<IEventBus, RabbitMqEventBus>();
 
+        // --- Только Supabase S3 (без MinIO) ---
         services.AddSingleton<IAmazonS3>(sp =>
         {
-            var config = sp.GetRequiredService<IConfiguration>();
+            var cfg = sp.GetRequiredService<IConfiguration>();
             return new AmazonS3Client(
-                config["Supabase:S3:AccessKey"],
-                config["Supabase:S3:SecretKey"],
+                cfg["Supabase:S3:AccessKey"],
+                cfg["Supabase:S3:SecretKey"],
                 new AmazonS3Config
                 {
-                    ServiceURL = config["Supabase:S3:Endpoint"],
-                    ForcePathStyle = true
+                    ServiceURL = cfg["Supabase:S3:Endpoint"], // https://...supabase.co/storage/v1/s3
+                    ForcePathStyle = true                      // обязательно для S3-совместимых API
                 });
         });
 
+        // Хранилище, которое использует IAmazonS3
         services.AddScoped<IStorageService, SupabaseStorageService>();
+        services.AddScoped<IMediaStorageService, MediaStorageService>();
 
         return services;
     }

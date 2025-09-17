@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/openapi-3.0.json",
   "openapi": "3.0.1",
   "info": {
     "title": "Memories – Unified API",

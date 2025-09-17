@@ -20,7 +20,8 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
         // AutoMapper
-        services.AddAutoMapper(Assembly.GetExecutingAssembly());
+        services.AddAutoMapper(cfg => { /* опционально: cfg.AllowNullCollections = true; */ },
+    typeof(DependencyInjection).Assembly);
 
         services.AddValidatorsFromAssemblyContaining<CreateNotificationCommandValidator>();
 
