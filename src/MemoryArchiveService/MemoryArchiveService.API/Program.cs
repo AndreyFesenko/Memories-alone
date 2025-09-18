@@ -119,30 +119,43 @@ internal static class CloudChecks
         }
     }
 
-    private static async Task CheckRabbitMqAsync(IConfiguration cfg, CancellationToken ct)
+    static async Task CheckRabbitMqAsync(IConfiguration cfg, CancellationToken ct)
     {
         try
         {
-            var mq = cfg.GetSection("RabbitMq");
-            var factory = new ConnectionFactory
-            {
-                HostName = mq["Host"] ?? "localhost",
-                UserName = mq["User"] ?? "guest",
-                Password = mq["Password"] ?? "guest",
-                Port = int.TryParse(mq["Port"], out var p) ? p : 5672
-            };
+            var section = cfg.GetSection("RabbitMq");
+            var uriStr = section["Uri"];
+            var exchange = section["Exchange"] ?? "memory-events";
 
-            await using var conn = await factory.CreateConnectionAsync(clientProvidedName: "memory-archive-health", cancellationToken: ct);
+            var factory = new ConnectionFactory();
+
+            if (!string.IsNullOrWhiteSpace(uriStr))
+            {
+                factory.Uri = new Uri(uriStr);
+            }
+            else
+            {
+                factory.HostName = section["Host"]!;
+                factory.UserName = section["User"]!;
+                factory.Password = section["Password"]!;
+                factory.VirtualHost = section["VirtualHost"] ?? "/";
+                var useTls = bool.TryParse(section["UseTls"], out var tls) && tls;
+                factory.Port = int.TryParse(section["Port"], out var port) ? port : (useTls ? AmqpTcpEndpoint.UseDefaultPort : 5672);
+                factory.Ssl = new SslOption { Enabled = useTls, ServerName = factory.HostName };
+            }
+
+            await using var conn = await factory.CreateConnectionAsync("memory-archive-health");
             await using var ch = await conn.CreateChannelAsync();
 
-            // пассивная проверка стандартного обменника
+            // пассивная проверка существования системного exchange и нашего exchange:
             await ch.ExchangeDeclarePassiveAsync("amq.direct");
+            await ch.ExchangeDeclareAsync(exchange, ExchangeType.Topic, durable: true);
 
-            Log.Information("RabbitMQ: OK (host {Host}, port {Port})", factory.HostName, factory.Port);
+            Serilog.Log.Information("RabbitMQ (CloudAMQP): OK (exchange '{Exchange}')", exchange);
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "RabbitMQ: FAILED");
+            Serilog.Log.Error(ex, "RabbitMQ (CloudAMQP): FAILED");
         }
     }
 
