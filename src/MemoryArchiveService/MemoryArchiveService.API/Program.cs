@@ -66,6 +66,8 @@ app.MapControllers();
 
 // Простые health endpoints
 app.MapGet("/health/live", () => Results.Ok(new { status = "Live" }));
+
+// Readiness с простым пингом БД (агрегированный см. ниже в CloudChecks.RunOnceAsync)
 app.MapGet("/health/ready", async (MemoryArchiveDbContext db) =>
 {
     var ok = await db.Database.CanConnectAsync();
@@ -119,7 +121,7 @@ internal static class CloudChecks
         }
     }
 
-    static async Task CheckRabbitMqAsync(IConfiguration cfg, CancellationToken ct)
+    private static async Task CheckRabbitMqAsync(IConfiguration cfg, CancellationToken ct)
     {
         try
         {
@@ -131,31 +133,34 @@ internal static class CloudChecks
 
             if (!string.IsNullOrWhiteSpace(uriStr))
             {
+                // amqps://USER:PASSWORD@HOST/VHOST
                 factory.Uri = new Uri(uriStr);
             }
             else
             {
-                factory.HostName = section["Host"]!;
-                factory.UserName = section["User"]!;
-                factory.Password = section["Password"]!;
+                factory.HostName = section["Host"] ?? "localhost";
+                factory.UserName = section["User"] ?? "guest";
+                factory.Password = section["Password"] ?? "guest";
                 factory.VirtualHost = section["VirtualHost"] ?? "/";
                 var useTls = bool.TryParse(section["UseTls"], out var tls) && tls;
-                factory.Port = int.TryParse(section["Port"], out var port) ? port : (useTls ? AmqpTcpEndpoint.UseDefaultPort : 5672);
+                factory.Port = int.TryParse(section["Port"], out var port)
+                    ? port
+                    : (useTls ? AmqpTcpEndpoint.UseDefaultPort : 5672);
                 factory.Ssl = new SslOption { Enabled = useTls, ServerName = factory.HostName };
             }
 
             await using var conn = await factory.CreateConnectionAsync("memory-archive-health");
             await using var ch = await conn.CreateChannelAsync();
 
-            // пассивная проверка существования системного exchange и нашего exchange:
+            // пассивная проверка системного exchange и объявления нашего exchange
             await ch.ExchangeDeclarePassiveAsync("amq.direct");
             await ch.ExchangeDeclareAsync(exchange, ExchangeType.Topic, durable: true);
 
-            Serilog.Log.Information("RabbitMQ (CloudAMQP): OK (exchange '{Exchange}')", exchange);
+            Log.Information("RabbitMQ (CloudAMQP): OK (exchange '{Exchange}')", exchange);
         }
         catch (Exception ex)
         {
-            Serilog.Log.Error(ex, "RabbitMQ (CloudAMQP): FAILED");
+            Log.Error(ex, "RabbitMQ (CloudAMQP): FAILED");
         }
     }
 
@@ -166,10 +171,9 @@ internal static class CloudChecks
             var s3 = sp.GetRequiredService<IAmazonS3>();
             var bucket = cfg["Supabase:S3:Bucket"];
 
-            // легкая операция — запрос локации бакета
             var resp = await s3.GetBucketLocationAsync(bucket, ct);
-            Log.Information("Supabase S3: OK (bucket: {Bucket}, location: {Location})",
-                bucket, resp.Location?.Value ?? "(unknown)");
+            var loc = resp.Location?.Value ?? ""; // у Supabase может быть пусто
+            Log.Information("Supabase S3: OK (bucket: {Bucket}, location: {Location})", bucket, loc);
         }
         catch (Exception ex)
         {

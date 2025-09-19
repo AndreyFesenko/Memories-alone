@@ -28,7 +28,7 @@ public class CreateMemoryCommandHandler : IRequestHandler<CreateMemoryCommand, M
 
     public async Task<MemoryDto> Handle(CreateMemoryCommand request, CancellationToken ct)
     {
-        // Загружаем файл в Supabase Storage
+        // 1) Загружаем файл (сторедж САМ копирует поток внутрь себя)
         var storageUrl = await _storage.UploadAsync(
             request.FileStream,
             request.FileName,
@@ -36,52 +36,46 @@ public class CreateMemoryCommandHandler : IRequestHandler<CreateMemoryCommand, M
             ct
         );
 
-        // Определение типа медиа
-        var mediaType = Enum.TryParse<MediaType>(request.MediaType, ignoreCase: true, out var parsedType)
-            ? parsedType
+        // 2) Тип медиа
+        var mediaType = Enum.TryParse<MediaType>(request.MediaType, true, out var parsed)
+            ? parsed
             : MediaType.Image;
 
-        // Создание объекта памяти
+        // 3) Сущность
         var memory = new Memory
         {
             Id = Guid.NewGuid(),
-            OwnerId = Guid.TryParse(request.OwnerId, out var ownerId) ? ownerId : throw new ArgumentException("Invalid OwnerId"),
-
+            OwnerId = Guid.Parse(request.OwnerId),
             Title = request.Title,
             Description = request.Description,
             CreatedAt = DateTime.UtcNow,
-            AccessLevel = Enum.TryParse(request.AccessLevel, out AccessLevel level) ? level : AccessLevel.Private,
+            AccessLevel = Enum.TryParse(request.AccessLevel, true, out AccessLevel level) ? level : AccessLevel.Private,
             Tags = new List<Tag>(),
             MediaFiles = new List<MediaFile>
             {
-                new MediaFile
+                new()
                 {
-                    Id = Guid.NewGuid(),
-                    FileName = request.FileName,
-                    Url = storageUrl,
+                    Id         = Guid.NewGuid(),
+                    FileName   = request.FileName,
+                    Url        = storageUrl,
                     StorageUrl = storageUrl,
-                    MediaType = mediaType,
-                    OwnerId = request.OwnerId,
-                    CreatedAt = DateTime.UtcNow
+                    MediaType  = mediaType,
+                    OwnerId    = request.OwnerId,
+                    CreatedAt  = DateTime.UtcNow
                 }
             }
         };
 
-        // Обработка тегов
-        if (request.Tags != null)
+        if (request.Tags is { Count: > 0 })
         {
-            foreach (var tagName in request.Tags)
+            foreach (var name in request.Tags)
             {
-                var tag = await _tags.GetByNameAsync(tagName, ct)
-                    ?? new Tag { Id = Guid.NewGuid(), Name = tagName };
+                var tag = await _tags.GetByNameAsync(name, ct) ?? new Tag { Id = Guid.NewGuid(), Name = name };
                 memory.Tags.Add(tag);
             }
         }
 
-        // Сохраняем в базу
         await _repo.AddAsync(memory, ct);
-
-        // Отправляем событие
         await _eventBus.PublishAsync(new { Event = "MemoryCreated", MemoryId = memory.Id }, ct);
 
         return new MemoryDto
@@ -92,7 +86,18 @@ public class CreateMemoryCommandHandler : IRequestHandler<CreateMemoryCommand, M
             Description = memory.Description,
             CreatedAt = memory.CreatedAt,
             AccessLevel = memory.AccessLevel.ToString(),
-            Tags = memory.Tags.Select(t => t.Name).ToList()
+            Tags = memory.Tags.Select(t => t.Name).ToList(),
+            MediaFiles = memory.MediaFiles.Select(m => new MediaFileDto
+            {
+                Id = m.Id,
+                MemoryId = memory.Id,                  // безопасно: даже если в сущности нет m.MemoryId
+                FileName = m.FileName,
+                Url = m.Url ?? m.StorageUrl ?? string.Empty,
+                MediaType = m.MediaType.ToString(),
+                UploadedAt = m.CreatedAt,              // если в сущности есть UploadedAt — можешь проставить его
+                CreatedAt = m.CreatedAt
+            }).ToList(),
+            MediaCount = memory.MediaFiles.Count
         };
     }
 }

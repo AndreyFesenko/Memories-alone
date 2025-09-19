@@ -1,79 +1,752 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <title>Memories API Docs</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Swagger UI CDN -->
-  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
-  <style>
-    body { margin:0; background:#f7f7f7; }
-    #topbar { display:none; } /* чище без верхней полосы */
-  </style>
+    <meta charset="utf-8" />
+    <title>Memories – Unified API</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- highlight.js -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: #111827;
+            --ink: #e5e7eb;
+            --muted: #9ca3af;
+            --accent: #22c55e;
+            --red: #ef4444;
+            --yellow: #f59e0b
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font: 14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif
+        }
+
+        header {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid #1f2937;
+            background: #0b1220;
+            position: sticky;
+            top: 0;
+            z-index: 3
+        }
+
+            header h1 {
+                font-size: 16px;
+                margin: 0;
+                font-weight: 600
+            }
+
+            header .env {
+                font-size: 12px;
+                color: var(--muted)
+            }
+
+        main {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 16px;
+            padding: 16px;
+            max-width: 1500px;
+            margin: 0 auto
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid #1f2937;
+            border-radius: 12px;
+            overflow: hidden
+        }
+
+            .card h3 {
+                margin: 0;
+                padding: 12px 14px;
+                border-bottom: 1px solid #1f2937;
+                font-size: 13px;
+                letter-spacing: .2px;
+                color: #cbd5e1
+            }
+
+            .card .body {
+                padding: 12px 14px;
+                display: grid;
+                gap: 10px
+            }
+
+        label {
+            display: grid;
+            gap: 6px;
+            font-size: 12px;
+            color: #cbd5e1
+        }
+
+        input[type="text"], input[type="url"], select, textarea {
+            width: 100%;
+            background: #0b1220;
+            color: var(--ink);
+            border: 1px solid #1f2937;
+            border-radius: 8px;
+            padding: 9px 10px;
+            font-size: 13px
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--accent);
+            border: none;
+            color: #052e16;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-weight: 600;
+            cursor: pointer
+        }
+
+            .btn.secondary {
+                background: #1f2937;
+                color: #e5e7eb
+            }
+
+            .btn:disabled {
+                opacity: .6;
+                cursor: not-allowed
+            }
+
+            .btn.small {
+                padding: 4px 8px;
+                font-size: 11px
+            }
+
+        .tabs {
+            display: flex;
+            gap: 6px
+        }
+
+        .tab {
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid #1f2937;
+            background: #0b1220;
+            color: #cbd5e1;
+            cursor: pointer;
+            font-size: 12px
+        }
+
+            .tab.active {
+                background: #1f2937
+            }
+
+        pre, code {
+            font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+            font-size: 12px
+        }
+
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 520px;
+            overflow: auto;
+            background: #0b1220;
+            border-top: 1px solid #1f2937;
+            padding: 12px 14px
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 11px
+        }
+
+            .pill.get {
+                background: #052e16;
+                color: #86efac;
+                border: 1px solid #166534
+            }
+
+            .pill.post {
+                background: #111827;
+                color: #93c5fd;
+                border: 1px solid #1d4ed8
+            }
+
+        .muted {
+            color: var(--muted);
+            font-size: 12px
+        }
+
+        .divider {
+            height: 1px;
+            background: #1f2937;
+            margin: 8px 0
+        }
+
+        .hint {
+            font-size: 11px;
+            color: #a3a3a3
+        }
+
+        .inline {
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+
+        .grid2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px
+        }
+
+        details.devnotes summary {
+            cursor: pointer;
+            padding: 10px 14px
+        }
+
+        details.devnotes .body {
+            padding-top: 0
+        }
+
+        kbd {
+            background: #0b1220;
+            border: 1px solid #1f2937;
+            border-radius: 6px;
+            padding: 2px 6px;
+            font-size: 11px
+        }
+
+        .file-preview {
+            font-size: 12px;
+            color: #cbd5e1;
+            background: #0b1220;
+            border: 1px dashed #334155;
+            border-radius: 8px;
+            padding: 8px
+        }
+    </style>
 </head>
 <body>
-  <div id="swagger-ui"></div>
-
-  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
-  <script>
-    // Путь к OpenAPI (лежит рядом в wwwroot)
-    const specUrl = "/openapi.json";
-
-    // Конфиг Swagger UI
-    window.ui = SwaggerUIBundle({
-      url: specUrl,
-      dom_id: "#swagger-ui",
-      deepLinking: true,
-      displayRequestDuration: true,
-      filter: true,
-      persistAuthorization: true, // сохранять токен в UI на время сессии
-      docExpansion: "none",
-      layout: "BaseLayout",
-      tryItOutEnabled: true, // включаем Try it out
-      requestInterceptor: (req) => {
-        // Если пользователь сохранил токен в localStorage — подставим его автоматически
-        const saved = localStorage.getItem("memories_jwt");
-        if (saved && !req.headers.Authorization) {
-          req.headers["Authorization"] = `Bearer ${saved}`;
-        }
-        return req;
-      },
-      presets: [
-        SwaggerUIBundle.presets.apis,
-        SwaggerUIBundle.SwaggerUIStandalonePreset
-      ],
-      // Поддержка Bearer; также можно выбрать схему в самом OpenAPI (components.securitySchemes)
-      // Здесь просто обеспечиваем UI-часть; спецификация должна описывать "Bearer".
-    });
-
-    // Маленький виджет для ручного сохранения токена в localStorage
-    (function addTokenHelper() {
-      const bar = document.createElement("div");
-      bar.style.cssText = "position:fixed;right:16px;bottom:16px;background:#fff;border:1px solid #ddd;border-radius:8px;box-shadow:0 4px 10px rgba(0,0,0,.08);padding:12px;z-index:9999;font:14px/1.4 Arial, sans-serif;";
-      bar.innerHTML = `
-        <div style="margin-bottom:8px;font-weight:600;">JWT Helper</div>
-        <input id="jwt-input" type="text" placeholder="Paste JWT here" style="width:260px;padding:6px;border:1px solid #ccc;border-radius:6px;" />
-        <div style="margin-top:8px;text-align:right;">
-          <button id="jwt-save" style="padding:6px 10px;border:1px solid #1f6feb;background:#1f6feb;color:#fff;border-radius:6px;cursor:pointer;">Save</button>
-          <button id="jwt-clear" style="padding:6px 10px;border:1px solid #ccc;background:#fff;color:#333;border-radius:6px;cursor:pointer;margin-left:6px;">Clear</button>
+    <header>
+        <div class="inline">
+            <h1>Memories – Unified API</h1>
+            <span class="env" id="env">Gateway: <code>http://localhost:8080</code></span>
         </div>
-      `;
-      document.body.appendChild(bar);
+        <div class="tabs" id="tabs">
+            <button class="tab active" data-tab="identity">Identity</button>
+            <button class="tab" data-tab="memory">MemoryArchive</button>
+        </div>
+    </header>
 
-      const input = document.getElementById("jwt-input");
-      const saved = localStorage.getItem("memories_jwt");
-      if (saved) input.value = saved;
+    <main>
+        <!-- LEFT: builder -->
+        <section class="card">
+            <h3>Запрос</h3>
+            <div class="body" id="reqPane">
+                <div class="row">
+                    <label>
+                        Метод
+                        <select id="method"></select>
+                    </label>
+                    <label>
+                        Endpoint
+                        <select id="endpoint"></select>
+                    </label>
+                </div>
 
-      document.getElementById("jwt-save").onclick = () => {
-        localStorage.setItem("memories_jwt", input.value.trim());
-        alert("JWT saved to localStorage. It will be auto-applied to requests.");
-      };
-      document.getElementById("jwt-clear").onclick = () => {
-        localStorage.removeItem("memories_jwt");
-        input.value = "";
-        alert("JWT cleared.");
-      };
-    })();
-  </script>
+                <label>
+                    URL (прокси гейтвея)
+                    <input id="url" type="url" />
+                    <span id="urlHint" class="hint"></span>
+                </label>
+
+                <div class="inline">
+                    <label style="flex:1">
+                        Authorization (Bearer)
+                        <input id="auth" type="text" placeholder="вставьте JWT без 'Bearer '" />
+                    </label>
+                    <button class="btn small secondary" id="copyJwt" title="Скопировать токен">📋</button>
+                </div>
+                <span class="hint">Токен сохраняется в localStorage. Для /identity/me и всех методов Memory — обязателен.</span>
+
+                <label class="inline">
+                    <input type="checkbox" id="persistBodies" />
+                    <span class="hint">Сохранять тело запроса между переключениями эндпоинтов</span>
+                </label>
+
+                <div id="jsonBlock">
+                    <label>JSON Body<textarea id="json" spellcheck="false"></textarea></label>
+                </div>
+
+                <div id="formBlock" style="display:none;">
+                    <div class="grid2">
+                        <label>OwnerId <input type="text" id="f_owner" placeholder="UUID" /></label>
+                        <label>Title <input type="text" id="f_title" placeholder="заголовок" /></label>
+                    </div>
+                    <label>Description <input type="text" id="f_desc" placeholder="краткое описание" /></label>
+                    <div class="grid2">
+                        <label>
+                            MediaType
+                            <select id="f_media">
+                                <option>Image</option>
+                                <option>Video</option>
+                                <option>Document</option>
+                                <option>Audio</option>
+                                <option>Other</option>
+                            </select>
+                        </label>
+                        <label>
+                            AccessLevel
+                            <select id="f_access">
+                                <option value="">(не задавать)</option>
+                                <option>Private</option>
+                                <option>Public</option>
+                                <option>FriendsOnly</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="grid2">
+                        <label>MemoryId <input type="text" id="f_memoryId" placeholder="для /{memoryId}" /></label>
+                        <label>MediaId <input type="text" id="f_mediaId" placeholder="для /{mediaId}" /></label>
+                    </div>
+                    <label>File <input type="file" id="f_file" /></label>
+                    <div id="filePreview" class="file-preview" style="display:none;"></div>
+                </div>
+
+                <div class="row">
+                    <button class="btn" id="send">Отправить</button>
+                    <button class="btn secondary" id="fill">Заполнить пример</button>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="inline">
+                    <label style="flex:1">
+                        Сгенерированный curl
+                        <textarea id="curl" readonly></textarea>
+                    </label>
+                    <button class="btn small secondary" id="copyCurl" title="Скопировать curl">📋</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- RIGHT: response -->
+        <section class="card">
+            <h3>Ответ</h3>
+            <div class="body">
+                <div class="inline"><span class="muted">HTTP Status:</span><span id="status" class="pill get">—</span></div>
+                <label>Заголовки<textarea id="respHeaders" readonly></textarea></label>
+            </div>
+            <h3>Тело ответа</h3>
+            <pre><code id="resp" class="language-json">—</code></pre>
+        </section>
+    </main>
+
+    <!-- Developer Notes -->
+    <section class="card" style="max-width:1500px;margin:16px auto;">
+        <details class="devnotes" open>
+            <summary><strong>Developer Notes</strong> — как вызывать эндпоинты и что ожидать</summary>
+            <div class="body">
+                <h4>Identity</h4>
+                <ul>
+                    <li>
+                        <kbd>POST</kbd> <code>/identity/login</code> — логин по username/password.
+                        <br />Body: <code>{"username": "...", "password": "..."}</code>
+                        <br />200 → <code>{"accessToken": "...", "expiresAt": "ISO", "refreshToken": null|"..."} </code>
+                        <br />401 → неверные креды.
+                    </li>
+                    <li>
+                        <kbd>POST</kbd> <code>/identity/register</code> — создать пользователя.
+                        <br />Body: <code>{"username":"...", "password":"...", "email":"...", "displayName":"..."}</code>
+                        <br />201 → как при логине (accessToken).
+                        <br />409 → email/username заняты.
+                    </li>
+                    <li>
+                        <kbd>POST</kbd> <code>/identity/refresh</code> — обновить токен.
+                        <br />Body: <code>{"refreshToken":"..."}</code>
+                        <br />200 → новые токены.
+                        <br />400 → нет refreshToken.
+                    </li>
+                    <li>
+                        <kbd>GET</kbd> <code>/identity/me</code> — профиль текущего пользователя.
+                        <br />Headers: <code>Authorization: Bearer &lt;JWT&gt;</code>
+                        <br />200 → id/claims; 401 → без/с невалидным токеном.
+                    </li>
+                </ul>
+
+                <h4>MemoryArchive</h4>
+                <ul>
+                    <li>
+                        <kbd>POST</kbd> <code>/memory/api/memory</code> — создать Memory c файлом.
+                        <br />FormData: <code>OwnerId, Title, Description, MediaType, [AccessLevel], File</code>
+                        <br />200 → <code>MemoryDto</code>.
+                        <br />400 → валидация (например, нет файла).
+                    </li>
+                    <li>
+                        <kbd>POST</kbd> <code>/memory/api/memory/{memoryId}/media</code> — добавить файл в Memory.
+                        <br />FormData: <code>File, MediaType</code>
+                        <br />200 → <code>MediaFileDto</code>; 404 → memoryId не найден.
+                    </li>
+                    <li>
+                        <kbd>PUT</kbd> <code>/memory/api/memory/{memoryId}</code> — обновить Memory.
+                        <br />Body JSON: <code>title, description, accessLevel</code>
+                        <br />200 → обновлённый <code>MemoryDto</code>; 404 — не найден.
+                    </li>
+                    <li>
+                        <kbd>PUT</kbd> <code>/memory/api/memory/{memoryId}/media/{mediaId}</code> — обновить метаданные файла.
+                        <br />Body JSON: <code>fileName?, mediaType?</code>
+                        <br />200 → <code>MediaFileDto</code>; 404 — не найдено.
+                    </li>
+                    <li>
+                        <kbd>DELETE</kbd> <code>/memory/api/memory/{memoryId}</code> — удалить Memory целиком.
+                        <br />204 → ok; 404 — не найден.
+                    </li>
+                    <li>
+                        <kbd>DELETE</kbd> <code>/memory/api/memory/{memoryId}/media/{mediaId}</code> — удалить файл.
+                        <br />204 → ok; 404 — не найдено.
+                    </li>
+                </ul>
+            </div>
+        </details>
+    </section>
+
+    <script>
+        (() => {
+            hljs.highlightAll();
+
+            const method = document.getElementById('method'), endpointSel = document.getElementById('endpoint'),
+                url = document.getElementById('url'), urlHint = document.getElementById('urlHint'),
+                auth = document.getElementById('auth'), json = document.getElementById('json'),
+                jsonBlock = document.getElementById('jsonBlock'), formBlock = document.getElementById('formBlock'),
+                sendBtn = document.getElementById('send'), fillBtn = document.getElementById('fill'),
+                curlBox = document.getElementById('curl'), respEl = document.getElementById('resp'),
+                statusEl = document.getElementById('status'), respHeaders = document.getElementById('respHeaders'),
+                fOwner = document.getElementById('f_owner'), fTitle = document.getElementById('f_title'),
+                fDesc = document.getElementById('f_desc'), fMedia = document.getElementById('f_media'),
+                fAccess = document.getElementById('f_access'), fFile = document.getElementById('f_file'),
+                fMemoryId = document.getElementById('f_memoryId'), fMediaId = document.getElementById('f_mediaId'),
+                copyJwt = document.getElementById('copyJwt'), copyCurl = document.getElementById('copyCurl'),
+                tabs = document.getElementById('tabs'), persistBodies = document.getElementById('persistBodies'),
+                filePreview = document.getElementById('filePreview');
+
+            let currentTab = 'identity', currentEndpointKey = '';
+            const LS_JWT_KEY = 'memories.jwt';
+            const LS_PERSIST = 'memories.persist';
+            const LS_STATE = 'memories.state.v1'; // map endpointKey -> {mode,json,form}
+
+            // состояние по эндпоинтам
+            let stateStore = {};
+            try { stateStore = JSON.parse(localStorage.getItem(LS_STATE) || '{}') } catch { stateStore = {} }
+
+            const endpoints = {
+                identity: {
+                    login: {
+                        label: 'Login', method: 'POST', urlTemplate: 'http://localhost:8080/identity/login', mode: 'json',
+                        json: { username: 'fes', password: 'fes256!' },
+                        hint: 'Вернёт accessToken — сохранится в localStorage.'
+                    },
+                    register: {
+                        label: 'CreateUser', method: 'POST', urlTemplate: 'http://localhost:8080/identity/register', mode: 'json',
+                        json: { username: 'andrey', password: 'andrey256!', email: 'a@a.com', displayName: 'Andrey' }
+                    },
+                    refresh: {
+                        label: 'Refresh JWT', method: 'POST', urlTemplate: 'http://localhost:8080/identity/refresh', mode: 'json',
+                        json: { refreshToken: 'abc-refresh-token' }
+                    },
+                    me: {
+                        label: 'Me', method: 'GET', urlTemplate: 'http://localhost:8080/identity/me', mode: 'none',
+                        hint: 'Требуется Bearer JWT'
+                    }
+                },
+                memory: {
+                    create: {
+                        label: 'CreateMemory', method: 'POST', urlTemplate: 'http://localhost:8080/memory/api/memory', mode: 'form',
+                        form: { OwnerId: '', Title: '', Description: '', MediaType: 'Image', AccessLevel: '' },
+                        hint: 'FormData с файлом — см. поля ниже'
+                    },
+                    upload: {
+                        label: 'UploadMedia', method: 'POST', urlTemplate: 'http://localhost:8080/memory/api/memory/{memoryId}/media', mode: 'form',
+                        form: { MemoryId: '', MediaType: 'Image' },
+                        hint: 'Путь требует {memoryId}, FormData: File/MediaType'
+                    },
+                    updateMemory: {
+                        label: 'UpdateMemory', method: 'PUT', urlTemplate: 'http://localhost:8080/memory/api/memory/{memoryId}', mode: 'json',
+                        json: { title: 'New title', description: 'Description', accessLevel: 'Private' }
+                    },
+                    updateMedia: {
+                        label: 'UpdateMediaFile', method: 'PUT', urlTemplate: 'http://localhost:8080/memory/api/memory/{memoryId}/media/{mediaId}', mode: 'json',
+                        json: { fileName: 'file.jpg', mediaType: 'Image' }
+                    },
+                    deleteMemory: { label: 'DeleteMemory', method: 'DELETE', urlTemplate: 'http://localhost:8080/memory/api/memory/{memoryId}', mode: 'none' },
+                    deleteMedia: { label: 'DeleteMediaFile', method: 'DELETE', urlTemplate: 'http://localhost:8080/memory/api/memory/{memoryId}/media/{mediaId}', mode: 'none' }
+                }
+            };
+
+            function endpointKey(tab, key) { return `${tab}.${key}` }
+
+            function populateMethods() {
+                method.innerHTML = '';['GET', 'POST', 'PUT', 'DELETE'].forEach(m => {
+                    const opt = document.createElement('option'); opt.value = m; opt.textContent = m; method.appendChild(opt);
+                });
+            }
+
+            function populateEndpoints(tab) {
+                endpointSel.innerHTML = '';
+                Object.entries(endpoints[tab]).forEach(([k, v]) => {
+                    const opt = document.createElement('option'); opt.value = k; opt.textContent = v.label; endpointSel.appendChild(opt);
+                });
+                currentEndpointKey = Object.keys(endpoints[tab])[0];
+                endpointSel.value = currentEndpointKey;
+            }
+
+            function restorePersistFlag() {
+                const saved = localStorage.getItem(LS_PERSIST);
+                persistBodies.checked = saved === '1';
+            }
+
+            function saveState(epKey, data) {
+                if (!persistBodies.checked) return;
+                stateStore[epKey] = data;
+                localStorage.setItem(LS_STATE, JSON.stringify(stateStore));
+            }
+
+            function getSavedState(epKey) {
+                return stateStore[epKey];
+            }
+
+            function applyPreset(tab, key) {
+                const p = endpoints[tab][key]; if (!p) return;
+                const epKey = endpointKey(tab, key);
+
+                // сначала пробуем восстановить сохранённое состояние
+                const saved = getSavedState(epKey);
+
+                const mode = saved?.mode || p.mode;
+                method.value = saved?.method || p.method;
+                url.value = saved?.url || p.urlTemplate;
+                urlHint.textContent = p.hint || '';
+
+                if (mode === 'json') {
+                    json.value = saved?.json ?? JSON.stringify(p.json ?? {}, null, 2);
+                } else if (mode === 'form') {
+                    fOwner.value = saved?.form?.OwnerId ?? p.form?.OwnerId ?? '';
+                    fTitle.value = saved?.form?.Title ?? p.form?.Title ?? '';
+                    fDesc.value = saved?.form?.Description ?? p.form?.Description ?? '';
+                    fMedia.value = saved?.form?.MediaType ?? p.form?.MediaType ?? 'Image';
+                    fAccess.value = saved?.form?.AccessLevel ?? p.form?.AccessLevel ?? '';
+                    fMemoryId.value = saved?.form?.MemoryId ?? '';
+                    fMediaId.value = saved?.form?.MediaId ?? '';
+                    fFile.value = '';
+                    updateFilePreview();
+                }
+
+                setMode(mode);
+                updateCurl();
+            }
+
+            function pickTab(tab) {
+                currentTab = tab;
+                [...tabs.querySelectorAll('.tab')].forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+                populateEndpoints(tab);
+                applyPreset(tab, Object.keys(endpoints[tab])[0]);
+            }
+
+            function setMode(mode) {
+                jsonBlock.style.display = (mode === 'json') ? '' : 'none';
+                formBlock.style.display = (mode === 'form') ? '' : 'none';
+                updateCurl();
+            }
+
+            function fillPathPlaceholders(u) {
+                return u
+                    .replace('{memoryId}', fMemoryId.value || '{memoryId}')
+                    .replace('{mediaId}', fMediaId.value || '{mediaId}');
+            }
+
+            function escapeShellArg(s) { return s.replaceAll("'", "'\"'\"'") }
+
+            function updateCurl() {
+                const m = method.value;
+                const rawUrl = url.value;
+                const u = fillPathPlaceholders(rawUrl);
+                const token = auth.value.trim();
+                const headers = [];
+                let body = '';
+
+                if (token) headers.push("-H 'Authorization: Bearer " + escapeShellArg(token) + "'");
+
+                if (jsonBlock.style.display !== 'none') {
+                    headers.push("-H 'Content-Type: application/json'");
+                    if (json.value) body = `-d '${escapeShellArg(json.value)}'`;
+                } else if (formBlock.style.display !== 'none') {
+                    headers.push("-H 'Content-Type: multipart/form-data'");
+                    const f = [];
+                    if (fOwner.value) f.push(`-F 'OwnerId=${escapeShellArg(fOwner.value)}'`);
+                    if (fTitle.value) f.push(`-F 'Title=${escapeShellArg(fTitle.value)}'`);
+                    if (fDesc.value) f.push(`-F 'Description=${escapeShellArg(fDesc.value)}'`);
+                    if (fMedia.value) f.push(`-F 'MediaType=${escapeShellArg(fMedia.value)}'`);
+                    if (fAccess.value) f.push(`-F 'AccessLevel=${escapeShellArg(fAccess.value)}'`);
+                    if (fMemoryId.value) f.push(`-F 'MemoryId=${escapeShellArg(fMemoryId.value)}'`);
+                    if (fMediaId.value) f.push(`-F 'MediaId=${escapeShellArg(fMediaId.value)}'`);
+                    if (fFile.files.length) {
+                        const mime = fFile.files[0].type || 'application/octet-stream';
+                        f.push(`-F 'File=@${escapeShellArg(fFile.files[0].name)};type=${mime}'`);
+                    }
+                    body = f.join(' \\\n  ');
+                }
+
+                const head = headers.join(' \\\n  ');
+                const script = [`curl -X '${m}' \\`, `  '${u}' \\`, head ? `  ${head} \\` : '', body ? `  ${body}` : ''].filter(Boolean).join('\n');
+                curlBox.value = script;
+
+                // сохраняем состояние эндпоинта
+                const epKey = endpointKey(currentTab, endpointSel.value);
+                const stored = {
+                    method: m,
+                    url: rawUrl,
+                    mode: (jsonBlock.style.display !== 'none') ? 'json' : ((formBlock.style.display !== 'none') ? 'form' : 'none'),
+                    json: json.value,
+                    form: {
+                        OwnerId: fOwner.value, Title: fTitle.value, Description: fDesc.value,
+                        MediaType: fMedia.value, AccessLevel: fAccess.value,
+                        MemoryId: fMemoryId.value, MediaId: fMediaId.value
+                    }
+                };
+                saveState(epKey, stored);
+            }
+
+            async function sendRequest() {
+                sendBtn.disabled = true;
+                statusEl.textContent = '…'; statusEl.className = 'pill ' + (method.value === 'GET' ? 'get' : 'post');
+                try {
+                    let u = fillPathPlaceholders(url.value);
+                    const token = auth.value.trim();
+                    const headers = new Headers();
+                    if (token) headers.set('Authorization', `Bearer ${token}`);
+
+                    let body = undefined;
+                    if (jsonBlock.style.display !== 'none') {
+                        headers.set('Content-Type', 'application/json');
+                        body = json.value || '';
+                    } else if (formBlock.style.display !== 'none') {
+                        const fd = new FormData();
+                        if (fOwner.value) fd.append('OwnerId', fOwner.value);
+                        if (fTitle.value) fd.append('Title', fTitle.value);
+                        if (fDesc.value) fd.append('Description', fDesc.value);
+                        if (fMedia.value) fd.append('MediaType', fMedia.value);
+                        if (fAccess.value) fd.append('AccessLevel', fAccess.value);
+                        if (fMemoryId.value) fd.append('MemoryId', fMemoryId.value);
+                        if (fMediaId.value) fd.append('MediaId', fMediaId.value);
+                        if (fFile.files.length) fd.append('File', fFile.files[0], fFile.files[0].name);
+                        body = fd;
+                        headers.delete('Content-Type'); // пусть браузер проставит boundary
+                    }
+
+                    const res = await fetch(u, { method: method.value, headers, body });
+                    statusEl.textContent = res.status + ' ' + res.statusText;
+
+                    const ct = res.headers.get('content-type') || '';
+                    const hdrs = []; res.headers.forEach((v, k) => hdrs.push(`${k}: ${v}`));
+                    respHeaders.value = hdrs.join('\n');
+
+                    let text;
+                    if (ct.includes('application/json')) {
+                        const j = await res.json().catch(() => ({}));
+                        if (j && j.accessToken) { // авто-сохраняем JWT
+                            auth.value = j.accessToken;
+                            localStorage.setItem(LS_JWT_KEY, j.accessToken);
+                        }
+                        text = JSON.stringify(j, null, 2);
+                    } else {
+                        text = await res.text();
+                    }
+
+                    respEl.textContent = text || '—';
+                    hljs.highlightElement(respEl);
+                } catch (err) {
+                    statusEl.textContent = 'ERR';
+                    respEl.textContent = String(err);
+                    hljs.highlightElement(respEl);
+                } finally {
+                    sendBtn.disabled = false;
+                    updateCurl();
+                }
+            }
+
+            function updateFilePreview() {
+                if (!fFile.files.length) { filePreview.style.display = 'none'; filePreview.textContent = ''; return; }
+                const f = fFile.files[0];
+                const kb = (f.size / 1024).toFixed(1);
+                filePreview.style.display = '';
+                filePreview.textContent = `Имя: ${f.name}\nРазмер: ${kb} KB\nMIME: ${f.type || 'n/a'}\nИзменён: ${new Date(f.lastModified).toLocaleString()}`;
+            }
+
+            // events
+            sendBtn.addEventListener('click', sendRequest);
+            copyJwt.addEventListener('click', () => navigator.clipboard.writeText(auth.value || ''));
+            copyCurl.addEventListener('click', () => navigator.clipboard.writeText(curlBox.value || ''));
+            endpointSel.addEventListener('change', () => { currentEndpointKey = endpointSel.value; applyPreset(currentTab, currentEndpointKey) });
+            tabs.addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (!b) return; pickTab(b.dataset.tab) });
+            fillBtn.addEventListener('click', () => applyPreset(currentTab, currentEndpointKey));
+
+            // live rebuild & preview
+            ['change', 'input'].forEach(ev => {
+                method.addEventListener(ev, updateCurl);
+                url.addEventListener(ev, updateCurl);
+                auth.addEventListener(ev, updateCurl);
+                json.addEventListener(ev, updateCurl);
+                [fOwner, fTitle, fDesc, fMedia, fAccess, fMemoryId, fMediaId].forEach(el => el.addEventListener(ev, updateCurl));
+            });
+            fFile.addEventListener('change', () => { updateFilePreview(); updateCurl() });
+
+            persistBodies.addEventListener('change', () => {
+                localStorage.setItem(LS_PERSIST, persistBodies.checked ? '1' : '0');
+                if (!persistBodies.checked) {
+                    // очищаем сохранённые стейты
+                    localStorage.removeItem(LS_STATE);
+                    stateStore = {};
+                }
+            });
+
+            // init
+            function init() {
+                // восстановить jwt и флаг
+                const savedJwt = localStorage.getItem(LS_JWT_KEY); if (savedJwt) auth.value = savedJwt;
+                restorePersistFlag();
+
+                populateMethods();
+                pickTab('identity');
+                updateCurl();
+            }
+            init();
+        })();
+    </script>
 </body>
 </html>

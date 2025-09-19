@@ -1,4 +1,4 @@
-﻿// src\MemoryArchiveService\MemoryArchiveService.Infrastructure\DependencyInjection.cs
+﻿// src/MemoryArchiveService/MemoryArchiveService.Infrastructure/DependencyInjection.cs
 using Amazon.S3;
 using MemoryArchiveService.Application.Interfaces;
 using MemoryArchiveService.Infrastructure.Persistence;
@@ -23,11 +23,11 @@ public static class DependencyInjection
         services.AddScoped<IMediaRepository, MediaRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
 
-        // --- RabbitMQ Event Bus (через IOptions<RabbitMqOptions>) ---
+        // RabbitMQ Event Bus
         services.Configure<RabbitMqOptions>(config.GetSection("RabbitMq"));
         services.AddSingleton<IEventBus, RabbitMqEventBus>();
 
-        // --- Только Supabase S3 (без MinIO) ---
+        // Supabase S3
         services.AddSingleton<IAmazonS3>(sp =>
         {
             var cfg = sp.GetRequiredService<IConfiguration>();
@@ -37,13 +37,14 @@ public static class DependencyInjection
                 new AmazonS3Config
                 {
                     ServiceURL = cfg["Supabase:S3:Endpoint"], // https://...supabase.co/storage/v1/s3
-                    ForcePathStyle = true                      // обязательно для S3-совместимых API
+                    ForcePathStyle = true,                     // обязательно для S3-совместимых API
+                    //SignatureVersion = "4"                     // явное V4-подписание (безопасно)
+                    // AuthenticationRegion можно не указывать с ServiceURL
                 });
         });
 
-        // Хранилище, которое использует IAmazonS3
+        // Хранилище на базе IAmazonS3
         services.AddScoped<IStorageService, SupabaseStorageService>();
-        services.AddScoped<IMediaStorageService, MediaStorageService>();
 
         return services;
     }

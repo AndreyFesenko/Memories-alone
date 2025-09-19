@@ -1,79 +1,532 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <title>Memories API Docs</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Swagger UI CDN -->
-  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
-  <style>
-    body { margin:0; background:#f7f7f7; }
-    #topbar { display:none; } /* чище без верхней полосы */
-  </style>
+    <meta charset="utf-8" />
+    <title>Memories – Unified API</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: #111827;
+            --ink: #e5e7eb;
+            --muted: #9ca3af;
+            --accent: #22c55e;
+            --red: #ef4444;
+            --yellow: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font: 14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif
+        }
+
+        header {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid #1f2937;
+            background: #0b1220;
+            position: sticky;
+            top: 0;
+            z-index: 3
+        }
+
+            header h1 {
+                font-size: 16px;
+                margin: 0;
+                font-weight: 600
+            }
+
+            header .env {
+                font-size: 12px;
+                color: var(--muted)
+            }
+
+        main {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 16px;
+            padding: 16px;
+            max-width: 1400px;
+            margin: 0 auto
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid #1f2937;
+            border-radius: 12px;
+            overflow: hidden
+        }
+
+            .card h3 {
+                margin: 0;
+                padding: 12px 14px;
+                border-bottom: 1px solid #1f2937;
+                font-size: 13px;
+                letter-spacing: .2px;
+                color: #cbd5e1
+            }
+
+            .card .body {
+                padding: 12px 14px;
+                display: grid;
+                gap: 10px
+            }
+
+        label {
+            display: grid;
+            gap: 6px;
+            font-size: 12px;
+            color: #cbd5e1
+        }
+
+        input[type="text"], input[type="url"], select, textarea {
+            width: 100%;
+            background: #0b1220;
+            color: var(--ink);
+            border: 1px solid #1f2937;
+            border-radius: 8px;
+            padding: 9px 10px;
+            font-size: 13px
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--accent);
+            border: none;
+            color: #052e16;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-weight: 600;
+            cursor: pointer
+        }
+
+            .btn.secondary {
+                background: #1f2937;
+                color: #e5e7eb
+            }
+
+            .btn:disabled {
+                opacity: .6;
+                cursor: not-allowed
+            }
+
+        .tabs {
+            display: flex;
+            gap: 6px
+        }
+
+        .tab {
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid #1f2937;
+            background: #0b1220;
+            color: #cbd5e1;
+            cursor: pointer;
+            font-size: 12px
+        }
+
+            .tab.active {
+                background: #1f2937
+            }
+
+        pre, code {
+            font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+            font-size: 12px
+        }
+
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 420px;
+            overflow: auto;
+            background: #0b1220;
+            border-top: 1px solid #1f2937;
+            padding: 12px 14px
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 11px
+        }
+
+            .pill.get {
+                background: #052e16;
+                color: #86efac;
+                border: 1px solid #166534
+            }
+
+            .pill.post {
+                background: #111827;
+                color: #93c5fd;
+                border: 1px solid #1d4ed8
+            }
+
+        .muted {
+            color: var(--muted);
+            font-size: 12px
+        }
+
+        .divider {
+            height: 1px;
+            background: #1f2937;
+            margin: 8px 0
+        }
+
+        .hint {
+            font-size: 11px;
+            color: #a3a3a3
+        }
+
+        .inline {
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+
+        .danger {
+            color: var(--red)
+        }
+
+        .ok {
+            color: var(--accent)
+        }
+
+        .warn {
+            color: var(--yellow)
+        }
+
+        .grid2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px
+        }
+    </style>
 </head>
 <body>
-  <div id="swagger-ui"></div>
-
-  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
-  <script>
-    // Путь к OpenAPI (лежит рядом в wwwroot)
-    const specUrl = "/openapi.json";
-
-    // Конфиг Swagger UI
-    window.ui = SwaggerUIBundle({
-      url: specUrl,
-      dom_id: "#swagger-ui",
-      deepLinking: true,
-      displayRequestDuration: true,
-      filter: true,
-      persistAuthorization: true, // сохранять токен в UI на время сессии
-      docExpansion: "none",
-      layout: "BaseLayout",
-      tryItOutEnabled: true, // включаем Try it out
-      requestInterceptor: (req) => {
-        // Если пользователь сохранил токен в localStorage — подставим его автоматически
-        const saved = localStorage.getItem("memories_jwt");
-        if (saved && !req.headers.Authorization) {
-          req.headers["Authorization"] = `Bearer ${saved}`;
-        }
-        return req;
-      },
-      presets: [
-        SwaggerUIBundle.presets.apis,
-        SwaggerUIBundle.SwaggerUIStandalonePreset
-      ],
-      // Поддержка Bearer; также можно выбрать схему в самом OpenAPI (components.securitySchemes)
-      // Здесь просто обеспечиваем UI-часть; спецификация должна описывать "Bearer".
-    });
-
-    // Маленький виджет для ручного сохранения токена в localStorage
-    (function addTokenHelper() {
-      const bar = document.createElement("div");
-      bar.style.cssText = "position:fixed;right:16px;bottom:16px;background:#fff;border:1px solid #ddd;border-radius:8px;box-shadow:0 4px 10px rgba(0,0,0,.08);padding:12px;z-index:9999;font:14px/1.4 Arial, sans-serif;";
-      bar.innerHTML = `
-        <div style="margin-bottom:8px;font-weight:600;">JWT Helper</div>
-        <input id="jwt-input" type="text" placeholder="Paste JWT here" style="width:260px;padding:6px;border:1px solid #ccc;border-radius:6px;" />
-        <div style="margin-top:8px;text-align:right;">
-          <button id="jwt-save" style="padding:6px 10px;border:1px solid #1f6feb;background:#1f6feb;color:#fff;border-radius:6px;cursor:pointer;">Save</button>
-          <button id="jwt-clear" style="padding:6px 10px;border:1px solid #ccc;background:#fff;color:#333;border-radius:6px;cursor:pointer;margin-left:6px;">Clear</button>
+    <header>
+        <div class="inline">
+            <h1>Memories – Unified API</h1>
+            <span class="env" id="env">Gateway: <code>http://localhost:8080</code></span>
         </div>
-      `;
-      document.body.appendChild(bar);
+        <div class="tabs" id="tabs">
+            <button class="tab active" data-tab="identity">Identity</button>
+            <button class="tab" data-tab="memory">MemoryArchive</button>
+        </div>
+    </header>
 
-      const input = document.getElementById("jwt-input");
-      const saved = localStorage.getItem("memories_jwt");
-      if (saved) input.value = saved;
+    <main>
+        <!-- LEFT: request builder -->
+        <section class="card">
+            <h3>Запрос</h3>
+            <div class="body" id="reqPane">
+                <div class="row">
+                    <label>
+                        Метод
+                        <select id="method">
+                            <option>GET</option>
+                            <option selected>POST</option>
+                            <option>PUT</option>
+                            <option>DELETE</option>
+                        </select>
+                    </label>
+                    <label>
+                        URL (прокси гейтвея)
+                        <input id="url" type="url" value="http://localhost:8080/identity/login" />
+                    </label>
+                </div>
 
-      document.getElementById("jwt-save").onclick = () => {
-        localStorage.setItem("memories_jwt", input.value.trim());
-        alert("JWT saved to localStorage. It will be auto-applied to requests.");
-      };
-      document.getElementById("jwt-clear").onclick = () => {
-        localStorage.removeItem("memories_jwt");
-        input.value = "";
-        alert("JWT cleared.");
-      };
-    })();
-  </script>
+                <label>
+                    Authorization (Bearer)
+                    <input id="auth" type="text" placeholder="вставьте JWT без 'Bearer '" />
+                    <span class="hint">Оставьте пустым, если эндпоинт публичный. Для /identity/me — обязательно.</span>
+                </label>
+
+                <div id="jsonBlock">
+                    <label>
+                        JSON Body
+                        <textarea id="json" spellcheck="false" placeholder='{ "username": "fes", "password": "fes256!" }'></textarea>
+                    </label>
+                </div>
+
+                <div id="formBlock" style="display:none;">
+                    <div class="grid2">
+                        <label>OwnerId <input type="text" id="f_owner" placeholder="UUID или строка" /></label>
+                        <label>Title <input type="text" id="f_title" placeholder="описание" /></label>
+                    </div>
+                    <label>
+                        Description
+                        <input type="text" id="f_desc" placeholder="краткое описание" />
+                    </label>
+                    <label>
+                        MediaType
+                        <select id="f_media">
+                            <option value="Image" selected>Image</option>
+                            <option value="Video">Video</option>
+                            <option value="Document">Document</option>
+                            <option value="Audio">Audio</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </label>
+                    <label>
+                        File
+                        <input type="file" id="f_file" />
+                        <span class="hint">Отправляется как multipart/form-data → поле <code>File</code></span>
+                    </label>
+                </div>
+
+                <div class="row">
+                    <button class="btn" id="send">Отправить</button>
+                    <button class="btn secondary" id="fill">Заполнить пример</button>
+                </div>
+
+                <div class="divider"></div>
+
+                <label>
+                    Сгенерированный curl
+                    <textarea id="curl" spellcheck="false" readonly></textarea>
+                </label>
+            </div>
+        </section>
+
+        <!-- RIGHT: response viewer -->
+        <section class="card">
+            <h3>Ответ</h3>
+            <div class="body">
+                <div class="inline">
+                    <span class="muted">HTTP Status:</span>
+                    <span id="status" class="pill get">—</span>
+                </div>
+                <label>
+                    Заголовки
+                    <textarea id="respHeaders" readonly></textarea>
+                </label>
+            </div>
+            <h3>Тело ответа</h3>
+            <pre id="resp">—</pre>
+        </section>
+    </main>
+
+    <script>
+        (() => {
+            const tabs = document.getElementById('tabs');
+            const method = document.getElementById('method');
+            const url = document.getElementById('url');
+            const auth = document.getElementById('auth');
+            const json = document.getElementById('json');
+            const jsonBlock = document.getElementById('jsonBlock');
+            const formBlock = document.getElementById('formBlock');
+            const sendBtn = document.getElementById('send');
+            const fillBtn = document.getElementById('fill');
+            const curlBox = document.getElementById('curl');
+            const respEl = document.getElementById('resp');
+            const statusEl = document.getElementById('status');
+            const respHeaders = document.getElementById('respHeaders');
+            const fOwner = document.getElementById('f_owner');
+            const fTitle = document.getElementById('f_title');
+            const fDesc = document.getElementById('f_desc');
+            const fMedia = document.getElementById('f_media');
+            const fFile = document.getElementById('f_file');
+
+            let currentTab = 'identity';
+            const presets = {
+                identity: {
+                    method: 'POST',
+                    url: 'http://localhost:8080/identity/login',
+                    json: JSON.stringify({ username: 'fes', password: 'fes256!' }, null, 2),
+                    mode: 'json'
+                },
+                memory: {
+                    method: 'POST',
+                    url: 'http://localhost:8080/memory/api/memory',
+                    mode: 'form',
+                    form: {
+                        OwnerId: '8bfbdace-33b7-4764-9903-39a6dc48bf7d',
+                        Title: 'Dad astronaut',
+                        Description: 'Test upload via gateway',
+                        MediaType: 'Image'
+                    }
+                }
+            };
+
+            function setMode(mode) {
+                if (mode === 'json') {
+                    jsonBlock.style.display = '';
+                    formBlock.style.display = 'none';
+                } else {
+                    jsonBlock.style.display = 'none';
+                    formBlock.style.display = '';
+                }
+                updateCurl();
+            }
+
+            function pickTab(tab) {
+                currentTab = tab;
+                for (const btn of tabs.querySelectorAll('.tab')) {
+                    btn.classList.toggle('active', btn.dataset.tab === tab);
+                }
+                const p = presets[tab];
+                method.value = p.method;
+                url.value = p.url;
+                if (p.mode === 'json') {
+                    json.value = p.json || '';
+                } else {
+                    fOwner.value = p.form.OwnerId || '';
+                    fTitle.value = p.form.Title || '';
+                    fDesc.value = p.form.Description || '';
+                    fMedia.value = p.form.MediaType || 'Image';
+                    fFile.value = '';
+                }
+                setMode(p.mode);
+            }
+
+            function escapeShellArg(s) {
+                return s.replaceAll("'", "'\"'\"'");
+            }
+
+            function updateCurl() {
+                const m = method.value;
+                const u = url.value;
+                const token = auth.value.trim();
+                const headers = [];
+                let bodyPart = '';
+
+                if (token) headers.push("-H 'Authorization: Bearer " + escapeShellArg(token) + "'");
+
+                if (jsonBlock.style.display !== 'none') {
+                    headers.push("-H 'Content-Type: application/json'");
+                    const payload = json.value || '';
+                    bodyPart = payload ? `-d '${escapeShellArg(payload)}'` : '';
+                } else {
+                    // multipart
+                    headers.push("-H 'Content-Type: multipart/form-data'");
+                    const fields = [];
+                    if (fOwner.value) fields.push(`-F 'OwnerId=${escapeShellArg(fOwner.value)}'`);
+                    if (fTitle.value) fields.push(`-F 'Title=${escapeShellArg(fTitle.value)}'`);
+                    if (fDesc.value) fields.push(`-F 'Description=${escapeShellArg(fDesc.value)}'`);
+                    if (fMedia.value) fields.push(`-F 'MediaType=${escapeShellArg(fMedia.value)}'`);
+                    if (fFile.files.length) {
+                        // только имя — напоминание пользователю
+                        fields.push(`-F 'File=@${escapeShellArg(fFile.files[0].name)};type=${fFile.files[0].type || 'application/octet-stream'}'`);
+                    }
+                    bodyPart = fields.join(' \\\n  ');
+                }
+
+                const head = headers.join(' \\\n  ');
+                const curl = [
+                    `curl -X '${m}' \\`,
+                    `  '${u}' \\`,
+                    head ? `  ${head} \\` : '',
+                    bodyPart ? `  ${bodyPart}` : ''
+                ].filter(Boolean).join('\n');
+                curlBox.value = curl;
+            }
+
+            method.addEventListener('change', updateCurl);
+            url.addEventListener('input', updateCurl);
+            auth.addEventListener('input', updateCurl);
+            json.addEventListener('input', updateCurl);
+            fOwner.addEventListener('input', updateCurl);
+            fTitle.addEventListener('input', updateCurl);
+            fDesc.addEventListener('input', updateCurl);
+            fMedia.addEventListener('change', updateCurl);
+            fFile.addEventListener('change', updateCurl);
+
+            tabs.addEventListener('click', (e) => {
+                const btn = e.target.closest('[data-tab]');
+                if (!btn) return;
+                pickTab(btn.dataset.tab);
+            });
+
+            fillBtn.addEventListener('click', () => {
+                pickTab(currentTab);
+            });
+
+            sendBtn.addEventListener('click', async () => {
+                sendBtn.disabled = true;
+                statusEl.textContent = '…';
+                statusEl.className = 'pill get';
+
+                try {
+                    const m = method.value;
+                    const u = url.value;
+                    const token = auth.value.trim();
+                    const headers = new Headers();
+                    if (token) headers.set('Authorization', `Bearer ${token}`);
+
+                    let body = undefined;
+                    if (jsonBlock.style.display !== 'none') {
+                        headers.set('Content-Type', 'application/json');
+                        body = json.value || '';
+                    } else {
+                        const fd = new FormData();
+                        if (fOwner.value) fd.append('OwnerId', fOwner.value);
+                        if (fTitle.value) fd.append('Title', fTitle.value);
+                        if (fDesc.value) fd.append('Description', fDesc.value);
+                        if (fMedia.value) fd.append('MediaType', fMedia.value);
+                        if (fFile.files.length) fd.append('File', fFile.files[0], fFile.files[0].name);
+                        body = fd;
+                        // заголовок Content-Type FormData ставит сам браузер
+                        headers.delete('Content-Type');
+                    }
+
+                    const res = await fetch(u, { method: m, headers, body });
+                    const ct = res.headers.get('content-type') || '';
+                    const hdrs = [];
+                    res.headers.forEach((v, k) => hdrs.push(`${k}: ${v}`));
+                    respHeaders.value = hdrs.join('\n');
+
+                    statusEl.textContent = res.status + ' ' + res.statusText;
+                    statusEl.className = 'pill ' + (m === 'GET' ? 'get' : 'post');
+
+                    let text;
+                    if (ct.includes('application/json')) {
+                        const j = await res.json().catch(() => ({}));
+                        text = JSON.stringify(j, null, 2);
+                    } else {
+                        text = await res.text();
+                    }
+                    respEl.textContent = text || '—';
+                } catch (err) {
+                    statusEl.textContent = 'ERR';
+                    statusEl.className = 'pill post';
+                    respEl.textContent = String(err);
+                } finally {
+                    sendBtn.disabled = false;
+                }
+            });
+
+            // initial
+            pickTab('identity');
+            updateCurl();
+        })();
+    </script>
 </body>
 </html>
