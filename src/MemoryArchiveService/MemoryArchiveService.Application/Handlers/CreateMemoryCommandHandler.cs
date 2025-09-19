@@ -28,55 +28,77 @@ public class CreateMemoryCommandHandler : IRequestHandler<CreateMemoryCommand, M
 
     public async Task<MemoryDto> Handle(CreateMemoryCommand request, CancellationToken ct)
     {
-        // 1) Загружаем файл (сторедж САМ копирует поток внутрь себя)
-        var storageUrl = await _storage.UploadAsync(
-            request.FileStream,
+        // Буферизуем входной поток, чтобы можно было безопасно читать его при загрузке
+        using var buffer = new MemoryStream();
+        await request.FileStream.CopyToAsync(buffer, ct);
+        buffer.Position = 0;
+
+        // Грузим файл в S3 (Supabase)
+        var upload = await _storage.UploadAsync(
+            buffer,
             request.FileName,
             request.ContentType,
-            ct
-        );
+            ct);
 
-        // 2) Тип медиа
-        var mediaType = Enum.TryParse<MediaType>(request.MediaType, true, out var parsed)
-            ? parsed
+        // Тип медиа
+        var mediaType = Enum.TryParse<MediaType>(request.MediaType, ignoreCase: true, out var parsedType)
+            ? parsedType
             : MediaType.Image;
 
-        // 3) Сущность
         var memory = new Memory
         {
             Id = Guid.NewGuid(),
-            OwnerId = Guid.Parse(request.OwnerId),
+            OwnerId = Guid.TryParse(request.OwnerId, out var ownerId)
+                ? ownerId
+                : throw new ArgumentException("Invalid OwnerId"),
             Title = request.Title,
             Description = request.Description,
             CreatedAt = DateTime.UtcNow,
-            AccessLevel = Enum.TryParse(request.AccessLevel, true, out AccessLevel level) ? level : AccessLevel.Private,
+            AccessLevel = Enum.TryParse(request.AccessLevel, out AccessLevel level) ? level : AccessLevel.Private,
             Tags = new List<Tag>(),
             MediaFiles = new List<MediaFile>
             {
-                new()
+                new MediaFile
                 {
-                    Id         = Guid.NewGuid(),
-                    FileName   = request.FileName,
-                    Url        = storageUrl,
-                    StorageUrl = storageUrl,
-                    MediaType  = mediaType,
-                    OwnerId    = request.OwnerId,
-                    CreatedAt  = DateTime.UtcNow
+                    Id = Guid.NewGuid(),
+                    FileName = request.FileName,
+                    Url = upload.Url,
+                    StorageUrl = upload.Url,
+                    MediaType = mediaType,
+                    OwnerId = request.OwnerId,
+                    CreatedAt = DateTime.UtcNow,
+                    Size = upload.Size
                 }
             }
         };
 
+        // Теги
         if (request.Tags is { Count: > 0 })
         {
-            foreach (var name in request.Tags)
+            foreach (var tagName in request.Tags!)
             {
-                var tag = await _tags.GetByNameAsync(name, ct) ?? new Tag { Id = Guid.NewGuid(), Name = name };
+                var tag = await _tags.GetByNameAsync(tagName, ct)
+                          ?? new Tag { Id = Guid.NewGuid(), Name = tagName };
                 memory.Tags.Add(tag);
             }
         }
 
         await _repo.AddAsync(memory, ct);
+
         await _eventBus.PublishAsync(new { Event = "MemoryCreated", MemoryId = memory.Id }, ct);
+
+        // Мэп обратно в DTO с медиафайлами
+        var mediaDtos = memory.MediaFiles.Select(m => new MediaFileDto
+        {
+            Id = m.Id,
+            FileName = m.FileName,
+            Url = m.Url,
+            StorageUrl = m.StorageUrl,
+            MediaType = m.MediaType.ToString(),
+            OwnerId = m.OwnerId,
+            CreatedAt = m.CreatedAt,
+            Size = m.Size
+        }).ToList();
 
         return new MemoryDto
         {
@@ -87,17 +109,8 @@ public class CreateMemoryCommandHandler : IRequestHandler<CreateMemoryCommand, M
             CreatedAt = memory.CreatedAt,
             AccessLevel = memory.AccessLevel.ToString(),
             Tags = memory.Tags.Select(t => t.Name).ToList(),
-            MediaFiles = memory.MediaFiles.Select(m => new MediaFileDto
-            {
-                Id = m.Id,
-                MemoryId = memory.Id,                  // безопасно: даже если в сущности нет m.MemoryId
-                FileName = m.FileName,
-                Url = m.Url ?? m.StorageUrl ?? string.Empty,
-                MediaType = m.MediaType.ToString(),
-                UploadedAt = m.CreatedAt,              // если в сущности есть UploadedAt — можешь проставить его
-                CreatedAt = m.CreatedAt
-            }).ToList(),
-            MediaCount = memory.MediaFiles.Count
+            MediaFiles = mediaDtos,
+            MediaCount = mediaDtos.Count
         };
     }
 }
