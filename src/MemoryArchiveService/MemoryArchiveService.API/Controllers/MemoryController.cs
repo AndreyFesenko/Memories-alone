@@ -1,25 +1,31 @@
-﻿//C:\Users\user\Source\Repos\Memories-alone\src\MemoryArchiveService\MemoryArchiveService.API\Controllers\MemoryController.cs
+﻿// src/MemoryArchiveService/MemoryArchiveService.API/Controllers/MemoryController.cs
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using MemoryArchiveService.Application.Commands;
-using MemoryArchiveService.API.Models;
 using MemoryArchiveService.API.Mapping;
+using MemoryArchiveService.API.Models;
+using MemoryArchiveService.Application.Commands;
 using MemoryArchiveService.Application.DTOs;
 using MemoryArchiveService.Application.Queries;
+using MemoryArchiveService.Infrastructure.Services;
 
 namespace MemoryArchiveService.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/memory")]
 public class MemoryController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<MemoryController> _logger;
+    private readonly IPublicUrlResolver _urlResolver;
 
-    public MemoryController(IMediator mediator, ILogger<MemoryController> logger)
+    public MemoryController(
+        IMediator mediator,
+        ILogger<MemoryController> logger,
+        IPublicUrlResolver urlResolver)
     {
         _mediator = mediator;
         _logger = logger;
+        _urlResolver = urlResolver;
     }
 
     /// <summary>
@@ -37,6 +43,7 @@ public class MemoryController : ControllerBase
         var command = await form.MapToCommandAsync(ct);
         var result = await _mediator.Send(command, ct);
 
+        NormalizeMediaUrls(result);
         return Ok(result);
     }
 
@@ -54,6 +61,7 @@ public class MemoryController : ControllerBase
         if (result == null)
             return NotFound();
 
+        NormalizeMediaUrls(result);
         return Ok(result);
     }
 
@@ -79,6 +87,23 @@ public class MemoryController : ControllerBase
 
         var result = await _mediator.Send(query, ct);
 
+        // Нормализуем публичные ссылки во всех элементах страницы
+        if (result?.Items != null)
+        {
+            foreach (var dto in result.Items)
+                NormalizeMediaUrls(dto);
+        }
+
         return Ok(result);
+    }
+
+    private void NormalizeMediaUrls(MemoryDto? dto)
+    {
+        if (dto?.MediaFiles == null) return;
+        foreach (var m in dto.MediaFiles)
+        {
+            // Отдаём в поле Url уже публичную ссылку
+            m.Url = _urlResolver.Resolve(m.Url, m.StorageUrl);
+        }
     }
 }

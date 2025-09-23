@@ -27,24 +27,32 @@ public static class DependencyInjection
         services.Configure<RabbitMqOptions>(config.GetSection("RabbitMq"));
         services.AddSingleton<IEventBus, RabbitMqEventBus>();
 
+
         // Supabase S3
+
         services.AddSingleton<IAmazonS3>(sp =>
         {
-            var cfg = sp.GetRequiredService<IConfiguration>();
-            return new AmazonS3Client(
-                cfg["Supabase:S3:AccessKey"],
-                cfg["Supabase:S3:SecretKey"],
-                new AmazonS3Config
-                {
-                    ServiceURL = cfg["Supabase:S3:Endpoint"], // https://...supabase.co/storage/v1/s3
-                    ForcePathStyle = true,                     // обязательно для S3-совместимых API
-                    //SignatureVersion = "4"                     // явное V4-подписание (безопасно)
-                    // AuthenticationRegion можно не указывать с ServiceURL
-                });
+            var cfg = sp.GetRequiredService<IConfiguration>().GetSection("Supabase:S3");
+
+            var serviceUrl = cfg["Endpoint"];         // ✅ правильно
+            var access = cfg["AccessKey"];        // ✅ S3-ключи из Storage → S3 keys
+            var secret = cfg["SecretKey"];
+
+            var s3cfg = new AmazonS3Config
+            {
+                ServiceURL = serviceUrl,              // например: https://<project>.supabase.co/storage/v1/s3
+                ForcePathStyle = true,                // для совместимых S3 API
+                AuthenticationRegion = "ap-southeast-1"    // обязательно для Supabase S3 SDK
+            };
+
+            return new AmazonS3Client(access, secret, s3cfg);
         });
+
 
         // Хранилище на базе IAmazonS3
         services.AddScoped<IStorageService, SupabaseStorageService>();
+
+        services.AddSingleton<IPublicUrlResolver, SupabasePublicUrlResolver>();
 
         return services;
     }

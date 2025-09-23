@@ -1,6 +1,7 @@
 // src/MemoryArchiveService/MemoryArchiveService.API/Program.cs
 using System.Text.Json.Serialization;
 using Amazon.S3;
+using Amazon;
 using MemoryArchiveService.Application;
 using MemoryArchiveService.Infrastructure;
 using MemoryArchiveService.Infrastructure.Persistence;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.EntityFrameworkCore;
 using RabbitMQ.Client;
 using Serilog;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +48,30 @@ builder.Services.AddOpenApi(); // /openapi.json
 // DI из Application/Infrastructure
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
+
+builder.Services.AddAuthentication("Bearer")
+    .AddJwtBearer("Bearer", options =>
+    {
+        // В DEV работаем по HTTP
+        options.RequireHttpsMetadata = false;
+
+        // Не указываем Authority/MetadataAddress в dev,
+        // валидируем только базовые вещи (при необходимости — подпись)
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = false, // если надо проверять подпись — поставь true и укажи IssuerSigningKey
+            ClockSkew = TimeSpan.FromMinutes(2)
+        };
+
+        // Если ты НЕ хочешь, чтобы клеймы переписывались в ms-стиль
+        options.MapInboundClaims = false;
+    });
+
+builder.Services.AddAuthorization();
+
 
 // Http logging
 builder.Services.AddHttpLogging(o =>
@@ -88,6 +114,10 @@ _ = Task.Run(async () =>
     var cfg = sp.GetRequiredService<IConfiguration>();
     await CloudChecks.RunOnceAsync(sp, cfg, CancellationToken.None);
 });
+
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.Run();
 

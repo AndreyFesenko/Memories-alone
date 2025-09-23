@@ -8,6 +8,9 @@
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <!-- zip utils -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
         :root {
             --bg: #0f172a;
@@ -19,238 +22,64 @@
             --yellow: #f59e0b
         }
 
-        * {
-            box-sizing: border-box
-        }
+        * { box-sizing: border-box }
+        body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif }
+        header { display: flex; gap: 16px; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #1f2937; background: #0b1220; position: sticky; top: 0; z-index: 3 }
+        header h1 { font-size: 16px; margin: 0; font-weight: 600 }
+        header .env { font-size: 12px; color: var(--muted) }
 
-        body {
-            margin: 0;
-            background: var(--bg);
-            color: var(--ink);
-            font: 14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif
-        }
+        main { display: grid; grid-template-columns: 360px 1fr; gap: 16px; padding: 16px; max-width: 1500px; margin: 0 auto }
 
-        header {
-            display: flex;
-            gap: 16px;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 20px;
-            border-bottom: 1px solid #1f2937;
-            background: #0b1220;
-            position: sticky;
-            top: 0;
-            z-index: 3
-        }
+        .card { background: var(--panel); border: 1px solid #1f2937; border-radius: 12px; overflow: hidden }
+        .card h3 { margin: 0; padding: 12px 14px; border-bottom: 1px solid #1f2937; font-size: 13px; letter-spacing: .2px; color: #cbd5e1 }
+        .card .body { padding: 12px 14px; display: grid; gap: 10px }
 
-            header h1 {
-                font-size: 16px;
-                margin: 0;
-                font-weight: 600
-            }
+        label { display: grid; gap: 6px; font-size: 12px; color: #cbd5e1 }
+        input[type="text"], input[type="url"], select, textarea { width: 100%; background: #0b1220; color: var(--ink); border: 1px solid #1f2937; border-radius: 8px; padding: 9px 10px; font-size: 13px }
+        textarea { min-height: 120px; resize: vertical }
 
-            header .env {
-                font-size: 12px;
-                color: var(--muted)
-            }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
 
-        main {
-            display: grid;
-            grid-template-columns: 360px 1fr;
-            gap: 16px;
-            padding: 16px;
-            max-width: 1500px;
-            margin: 0 auto
-        }
+        .btn { display: inline-flex; align-items: center; gap: 8px; background: var(--accent); border: none; color: #052e16; border-radius: 10px; padding: 10px 14px; font-weight: 600; cursor: pointer }
+        .btn.secondary { background: #1f2937; color: #e5e7eb }
+        .btn:disabled { opacity: .6; cursor: not-allowed }
+        .btn.small { padding: 4px 8px; font-size: 11px }
+        .btn.ghost { background: #0b1220; color: #cbd5e1; border: 1px solid #1f2937 }
+        .btn.warning { background: #f59e0b; color: #1f1300 }
 
-        .card {
-            background: var(--panel);
-            border: 1px solid #1f2937;
-            border-radius: 12px;
-            overflow: hidden
-        }
+        .tabs { display: flex; gap: 6px }
+        .tab { padding: 6px 10px; border-radius: 8px; border: 1px solid #1f2937; background: #0b1220; color: #cbd5e1; cursor: pointer; font-size: 12px }
+        .tab.active { background: #1f2937 }
 
-            .card h3 {
-                margin: 0;
-                padding: 12px 14px;
-                border-bottom: 1px solid #1f2937;
-                font-size: 13px;
-                letter-spacing: .2px;
-                color: #cbd5e1
-            }
+        pre, code { font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace; font-size: 12px }
+        pre { margin: 0; white-space: pre-wrap; word-break: break-word; max-height: 520px; overflow: auto; background: #0b1220; border-top: 1px solid #1f2937; padding: 12px 14px }
 
-            .card .body {
-                padding: 12px 14px;
-                display: grid;
-                gap: 10px
-            }
+        .pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-weight: 600; font-size: 11px }
+        .pill.get { background: #052e16; color: #86efac; border: 1px solid #166534 }
+        .pill.post { background: #111827; color: #93c5fd; border: 1px solid #1d4ed8 }
 
-        label {
-            display: grid;
-            gap: 6px;
-            font-size: 12px;
-            color: #cbd5e1
-        }
+        .muted { color: var(--muted); font-size: 12px }
+        .divider { height: 1px; background: #1f2937; margin: 8px 0 }
+        .hint { font-size: 11px; color: #a3a3a3 }
+        .inline { display: flex; gap: 8px; align-items: center }
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
 
-        input[type="text"], input[type="url"], select, textarea {
-            width: 100%;
-            background: #0b1220;
-            color: var(--ink);
-            border: 1px solid #1f2937;
-            border-radius: 8px;
-            padding: 9px 10px;
-            font-size: 13px
-        }
+        details.devnotes summary { cursor: pointer; padding: 10px 14px }
+        details.devnotes .body { padding-top: 0 }
+        kbd { background: #0b1220; border: 1px solid #1f2937; border-radius: 6px; padding: 2px 6px; font-size: 11px }
 
-        textarea {
-            min-height: 120px;
-            resize: vertical
-        }
+        .file-preview { font-size: 12px; color: #cbd5e1; background: #0b1220; border: 1px dashed #334155; border-radius: 8px; padding: 8px }
 
-        .row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: var(--accent);
-            border: none;
-            color: #052e16;
-            border-radius: 10px;
-            padding: 10px 14px;
-            font-weight: 600;
-            cursor: pointer
-        }
-
-            .btn.secondary {
-                background: #1f2937;
-                color: #e5e7eb
-            }
-
-            .btn:disabled {
-                opacity: .6;
-                cursor: not-allowed
-            }
-
-            .btn.small {
-                padding: 4px 8px;
-                font-size: 11px
-            }
-
-        .tabs {
-            display: flex;
-            gap: 6px
-        }
-
-        .tab {
-            padding: 6px 10px;
-            border-radius: 8px;
-            border: 1px solid #1f2937;
-            background: #0b1220;
-            color: #cbd5e1;
-            cursor: pointer;
-            font-size: 12px
-        }
-
-            .tab.active {
-                background: #1f2937
-            }
-
-        pre, code {
-            font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
-            font-size: 12px
-        }
-
-        pre {
-            margin: 0;
-            white-space: pre-wrap;
-            word-break: break-word;
-            max-height: 520px;
-            overflow: auto;
-            background: #0b1220;
-            border-top: 1px solid #1f2937;
-            padding: 12px 14px
-        }
-
-        .pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 2px 8px;
-            border-radius: 999px;
-            font-weight: 600;
-            font-size: 11px
-        }
-
-            .pill.get {
-                background: #052e16;
-                color: #86efac;
-                border: 1px solid #166534
-            }
-
-            .pill.post {
-                background: #111827;
-                color: #93c5fd;
-                border: 1px solid #1d4ed8
-            }
-
-        .muted {
-            color: var(--muted);
-            font-size: 12px
-        }
-
-        .divider {
-            height: 1px;
-            background: #1f2937;
-            margin: 8px 0
-        }
-
-        .hint {
-            font-size: 11px;
-            color: #a3a3a3
-        }
-
-        .inline {
-            display: flex;
-            gap: 8px;
-            align-items: center
-        }
-
-        .grid2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px
-        }
-
-        details.devnotes summary {
-            cursor: pointer;
-            padding: 10px 14px
-        }
-
-        details.devnotes .body {
-            padding-top: 0
-        }
-
-        kbd {
-            background: #0b1220;
-            border: 1px solid #1f2937;
-            border-radius: 6px;
-            padding: 2px 6px;
-            font-size: 11px
-        }
-
-        .file-preview {
-            font-size: 12px;
-            color: #cbd5e1;
-            background: #0b1220;
-            border: 1px dashed #334155;
-            border-radius: 8px;
-            padding: 8px
-        }
+        .preview { margin: 0; padding: 12px 14px; border-top: 1px solid #1f2937; }
+        .preview .toolbar { display:flex; gap:8px; align-items:center; justify-content:flex-start; margin-bottom:8px; flex-wrap: wrap;}
+        .preview h4 { margin: 0 0 8px 0; font-size: 13px; color: #cbd5e1; }
+        .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+        .preview-item { background: #0b1220; border: 1px solid #334155; border-radius: 10px; padding: 8px; overflow: hidden; }
+        .preview-item img, .preview-item video { width: 100%; height: 130px; object-fit: cover; border-radius: 8px; display: block; }
+        .preview-item audio { width: 100%; display: block; }
+        .preview-item .meta { font-size: 11px; color: #9ca3af; margin-top: 6px; word-break: break-word; }
+        .preview-item a { text-decoration: none; color: #93c5fd; font-size: 12px; }
+        .tiny { font-size: 11px; color: #9ca3af; }
     </style>
 </head>
 <body>
@@ -336,6 +165,19 @@
                         <label>MemoryId <input type="text" id="f_memoryId" placeholder="для /{memoryId}" /></label>
                         <label>MediaId <input type="text" id="f_mediaId" placeholder="для /{mediaId}" /></label>
                     </div>
+                    <div class="grid2">
+                        <label>Page <input type="number" id="f_page" value="1" min="1" /></label>
+                        <label>PageSize <input type="number" id="f_pageSize" value="10" min="1" max="100" /></label>
+                    </div>
+                    <label>
+                        AccessLevel (query для ListByUser)
+                        <select id="f_accessQuery">
+                            <option value="">(любой)</option>
+                            <option>Private</option>
+                            <option>Public</option>
+                            <option>FriendsOnly</option>
+                        </select>
+                    </label>
                     <label>File <input type="file" id="f_file" /></label>
                     <div id="filePreview" class="file-preview" style="display:none;"></div>
                 </div>
@@ -366,6 +208,15 @@
             </div>
             <h3>Тело ответа</h3>
             <pre><code id="resp" class="language-json">—</code></pre>
+            <div id="preview" class="preview" style="display:none;">
+                <div class="toolbar">
+                    <button class="btn small ghost" id="openAll">Открыть всё</button>
+                    <button class="btn small ghost" id="copyIds">Скопировать mediaId</button>
+                    <button class="btn small ghost" id="downloadAll">Скачать всё (zip)</button>
+                    <button class="btn small" id="downloadAllServer">Скачать всё (сервер)</button>
+                    <span class="tiny" id="dlHint" style="display:none;"></span>
+                </div>
+            </div>
         </section>
     </main>
 
@@ -400,39 +251,70 @@
                         <br />200 → id/claims; 401 → без/с невалидным токеном.
                     </li>
                 </ul>
-
                 <h4>MemoryArchive</h4>
                 <ul>
                     <li>
-                        <kbd>POST</kbd> <code>/memory/api/memory</code> — создать Memory c файлом.
+                        <kbd>POST</kbd> <code>/api/memory</code> — создать Memory c файлом.
                         <br />FormData: <code>OwnerId, Title, Description, MediaType, [AccessLevel], File</code>
                         <br />200 → <code>MemoryDto</code>.
                         <br />400 → валидация (например, нет файла).
                     </li>
+
                     <li>
-                        <kbd>POST</kbd> <code>/memory/api/memory/{memoryId}/media</code> — добавить файл в Memory.
+                        <kbd>POST</kbd> <code>/api/memory/{memoryId}/media</code> — добавить файл в Memory.
                         <br />FormData: <code>File, MediaType</code>
                         <br />200 → <code>MediaFileDto</code>; 404 → memoryId не найден.
                     </li>
+
                     <li>
-                        <kbd>PUT</kbd> <code>/memory/api/memory/{memoryId}</code> — обновить Memory.
+                        <kbd>PUT</kbd> <code>/api/memory/{memoryId}</code> — обновить Memory.
                         <br />Body JSON: <code>title, description, accessLevel</code>
                         <br />200 → обновлённый <code>MemoryDto</code>; 404 — не найден.
                     </li>
+
                     <li>
-                        <kbd>PUT</kbd> <code>/memory/api/memory/{memoryId}/media/{mediaId}</code> — обновить метаданные файла.
+                        <kbd>PUT</kbd> <code>/api/memory/{memoryId}/media/{mediaId}</code> — обновить метаданные файла.
                         <br />Body JSON: <code>fileName?, mediaType?</code>
                         <br />200 → <code>MediaFileDto</code>; 404 — не найдено.
                     </li>
+
                     <li>
-                        <kbd>DELETE</kbd> <code>/memory/api/memory/{memoryId}</code> — удалить Memory целиком.
+                        <kbd>DELETE</kbd> <code>/api/memory/{memoryId}</code> — удалить Memory целиком.
                         <br />204 → ok; 404 — не найден.
                     </li>
+
                     <li>
-                        <kbd>DELETE</kbd> <code>/memory/api/memory/{memoryId}/media/{mediaId}</code> — удалить файл.
+                        <kbd>DELETE</kbd> <code>/api/memory/{memoryId}/media/{mediaId}</code> — удалить файл.
                         <br />204 → ok; 404 — не найдено.
                     </li>
+
+                    <li>
+                        <kbd>GET</kbd> <code>/api/memory/{id}</code> — получить Memory по Id <em>(GetMemoryById)</em>.
+                        <br />200 → <code>MemoryDto</code>; 404 — не найден.
+                    </li>
+
+                    <li>
+                        <kbd>GET</kbd> <code>/api/media/{id}</code> — получить метаданные файла <em>(GetMediaById)</em>.
+                        <br />200 → <code>MediaFileDto</code>; 404 — не найден.
+                    </li>
+
+                    <li>
+                        <kbd>GET</kbd> <code>/api/memory/user/{userId}?accessLevel=&page=&pageSize=</code> — список воспоминаний пользователя <em>(ListByUser)</em>.
+                        <br />200 → <code>PagedResult&lt;MemoryDto&gt;</code> с <code>items[], totalCount, page, pageSize</code>.
+                        <br /><span class="hint">Превью использует <code>mediaFiles[].url</code>. Для приватных бакетов — генерируйте публичный URL (напр., через <code>PublicBaseUrl</code>) или сделайте бакет публичным.</span>
+                    </li>
+
+                    <li>
+                        <kbd>GET</kbd> <code>/api/memory/{id}/zip</code> — скачать все файлы одного Memory (сервер формирует zip).
+                        <br />200 → <code>application/zip</code>; требуется <code>Authorization: Bearer JWT</code>.
+                    </li>
+
+                    <li>
+                        <kbd>GET</kbd> <code>/api/memory/user/{userId}/zip?accessLevel=&page=&pageSize=</code> — скачать все файлы пользователя одним архивом (сервер формирует zip).
+                        <br />200 → <code>application/zip</code>; требуется <code>Authorization: Bearer JWT</code>.
+                    </li>
                 </ul>
+
             </div>
         </details>
     </section>
@@ -448,10 +330,16 @@
                 sendBtn = document.getElementById('send'), fillBtn = document.getElementById('fill'),
                 curlBox = document.getElementById('curl'), respEl = document.getElementById('resp'),
                 statusEl = document.getElementById('status'), respHeaders = document.getElementById('respHeaders'),
+                previewEl = document.getElementById('preview'),
                 fOwner = document.getElementById('f_owner'), fTitle = document.getElementById('f_title'),
                 fDesc = document.getElementById('f_desc'), fMedia = document.getElementById('f_media'),
                 fAccess = document.getElementById('f_access'), fFile = document.getElementById('f_file'),
                 fMemoryId = document.getElementById('f_memoryId'), fMediaId = document.getElementById('f_mediaId'),
+                fPage = document.getElementById('f_page'), fPageSize = document.getElementById('f_pageSize'),
+                fAccessQuery = document.getElementById('f_accessQuery'),
+                btnOpenAll = document.getElementById('openAll'), btnCopyIds = document.getElementById('copyIds'),
+                btnDownloadAll = document.getElementById('downloadAll'), btnDownloadAllServer = document.getElementById('downloadAllServer'),
+                dlHint = document.getElementById('dlHint'),
                 copyJwt = document.getElementById('copyJwt'), copyCurl = document.getElementById('copyCurl'),
                 tabs = document.getElementById('tabs'), persistBodies = document.getElementById('persistBodies'),
                 filePreview = document.getElementById('filePreview');
@@ -459,11 +347,14 @@
             let currentTab = 'identity', currentEndpointKey = '';
             const LS_JWT_KEY = 'memories.jwt';
             const LS_PERSIST = 'memories.persist';
-            const LS_STATE = 'memories.state.v1'; // map endpointKey -> {mode,json,form}
+            const LS_STATE = 'memories.state.v4'; // bump version to avoid old cache
 
             // состояние по эндпоинтам
             let stateStore = {};
             try { stateStore = JSON.parse(localStorage.getItem(LS_STATE) || '{}') } catch { stateStore = {} }
+
+            // keep last media for toolbar actions
+            let lastMedia = []; // {url,id,name,type}
 
             const endpoints = {
                 identity: {
@@ -491,6 +382,25 @@
                         form: { OwnerId: '', Title: '', Description: '', MediaType: 'Image', AccessLevel: '' },
                         hint: 'FormData с файлом — см. поля ниже'
                     },
+
+                    // Presets for retrieval
+                    getMemory: {
+                        label: 'GetMemoryById', method: 'GET',
+                        urlTemplate: 'http://localhost:8080/memory/api/memory/{memoryId}', mode: 'none',
+                        hint: 'Возвращает MemoryDto по Id'
+                    },
+                    listByUser: {
+                        label: 'ListByUser', method: 'GET',
+                        urlTemplate: 'http://localhost:8080/memory/api/memory/user/{userId}?page=1&pageSize=10',
+                        mode: 'none',
+                        hint: 'Параметры: accessLevel,page,pageSize. {userId} берётся из поля OwnerId.'
+                    },
+                    getMedia: {
+                        label: 'GetMediaById', method: 'GET',
+                        urlTemplate: 'http://localhost:8080/memory/api/media/{mediaId}', mode: 'none',
+                        hint: 'Возвращает MediaFileDto по Id (с URL, если настроено)'
+                    },
+
                     upload: {
                         label: 'UploadMedia', method: 'POST', urlTemplate: 'http://localhost:8080/memory/api/memory/{memoryId}/media', mode: 'form',
                         form: { MemoryId: '', MediaType: 'Image' },
@@ -563,6 +473,9 @@
                     fAccess.value = saved?.form?.AccessLevel ?? p.form?.AccessLevel ?? '';
                     fMemoryId.value = saved?.form?.MemoryId ?? '';
                     fMediaId.value = saved?.form?.MediaId ?? '';
+                    fPage.value = saved?.form?.Page ?? 1;
+                    fPageSize.value = saved?.form?.PageSize ?? 10;
+                    fAccessQuery.value = saved?.form?.AccessQuery ?? '';
                     fFile.value = '';
                     updateFilePreview();
                 }
@@ -587,7 +500,23 @@
             function fillPathPlaceholders(u) {
                 return u
                     .replace('{memoryId}', fMemoryId.value || '{memoryId}')
-                    .replace('{mediaId}', fMediaId.value || '{mediaId}');
+                    .replace('{mediaId}', fMediaId.value || '{mediaId}')
+                    .replace('{userId}', fOwner.value || '{userId}');
+            }
+
+            function buildListByUserUrl(rawUrl) {
+                try {
+                    const urlObj = new URL(fillPathPlaceholders(rawUrl));
+                    if (currentTab === 'memory' && endpointSel.value === 'listByUser') {
+                        urlObj.searchParams.set('page', String(fPage.value || 1));
+                        urlObj.searchParams.set('pageSize', String(fPageSize.value || 10));
+                        if (fAccessQuery.value) urlObj.searchParams.set('accessLevel', fAccessQuery.value);
+                        else urlObj.searchParams.delete('accessLevel');
+                    }
+                    return urlObj.toString();
+                } catch {
+                    return fillPathPlaceholders(rawUrl);
+                }
             }
 
             function escapeShellArg(s) { return s.replaceAll("'", "'\"'\"'") }
@@ -595,7 +524,7 @@
             function updateCurl() {
                 const m = method.value;
                 const rawUrl = url.value;
-                const u = fillPathPlaceholders(rawUrl);
+                let u = buildListByUserUrl(rawUrl);
                 const token = auth.value.trim();
                 const headers = [];
                 let body = '';
@@ -636,17 +565,122 @@
                     form: {
                         OwnerId: fOwner.value, Title: fTitle.value, Description: fDesc.value,
                         MediaType: fMedia.value, AccessLevel: fAccess.value,
-                        MemoryId: fMemoryId.value, MediaId: fMediaId.value
+                        MemoryId: fMemoryId.value, MediaId: fMediaId.value,
+                        Page: fPage.value, PageSize: fPageSize.value, AccessQuery: fAccessQuery.value
                     }
                 };
                 saveState(epKey, stored);
+            }
+
+            function clearPreview() {
+                previewEl.style.display = "none";
+                previewEl.querySelector('.toolbar').style.display = 'none';
+                lastMedia = [];
+                // remove old grids
+                previewEl.querySelectorAll('.preview-grid').forEach(n => n.remove());
+                dlHint.style.display = 'none';
+                dlHint.textContent = '';
+            }
+
+            function pushMedia(mf) {
+                const mt = (mf.mediaType || mf.MediaType || '').toString();
+                const url = mf.url || mf.Url || '';
+                const name = mf.fileName || mf.FileName || '';
+                const id = mf.id || mf.Id || '';
+                lastMedia.push({ url, id, name, type: mt });
+            }
+
+            function renderPreviewFromMediaArray(mediaFiles) {
+                if (!Array.isArray(mediaFiles) || mediaFiles.length === 0) return false;
+
+                const grid = document.createElement('div');
+                grid.className = 'preview-grid';
+
+                for (const mf of mediaFiles) {
+                    const wrap = document.createElement('div');
+                    wrap.className = 'preview-item';
+
+                    const mt = (mf.mediaType || mf.MediaType || '').toString();
+                    const url = mf.url || mf.Url || '';
+                    const name = mf.fileName || mf.FileName || '';
+
+                    pushMedia(mf);
+
+                    const type = mt.toLowerCase();
+                    if (type === 'image' && url) {
+                        const img = document.createElement('img');
+                        img.src = url;
+                        img.alt = name || 'image';
+                        wrap.appendChild(img);
+                    } else if (type === 'video' && url) {
+                        const vid = document.createElement('video');
+                        vid.src = url; vid.controls = true;
+                        wrap.appendChild(vid);
+                    } else if (type === 'audio' && url) {
+                        const aud = document.createElement('audio');
+                        aud.src = url; aud.controls = true;
+                        wrap.appendChild(aud);
+                    } else if (url) {
+                        const a = document.createElement('a');
+                        a.href = url; a.target = '_blank';
+                        a.textContent = name || (mt ? `[${mt}]` : 'file');
+                        wrap.appendChild(a);
+                    }
+
+                    const meta = document.createElement('div');
+                    meta.className = 'meta';
+                    meta.textContent = name || url || '[no name]';
+                    wrap.appendChild(meta);
+
+                    grid.appendChild(wrap);
+                }
+
+                // show toolbar only if we have something
+                const hasAny = lastMedia.length > 0;
+                previewEl.querySelector('.toolbar').style.display = hasAny ? '' : 'none';
+
+                previewEl.appendChild(grid);
+                previewEl.style.display = "";
+                return true;
+            }
+
+            function renderPreview(data) {
+                clearPreview();
+                if (!data) return;
+
+                // Case 1: MediaFileDto
+                if ((data.mediaType || data.MediaType) || (data.url || data.Url)) {
+                    renderPreviewFromMediaArray([data]);
+                    return;
+                }
+
+                // Case 2: MemoryDto with mediaFiles
+                const mf = data.mediaFiles || data.MediaFiles;
+                if (Array.isArray(mf) && mf.length) {
+                    renderPreviewFromMediaArray(mf);
+                    return;
+                }
+
+                // Case 3: PagedResult with .items -> MemoryDto[]
+                const items = data.items || data.Items || data.memories || data.Memories;
+                if (Array.isArray(items) && items.length) {
+                    // collect all mediaFiles
+                    const all = [];
+                    for (const it of items) {
+                        const m = it.mediaFiles || it.MediaFiles;
+                        if (Array.isArray(m) && m.length) all.push(...m);
+                    }
+                    if (all.length) {
+                        renderPreviewFromMediaArray(all);
+                    }
+                }
             }
 
             async function sendRequest() {
                 sendBtn.disabled = true;
                 statusEl.textContent = '…'; statusEl.className = 'pill ' + (method.value === 'GET' ? 'get' : 'post');
                 try {
-                    let u = fillPathPlaceholders(url.value);
+                    let u = buildListByUserUrl(url.value);
                     const token = auth.value.trim();
                     const headers = new Headers();
                     if (token) headers.set('Authorization', `Bearer ${token}`);
@@ -684,14 +718,17 @@
                             localStorage.setItem(LS_JWT_KEY, j.accessToken);
                         }
                         text = JSON.stringify(j, null, 2);
+                        try { renderPreview(j); } catch (e) { console.warn('preview err', e); }
                     } else {
                         text = await res.text();
+                        clearPreview();
                     }
 
                     respEl.textContent = text || '—';
                     hljs.highlightElement(respEl);
                 } catch (err) {
                     statusEl.textContent = 'ERR';
+                    clearPreview();
                     respEl.textContent = String(err);
                     hljs.highlightElement(respEl);
                 } finally {
@@ -722,7 +759,7 @@
                 url.addEventListener(ev, updateCurl);
                 auth.addEventListener(ev, updateCurl);
                 json.addEventListener(ev, updateCurl);
-                [fOwner, fTitle, fDesc, fMedia, fAccess, fMemoryId, fMediaId].forEach(el => el.addEventListener(ev, updateCurl));
+                [fOwner, fTitle, fDesc, fMedia, fAccess, fMemoryId, fMediaId, fPage, fPageSize, fAccessQuery].forEach(el => el.addEventListener(ev, updateCurl));
             });
             fFile.addEventListener('change', () => { updateFilePreview(); updateCurl() });
 
@@ -732,6 +769,88 @@
                     // очищаем сохранённые стейты
                     localStorage.removeItem(LS_STATE);
                     stateStore = {};
+                }
+            });
+
+            // preview toolbar actions
+            btnOpenAll.addEventListener('click', () => {
+                if (!lastMedia.length) return;
+                for (const m of lastMedia) if (m.url) try { window.open(m.url, '_blank'); } catch {}
+            });
+            btnCopyIds.addEventListener('click', async () => {
+                if (!lastMedia.length) return;
+                const ids = lastMedia.map(m => m.id).filter(Boolean);
+                if (!ids.length) return;
+                const txt = ids.join('\\n');
+                try { await navigator.clipboard.writeText(txt); } catch {}
+            });
+            btnDownloadAll.addEventListener('click', async () => {
+                if (!lastMedia.length) return;
+                btnDownloadAll.disabled = true;
+                dlHint.style.display = '';
+                dlHint.textContent = 'Скачивание…';
+                try {
+                    const zip = new JSZip();
+                    let idx = 1;
+                    for (const m of lastMedia) {
+                        if (!m.url) continue;
+                        const safeBase = (m.name || m.id || ('file_'+idx)).replace(/[^a-zA-Z0-9._-]+/g, '_');
+                        let ext = '';
+                        // try to keep extension if present in name or URL
+                        const byName = (m.name || '').match(/(\.[a-zA-Z0-9]{1,6})$/);
+                        const byUrl  = (m.url || '').match(/(\.[a-zA-Z0-9]{1,6})(?:\?|$)/);
+                        if (byName) ext = byName[1]; else if (byUrl) ext = byUrl[1];
+                        const filename = `${String(idx).padStart(2,'0')}_${safeBase}${ext}`;
+                        try {
+                            const resp = await fetch(m.url, { mode: 'cors' });
+                            const blob = await resp.blob();
+                            zip.file(filename, blob);
+                        } catch (e) {
+                            // add a text note if failed
+                            zip.file(`${String(idx).padStart(2,'0')}_${safeBase}.failed.txt`, `Failed to fetch: ${m.url}\n${e}`);
+                        }
+                        idx++;
+                    }
+                    const content = await zip.generateAsync({ type: 'blob' });
+                    saveAs(content, 'memories_media.zip');
+                    dlHint.textContent = 'Готово.';
+                } catch (e) {
+                    dlHint.textContent = 'Ошибка при сборке zip (CORS/доступ?).';
+                } finally {
+                    setTimeout(() => { dlHint.style.display = 'none'; }, 3000);
+                    btnDownloadAll.disabled = false;
+                }
+            });
+            btnDownloadAllServer.addEventListener('click', async () => {
+                if (!fOwner.value) { alert('Укажите OwnerId'); return; }
+                btnDownloadAllServer.disabled = true;
+                dlHint.style.display = '';
+                dlHint.textContent = 'Запрос к серверу…';
+                try {
+                    const base = `http://localhost:8080/memory/api/memory/user/${encodeURIComponent(fOwner.value)}/zip`;
+                    const u = new URL(base);
+                    if (fAccessQuery.value) u.searchParams.set('accessLevel', fAccessQuery.value);
+                    u.searchParams.set('page', String(fPage.value || 1));
+                    u.searchParams.set('pageSize', String(fPageSize.value || 50));
+
+                    const headers = {};
+                    const token = auth.value.trim();
+                    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                    const resp = await fetch(u.toString(), { headers });
+                    if (!resp.ok) { alert(`ZIP error ${resp.status}`); return; }
+                    const blob = await resp.blob();
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = `memories_${(fOwner.value||'user')}_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.zip`;
+                    a.click();
+                    setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+                    dlHint.textContent = 'Готово.';
+                } catch (e) {
+                    dlHint.textContent = 'Ошибка при скачивании zip с сервера.';
+                } finally {
+                    setTimeout(() => { dlHint.style.display = 'none'; }, 3000);
+                    btnDownloadAllServer.disabled = false;
                 }
             });
 
