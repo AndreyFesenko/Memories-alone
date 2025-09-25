@@ -102,11 +102,12 @@ public class AuthController : ControllerBase
         await _users.AddUserAsync(user, ct);
 
         // назначаем базовую роль "User"
-        var roleId = await GetOrCreateRoleIdAsync("User", ct);
+        var roleId = await GetOrCreateRoleIdAsync("Admin", ct);
         await _users.AddUserRoleAsync(user.Id, roleId, ct);
 
         // генерим токен с ролями
         var roles = await _users.GetUserRolesAsync(user.Id, ct);
+        Console.WriteLine($"[LOGIN] {user.Email} roles: {string.Join(",", roles)}");
         var access = _jwt.GenerateToken(user.Id, user.Email!, roles);
 
         return Created($"/identity/users/{user.Id}", new TokenResponse
@@ -137,6 +138,9 @@ public class AuthController : ControllerBase
 
         var roles = await _users.GetUserRolesAsync(user.Id, ct);
         var token = _jwt.GenerateToken(user.Id, user.Email!, roles);
+
+        Console.WriteLine($"[LOGIN] user: {user.Email}, id: {user.Id}");
+        Console.WriteLine($"[LOGIN] roles: {string.Join(",", roles ?? Array.Empty<string>())}");
 
         return Ok(new TokenResponse
         {

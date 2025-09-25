@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "Memories – Unified API",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "description": "Gateway spec combining microservices: Identity, MemoryArchive, Profile, Notification, AccessControl, AuditLogging"
   },
   "servers": [
@@ -492,7 +492,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedMemoryResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -527,6 +534,293 @@
           },
           "404": {
             "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/access-control/api/access/grant": {
+      "post": {
+        "tags": [
+          "AccessControl"
+        ],
+        "summary": "Grant access",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GrantAccessRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessRuleDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/access-control/api/access/revoke": {
+      "post": {
+        "tags": [
+          "AccessControl"
+        ],
+        "summary": "Revoke access",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccessRevokeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Revoked (idempotent)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "removed": {
+                      "type": "integer"
+                    },
+                    "subjectId": {
+                      "type": "string"
+                    },
+                    "subjectType": {
+                      "type": "string"
+                    },
+                    "resourceType": {
+                      "type": "string"
+                    },
+                    "resourceId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "permission": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/access-control/api/access/check": {
+      "post": {
+        "tags": [
+          "AccessControl"
+        ],
+        "summary": "Check access",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckAccessRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckAccessResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/access-control/api/access/memory/{id}/shares": {
+      "get": {
+        "tags": [
+          "AccessControl"
+        ],
+        "summary": "List shares for a Memory",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AccessRuleDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/auditlogs": {
+      "get": {
+        "tags": [
+          "AuditLogging"
+        ],
+        "summary": "Поиск аудиторских записей",
+        "parameters": [
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "nullable": true
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedAuditLogDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auditlogs/{id}": {
+      "get": {
+        "tags": [
+          "AuditLogging"
+        ],
+        "summary": "Получить запись аудита по идентификатору",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditLogDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "AuditLogging"
+        ],
+        "summary": "Удалить запись аудита",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Удалено"
+          },
+          "404": {
+            "description": "Не найдено"
           }
         }
       }
@@ -737,10 +1031,19 @@
             "type": "string"
           },
           "url": {
-            "type": "string"
+            "type": "string",
+            "description": "Public URL (may be resolved from storageUrl)"
+          },
+          "storageUrl": {
+            "type": "string",
+            "description": "Internal S3/Storage URL or S3 key"
           },
           "mediaType": {
             "type": "string"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64"
           },
           "uploadedAt": {
             "type": "string",
@@ -774,7 +1077,12 @@
             "format": "date-time"
           },
           "accessLevel": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "Private",
+              "Public",
+              "FriendsOnly"
+            ]
           },
           "tags": {
             "type": "array",
@@ -793,6 +1101,262 @@
             "format": "int32"
           }
         }
+      },
+      "PagedMemoryResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemoryDto"
+            }
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "GrantAccessRequest": {
+        "type": "object",
+        "required": [
+          "subjectId",
+          "subjectType",
+          "resourceType",
+          "resourceId",
+          "permission"
+        ],
+        "properties": {
+          "subjectId": {
+            "type": "string",
+            "description": "UUID пользователя или имя роли"
+          },
+          "subjectType": {
+            "type": "string",
+            "enum": [
+              "User",
+              "Role"
+            ]
+          },
+          "resourceType": {
+            "type": "string",
+            "enum": [
+              "Memory"
+            ]
+          },
+          "resourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "permission": {
+            "type": "string",
+            "enum": [
+              "View",
+              "Edit",
+              "Delete"
+            ]
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "RevokeAccessRequest": {
+        "type": "object",
+        "required": [
+          "subjectId",
+          "subjectType",
+          "resourceType",
+          "resourceId",
+          "permission"
+        ],
+        "properties": {
+          "subjectId": {
+            "type": "string"
+          },
+          "subjectType": {
+            "type": "string",
+            "enum": [
+              "User",
+              "Role"
+            ]
+          },
+          "resourceType": {
+            "type": "string",
+            "enum": [
+              "Memory"
+            ]
+          },
+          "resourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "permission": {
+            "type": "string",
+            "enum": [
+              "View",
+              "Edit",
+              "Delete"
+            ]
+          }
+        }
+      },
+      "CheckAccessRequest": {
+        "type": "object",
+        "required": [
+          "subjectId",
+          "resourceType",
+          "resourceId",
+          "permission"
+        ],
+        "properties": {
+          "subjectId": {
+            "type": "string"
+          },
+          "resourceType": {
+            "type": "string",
+            "enum": [
+              "Memory"
+            ]
+          },
+          "resourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "permission": {
+            "type": "string",
+            "enum": [
+              "View",
+              "Edit",
+              "Delete"
+            ]
+          }
+        }
+      },
+      "AccessRuleDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subjectId": {
+            "type": "string"
+          },
+          "subjectType": {
+            "type": "string"
+          },
+          "resourceType": {
+            "type": "string"
+          },
+          "resourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "permission": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CheckAccessResponse": {
+        "type": "object",
+        "properties": {
+          "allowed": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AuditLogDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "details": {
+            "type": "string",
+            "nullable": true
+          },
+          "result": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "string",
+            "nullable": true
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ipAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "userAgent": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "action",
+          "target",
+          "timestamp",
+          "createdAt"
+        ]
+      },
+      "PagedAuditLogDto": {
+        "type": "object",
+        "properties": {
+          "totalCount": {
+            "type": "integer"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditLogDto"
+            }
+          }
+        },
+        "required": [
+          "totalCount",
+          "items"
+        ]
       }
     }
   }

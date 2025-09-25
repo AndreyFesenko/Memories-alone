@@ -8,6 +8,7 @@
     <!-- Ссылки на слои -->
     <ProjectReference Include="..\AccessControlService.Infrastructure\AccessControlService.Infrastructure.csproj" />
     <ProjectReference Include="..\AccessControlService.Domain\AccessControlService.Domain.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <!-- NuGet пакеты -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <PrivateAssets>all</PrivateAssets>

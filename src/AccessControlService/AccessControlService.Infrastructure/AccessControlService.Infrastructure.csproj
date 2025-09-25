@@ -5,6 +5,11 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Repositories\Migrations\**" />
+    <EmbeddedResource Remove="Repositories\Migrations\**" />
+    <None Remove="Repositories\Migrations\**" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <PrivateAssets>all</PrivateAssets>
@@ -25,7 +30,8 @@
     <ProjectReference Include="..\AccessControlService.Domain\AccessControlService.Domain.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Repositories\Migrations\" />
+    <Folder Include="Migrations\" />
+    <Folder Include="Persistence\Migrations\" />
     <Folder Include="Persistence\" />
   </ItemGroup>
   <ItemGroup>

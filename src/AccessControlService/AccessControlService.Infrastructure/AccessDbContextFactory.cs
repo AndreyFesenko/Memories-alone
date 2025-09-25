@@ -1,7 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿// src\AccessControlService\AccessControlService.Infrastructure\AccessDbContextFactory.cs
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
-//using Microsoft.Extensions.Configuration.Json;
 using System.IO;
 
 namespace AccessControlService.Infrastructure

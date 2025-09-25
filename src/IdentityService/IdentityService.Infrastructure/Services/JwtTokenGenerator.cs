@@ -73,6 +73,12 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             signingCredentials: credentials
         );
 
+        Console.WriteLine($"[JWT] issuer={issuer}, audience={audience}, expires={now.AddMinutes(expiresMinutes):O}");
+        foreach (var role in roles ?? Array.Empty<string>())
+        {
+            Console.WriteLine($"[JWT] add role claim: {role}");
+        }
+
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }
