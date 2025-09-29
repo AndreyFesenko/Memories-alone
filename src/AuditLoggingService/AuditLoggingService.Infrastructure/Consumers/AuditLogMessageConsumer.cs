@@ -1,9 +1,7 @@
-﻿//C:\Users\user\source\repos\Memories-alone\src\AuditLoggingService\AuditLoggingService.Application\Consumers\AuditLogMessageConsumer.cs
-using Shared.Messaging.Messages;
+﻿using Shared.Messaging.Messages;
 using AuditLoggingService.Domain.Entities;
 using AuditLoggingService.Infrastructure.Persistence;
 using MassTransit;
-using Microsoft.EntityFrameworkCore;
 
 namespace AuditLoggingService.Application.Consumers;
 
@@ -18,21 +16,24 @@ public class AuditLogMessageConsumer : IConsumer<AuditLogMessage>
 
     public async Task Consume(ConsumeContext<AuditLogMessage> context)
     {
-        var msg = context.Message;
+        var m = context.Message;
 
-        var log = new AuditLog
+        var entity = new AuditLog
         {
             Id = Guid.NewGuid(),
-            UserId = msg.UserId,
-            Action = msg.Action,
-            Target = msg.Target,
-            Data = msg.Data,
-            IpAddress = msg.IpAddress,
-            UserAgent = msg.UserAgent,
-            Timestamp = msg.Timestamp
+            UserId = Guid.TryParse(m.UserId, out var uid) ? uid : (Guid?)null,
+            Action = m.Action,
+            Target = m.Target,
+            Data = m.Data,
+            IpAddress = m.IpAddress,
+            UserAgent = m.UserAgent,
+
+            // если в сообщении не проставлен валидный момент события
+            Timestamp = (m.Timestamp == default) ? DateTime.UtcNow : m.Timestamp,
+            CreatedAt = DateTime.UtcNow
         };
 
-        await _db.AuditLogs.AddAsync(log);
-        await _db.SaveChangesAsync();
+        await _db.AuditLogs.AddAsync(entity, context.CancellationToken);
+        await _db.SaveChangesAsync(context.CancellationToken);
     }
 }

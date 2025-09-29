@@ -27,7 +27,7 @@ public class CreateAuditLogCommandHandler : IRequestHandler<CreateAuditLogComman
             UserAgent = request.UserAgent,
             Timestamp = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow,
-            UserId = request.UserId?.ToString()
+            UserId = request.UserId
         };
 
         await _repo.CreateAsync(log, ct);
@@ -39,7 +39,7 @@ public class CreateAuditLogCommandHandler : IRequestHandler<CreateAuditLogComman
             Target = log.Target,
             Details = log.Details,
             Result = log.Result,
-            Data = log.Data ?? string.Empty,
+            Data = log.Data,
             IpAddress = log.IpAddress,
             UserAgent = log.UserAgent,
             Timestamp = log.Timestamp,

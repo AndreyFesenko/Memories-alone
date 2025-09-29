@@ -5,7 +5,7 @@ public class AuditLog
     public Guid Id { get; set; }
 
     // Пользователь, инициировавший действие
-    public string? UserId { get; set; } = default!;
+    public Guid? UserId { get; set; }
 
     // Тип действия, например: Create, Update, Delete
     public string Action { get; set; } = default!;

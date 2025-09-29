@@ -12,215 +12,117 @@
     }
   ],
   "tags": [
-    {
-      "name": "Identity"
-    },
-    {
-      "name": "MemoryArchive"
-    },
-    {
-      "name": "Profile"
-    },
-    {
-      "name": "Notification"
-    },
-    {
-      "name": "AccessControl"
-    },
-    {
-      "name": "AuditLogging"
-    },
-    {
-      "name": "System"
-    }
+    { "name": "Identity" },
+    { "name": "MemoryArchive" },
+    { "name": "Profile" },
+    { "name": "Notification" },
+    { "name": "AccessControl" },
+    { "name": "AuditLogging" },
+    { "name": "System" }
   ],
   "security": [
-    {
-      "Bearer": []
-    }
+    { "Bearer": [] }
   ],
   "paths": {
     "/health/live": {
       "get": {
-        "tags": [
-          "System"
-        ],
+        "tags": [ "System" ],
         "summary": "Gateway liveness",
         "security": [],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
+        "responses": { "200": { "description": "OK" } }
       }
     },
     "/health/ready": {
       "get": {
-        "tags": [
-          "System"
-        ],
+        "tags": [ "System" ],
         "summary": "Gateway readiness",
         "security": [],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
+        "responses": { "200": { "description": "OK" } }
       }
     },
     "/identity/register": {
       "post": {
-        "tags": [
-          "Identity"
-        ],
+        "tags": [ "Identity" ],
         "summary": "Create a new user",
         "security": [],
         "requestBody": {
           "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterRequest"
-              }
-            }
-          }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RegisterRequest" } } }
         },
         "responses": {
           "201": {
             "description": "Created (returns JWT)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JwtResponse"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/JwtResponse" } } }
           },
-          "409": {
-            "description": "User already exists"
-          }
+          "409": { "description": "User already exists" }
         }
       }
     },
     "/identity/login": {
       "post": {
-        "tags": [
-          "Identity"
-        ],
+        "tags": [ "Identity" ],
         "summary": "User login (returns JWT)",
         "security": [],
         "requestBody": {
           "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LoginRequest"
-              }
-            }
-          }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginRequest" } } }
         },
         "responses": {
           "200": {
             "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JwtResponse"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/JwtResponse" } } }
           },
-          "401": {
-            "description": "Invalid credentials"
-          }
+          "401": { "description": "Invalid credentials" }
         }
       }
     },
     "/identity/refresh": {
       "post": {
-        "tags": [
-          "Identity"
-        ],
+        "tags": [ "Identity" ],
         "summary": "Refresh JWT",
         "security": [],
         "requestBody": {
           "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RefreshRequest"
-              }
-            }
-          }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RefreshRequest" } } }
         },
         "responses": {
           "200": {
             "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JwtResponse"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/JwtResponse" } } }
           }
         }
       }
     },
     "/identity/me": {
       "get": {
-        "tags": [
-          "Identity"
-        ],
+        "tags": [ "Identity" ],
         "summary": "Get current user profile (from token)",
         "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
+          "200": { "description": "OK" },
+          "401": { "description": "Unauthorized" }
         }
       }
     },
     "/memory/api/memory": {
       "post": {
-        "tags": [
-          "MemoryArchive"
-        ],
+        "tags": [ "MemoryArchive" ],
         "summary": "CreateMemory (multipart)",
         "requestBody": {
           "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateMemoryForm"
-              }
-            }
-          }
+          "content": { "multipart/form-data": { "schema": { "$ref": "#/components/schemas/CreateMemoryForm" } } }
         },
         "responses": {
           "200": {
             "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MemoryDto"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoryDto" } } }
           },
-          "400": {
-            "description": "Validation error"
-          }
+          "400": { "description": "Validation error" }
         }
       }
     },
     "/memory/api/memory/{id}": {
       "put": {
-        "tags": [
-          "MemoryArchive"
-        ],
+        "tags": [ "MemoryArchive" ],
         "summary": "UpdateMemory (title/description/accessLevel/tags)",
         "parameters": [
           {
@@ -235,31 +137,17 @@
         ],
         "requestBody": {
           "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateMemoryRequest"
-              }
-            }
-          }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdateMemoryRequest" } } }
         },
         "responses": {
           "200": {
             "description": "Updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MemoryDto"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoryDto" } } }
           }
         }
       },
       "delete": {
-        "tags": [
-          "MemoryArchive"
-        ],
+        "tags": [ "MemoryArchive" ],
         "summary": "DeleteMemory",
         "parameters": [
           {
@@ -272,16 +160,10 @@
             }
           }
         ],
-        "responses": {
-          "204": {
-            "description": "Deleted"
-          }
-        }
+        "responses": { "204": { "description": "Deleted" } }
       },
       "get": {
-        "tags": [
-          "MemoryArchive"
-        ],
+        "tags": [ "MemoryArchive" ],
         "summary": "GetMemoryById",
         "parameters": [
           {
@@ -297,25 +179,15 @@
         "responses": {
           "200": {
             "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MemoryDto"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoryDto" } } }
           },
-          "404": {
-            "description": "Not Found"
-          }
+          "404": { "description": "Not Found" }
         }
       }
     },
     "/memory/api/memory/{id}/media": {
       "post": {
-        "tags": [
-          "MemoryArchive"
-        ],
+        "tags": [ "MemoryArchive" ],
         "summary": "UploadMedia (add another file to memory)",
         "parameters": [
           {
@@ -330,33 +202,19 @@
         ],
         "requestBody": {
           "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/UploadMediaForm"
-              }
-            }
-          }
+          "content": { "multipart/form-data": { "schema": { "$ref": "#/components/schemas/UploadMediaForm" } } }
         },
         "responses": {
           "200": {
             "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MemoryDto"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoryDto" } } }
           }
         }
       }
     },
     "/memory/api/memory/{id}/media/{mediaId}": {
       "put": {
-        "tags": [
-          "MemoryArchive"
-        ],
+        "tags": [ "MemoryArchive" ],
         "summary": "UpdateMediaFile (e.g., change fileName/mediaType)",
         "parameters": [
           {
@@ -380,31 +238,17 @@
         ],
         "requestBody": {
           "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateMediaRequest"
-              }
-            }
-          }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdateMediaRequest" } } }
         },
         "responses": {
           "200": {
             "description": "Updated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MemoryDto"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoryDto" } } }
           }
         }
       },
       "delete": {
-        "tags": [
-          "MemoryArchive"
-        ],
+        "tags": [ "MemoryArchive" ],
         "summary": "DeleteMediaFile",
         "parameters": [
           {
@@ -429,22 +273,14 @@
         "responses": {
           "200": {
             "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MemoryDto"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoryDto" } } }
           }
         }
       }
     },
     "/memory/api/memory/user/{userId}": {
       "get": {
-        "tags": [
-          "MemoryArchive"
-        ],
+        "tags": [ "MemoryArchive" ],
         "summary": "ListMemoriesByUser (paged)",
         "parameters": [
           {
@@ -462,11 +298,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": [
-                "Private",
-                "Public",
-                "FriendsOnly"
-              ]
+              "enum": [ "Private", "Public", "FriendsOnly" ]
             }
           },
           {
@@ -493,22 +325,14 @@
         "responses": {
           "200": {
             "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PagedMemoryResponse"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PagedMemoryResponse" } } }
           }
         }
       }
     },
     "/memory/api/media/{id}": {
       "get": {
-        "tags": [
-          "MemoryArchive"
-        ],
+        "tags": [ "MemoryArchive" ],
         "summary": "GetMediaById (metadata + URL)",
         "parameters": [
           {
@@ -524,71 +348,37 @@
         "responses": {
           "200": {
             "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MediaFileDto"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MediaFileDto" } } }
           },
-          "404": {
-            "description": "Not Found"
-          }
+          "404": { "description": "Not Found" }
         }
       }
     },
     "/access-control/api/access/grant": {
       "post": {
-        "tags": [
-          "AccessControl"
-        ],
+        "tags": [ "AccessControl" ],
         "summary": "Grant access",
         "requestBody": {
           "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GrantAccessRequest"
-              }
-            }
-          }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GrantAccessRequest" } } }
         },
         "responses": {
           "200": {
             "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AccessRuleDto"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AccessRuleDto" } } }
           },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          }
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden" }
         }
       }
     },
     "/access-control/api/access/revoke": {
       "post": {
-        "tags": [
-          "AccessControl"
-        ],
+        "tags": [ "AccessControl" ],
         "summary": "Revoke access",
         "requestBody": {
           "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AccessRevokeRequest"
-              }
-            }
-          }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RevokeAccessRequest" } } }
         },
         "responses": {
           "200": {
@@ -598,25 +388,15 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "removed": {
-                      "type": "integer"
-                    },
-                    "subjectId": {
-                      "type": "string"
-                    },
-                    "subjectType": {
-                      "type": "string"
-                    },
-                    "resourceType": {
-                      "type": "string"
-                    },
+                    "removed": { "type": "integer" },
+                    "subjectId": { "type": "string" },
+                    "subjectType": { "type": "string" },
+                    "resourceType": { "type": "string" },
                     "resourceId": {
                       "type": "string",
                       "format": "uuid"
                     },
-                    "permission": {
-                      "type": "string"
-                    }
+                    "permission": { "type": "string" }
                   }
                 }
               }
@@ -627,42 +407,24 @@
     },
     "/access-control/api/access/check": {
       "post": {
-        "tags": [
-          "AccessControl"
-        ],
+        "tags": [ "AccessControl" ],
         "summary": "Check access",
         "requestBody": {
           "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CheckAccessRequest"
-              }
-            }
-          }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CheckAccessRequest" } } }
         },
         "responses": {
           "200": {
             "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CheckAccessResponse"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CheckAccessResponse" } } }
           },
-          "401": {
-            "description": "Unauthorized"
-          }
+          "401": { "description": "Unauthorized" }
         }
       }
     },
     "/access-control/api/access/memory/{id}/shares": {
       "get": {
-        "tags": [
-          "AccessControl"
-        ],
+        "tags": [ "AccessControl" ],
         "summary": "List shares for a Memory",
         "parameters": [
           {
@@ -682,32 +444,24 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AccessRuleDto"
-                  }
+                  "items": { "$ref": "#/components/schemas/AccessRuleDto" }
                 }
               }
             }
           },
-          "401": {
-            "description": "Unauthorized"
-          }
+          "401": { "description": "Unauthorized" }
         }
       }
     },
     "/auditlogs": {
       "get": {
-        "tags": [
-          "AuditLogging"
-        ],
+        "tags": [ "AuditLogging" ],
         "summary": "Поиск аудиторских записей",
         "parameters": [
           {
             "name": "action",
             "in": "query",
-            "schema": {
-              "type": "string"
-            }
+            "schema": { "type": "string" }
           },
           {
             "name": "userId",
@@ -755,22 +509,14 @@
         "responses": {
           "200": {
             "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PagedAuditLogDto"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PagedAuditLogDto" } } }
           }
         }
       }
     },
     "/auditlogs/{id}": {
       "get": {
-        "tags": [
-          "AuditLogging"
-        ],
+        "tags": [ "AuditLogging" ],
         "summary": "Получить запись аудита по идентификатору",
         "parameters": [
           {
@@ -786,23 +532,13 @@
         "responses": {
           "200": {
             "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuditLogDto"
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuditLogDto" } } }
           },
-          "404": {
-            "description": "Не найдено"
-          }
+          "404": { "description": "Не найдено" }
         }
       },
       "delete": {
-        "tags": [
-          "AuditLogging"
-        ],
+        "tags": [ "AuditLogging" ],
         "summary": "Удалить запись аудита",
         "parameters": [
           {
@@ -816,12 +552,8 @@
           }
         ],
         "responses": {
-          "204": {
-            "description": "Удалено"
-          },
-          "404": {
-            "description": "Не найдено"
-          }
+          "204": { "description": "Удалено" },
+          "404": { "description": "Не найдено" }
         }
       }
     }
@@ -838,62 +570,35 @@
     "schemas": {
       "LoginRequest": {
         "type": "object",
-        "required": [
-          "username",
-          "password"
-        ],
+        "required": [ "username", "password" ],
         "properties": {
-          "username": {
-            "type": "string"
-          },
-          "password": {
-            "type": "string"
-          }
+          "username": { "type": "string" },
+          "password": { "type": "string" }
         }
       },
       "RegisterRequest": {
         "type": "object",
-        "required": [
-          "username",
-          "password",
-          "email"
-        ],
+        "required": [ "username", "password", "email" ],
         "properties": {
-          "username": {
-            "type": "string"
-          },
-          "password": {
-            "type": "string"
-          },
+          "username": { "type": "string" },
+          "password": { "type": "string" },
           "email": {
             "type": "string",
             "format": "email"
           },
-          "displayName": {
-            "type": "string"
-          }
+          "displayName": { "type": "string" }
         }
       },
       "RefreshRequest": {
         "type": "object",
-        "required": [
-          "refreshToken"
-        ],
-        "properties": {
-          "refreshToken": {
-            "type": "string"
-          }
-        }
+        "required": [ "refreshToken" ],
+        "properties": { "refreshToken": { "type": "string" } }
       },
       "JwtResponse": {
         "type": "object",
         "properties": {
-          "accessToken": {
-            "type": "string"
-          },
-          "refreshToken": {
-            "type": "string"
-          },
+          "accessToken": { "type": "string" },
+          "refreshToken": { "type": "string" },
           "expiresAt": {
             "type": "string",
             "format": "date-time"
@@ -902,46 +607,23 @@
       },
       "CreateMemoryForm": {
         "type": "object",
-        "required": [
-          "OwnerId",
-          "Title",
-          "Description",
-          "MediaType",
-          "File"
-        ],
+        "required": [ "OwnerId", "Title", "Description", "MediaType", "File" ],
         "properties": {
-          "OwnerId": {
-            "type": "string"
-          },
-          "Title": {
-            "type": "string"
-          },
-          "Description": {
-            "type": "string"
-          },
+          "OwnerId": { "type": "string" },
+          "Title": { "type": "string" },
+          "Description": { "type": "string" },
           "MediaType": {
             "type": "string",
-            "enum": [
-              "Image",
-              "Video",
-              "Audio",
-              "Document"
-            ]
+            "enum": [ "Image", "Video", "Audio", "Document" ]
           },
           "AccessLevel": {
             "type": "string",
-            "enum": [
-              "Private",
-              "Public",
-              "FriendsOnly"
-            ],
+            "enum": [ "Private", "Public", "FriendsOnly" ],
             "default": "Private"
           },
           "Tags": {
             "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "items": { "type": "string" }
           },
           "File": {
             "type": "string",
@@ -951,68 +633,41 @@
       },
       "UploadMediaForm": {
         "type": "object",
-        "required": [
-          "MediaType",
-          "File"
-        ],
+        "required": [ "MediaType", "File" ],
         "properties": {
           "MediaType": {
             "type": "string",
-            "enum": [
-              "Image",
-              "Video",
-              "Audio",
-              "Document"
-            ]
+            "enum": [ "Image", "Video", "Audio", "Document" ]
           },
           "File": {
             "type": "string",
             "format": "binary"
           },
-          "FileName": {
-            "type": "string"
-          }
+          "FileName": { "type": "string" }
         }
       },
       "UpdateMemoryRequest": {
         "type": "object",
         "properties": {
-          "title": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
           "accessLevel": {
             "type": "string",
-            "enum": [
-              "Private",
-              "Public",
-              "FriendsOnly"
-            ]
+            "enum": [ "Private", "Public", "FriendsOnly" ]
           },
           "tags": {
             "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "items": { "type": "string" }
           }
         }
       },
       "UpdateMediaRequest": {
         "type": "object",
         "properties": {
-          "fileName": {
-            "type": "string"
-          },
+          "fileName": { "type": "string" },
           "mediaType": {
             "type": "string",
-            "enum": [
-              "Image",
-              "Video",
-              "Audio",
-              "Document"
-            ]
+            "enum": [ "Image", "Video", "Audio", "Document" ]
           }
         }
       },
@@ -1027,9 +682,7 @@
             "type": "string",
             "format": "uuid"
           },
-          "fileName": {
-            "type": "string"
-          },
+          "fileName": { "type": "string" },
           "url": {
             "type": "string",
             "description": "Public URL (may be resolved from storageUrl)"
@@ -1038,9 +691,7 @@
             "type": "string",
             "description": "Internal S3/Storage URL or S3 key"
           },
-          "mediaType": {
-            "type": "string"
-          },
+          "mediaType": { "type": "string" },
           "size": {
             "type": "integer",
             "format": "int64"
@@ -1066,35 +717,23 @@
             "type": "string",
             "format": "uuid"
           },
-          "title": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
           "createdAt": {
             "type": "string",
             "format": "date-time"
           },
           "accessLevel": {
             "type": "string",
-            "enum": [
-              "Private",
-              "Public",
-              "FriendsOnly"
-            ]
+            "enum": [ "Private", "Public", "FriendsOnly" ]
           },
           "tags": {
             "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "items": { "type": "string" }
           },
           "mediaFiles": {
             "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/MediaFileDto"
-            }
+            "items": { "$ref": "#/components/schemas/MediaFileDto" }
           },
           "mediaCount": {
             "type": "integer",
@@ -1107,9 +746,7 @@
         "properties": {
           "items": {
             "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/MemoryDto"
-            }
+            "items": { "$ref": "#/components/schemas/MemoryDto" }
           },
           "totalCount": {
             "type": "integer",
@@ -1127,13 +764,7 @@
       },
       "GrantAccessRequest": {
         "type": "object",
-        "required": [
-          "subjectId",
-          "subjectType",
-          "resourceType",
-          "resourceId",
-          "permission"
-        ],
+        "required": [ "subjectId", "subjectType", "resourceType", "resourceId", "permission" ],
         "properties": {
           "subjectId": {
             "type": "string",
@@ -1141,16 +772,11 @@
           },
           "subjectType": {
             "type": "string",
-            "enum": [
-              "User",
-              "Role"
-            ]
+            "enum": [ "User", "Role" ]
           },
           "resourceType": {
             "type": "string",
-            "enum": [
-              "Memory"
-            ]
+            "enum": [ "Memory" ]
           },
           "resourceId": {
             "type": "string",
@@ -1158,11 +784,7 @@
           },
           "permission": {
             "type": "string",
-            "enum": [
-              "View",
-              "Edit",
-              "Delete"
-            ]
+            "enum": [ "View", "Edit", "Delete" ]
           },
           "expiresAt": {
             "type": "string",
@@ -1173,29 +795,16 @@
       },
       "RevokeAccessRequest": {
         "type": "object",
-        "required": [
-          "subjectId",
-          "subjectType",
-          "resourceType",
-          "resourceId",
-          "permission"
-        ],
+        "required": [ "subjectId", "subjectType", "resourceType", "resourceId", "permission" ],
         "properties": {
-          "subjectId": {
-            "type": "string"
-          },
+          "subjectId": { "type": "string" },
           "subjectType": {
             "type": "string",
-            "enum": [
-              "User",
-              "Role"
-            ]
+            "enum": [ "User", "Role" ]
           },
           "resourceType": {
             "type": "string",
-            "enum": [
-              "Memory"
-            ]
+            "enum": [ "Memory" ]
           },
           "resourceId": {
             "type": "string",
@@ -1203,31 +812,18 @@
           },
           "permission": {
             "type": "string",
-            "enum": [
-              "View",
-              "Edit",
-              "Delete"
-            ]
+            "enum": [ "View", "Edit", "Delete" ]
           }
         }
       },
       "CheckAccessRequest": {
         "type": "object",
-        "required": [
-          "subjectId",
-          "resourceType",
-          "resourceId",
-          "permission"
-        ],
+        "required": [ "subjectId", "resourceType", "resourceId", "permission" ],
         "properties": {
-          "subjectId": {
-            "type": "string"
-          },
+          "subjectId": { "type": "string" },
           "resourceType": {
             "type": "string",
-            "enum": [
-              "Memory"
-            ]
+            "enum": [ "Memory" ]
           },
           "resourceId": {
             "type": "string",
@@ -1235,11 +831,7 @@
           },
           "permission": {
             "type": "string",
-            "enum": [
-              "View",
-              "Edit",
-              "Delete"
-            ]
+            "enum": [ "View", "Edit", "Delete" ]
           }
         }
       },
@@ -1250,22 +842,14 @@
             "type": "string",
             "format": "uuid"
           },
-          "subjectId": {
-            "type": "string"
-          },
-          "subjectType": {
-            "type": "string"
-          },
-          "resourceType": {
-            "type": "string"
-          },
+          "subjectId": { "type": "string" },
+          "subjectType": { "type": "string" },
+          "resourceType": { "type": "string" },
           "resourceId": {
             "type": "string",
             "format": "uuid"
           },
-          "permission": {
-            "type": "string"
-          },
+          "permission": { "type": "string" },
           "expiresAt": {
             "type": "string",
             "format": "date-time",
@@ -1279,25 +863,18 @@
       },
       "CheckAccessResponse": {
         "type": "object",
-        "properties": {
-          "allowed": {
-            "type": "boolean"
-          }
-        }
+        "properties": { "allowed": { "type": "boolean" } }
       },
       "AuditLogDto": {
         "type": "object",
+        "required": [ "id", "action", "target", "timestamp", "createdAt" ],
         "properties": {
           "id": {
             "type": "string",
             "format": "uuid"
           },
-          "action": {
-            "type": "string"
-          },
-          "target": {
-            "type": "string"
-          },
+          "action": { "type": "string" },
+          "target": { "type": "string" },
           "details": {
             "type": "string",
             "nullable": true
@@ -1331,32 +908,18 @@
             "type": "string",
             "nullable": true
           }
-        },
-        "required": [
-          "id",
-          "action",
-          "target",
-          "timestamp",
-          "createdAt"
-        ]
+        }
       },
       "PagedAuditLogDto": {
         "type": "object",
+        "required": [ "totalCount", "items" ],
         "properties": {
-          "totalCount": {
-            "type": "integer"
-          },
+          "totalCount": { "type": "integer" },
           "items": {
             "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AuditLogDto"
-            }
+            "items": { "$ref": "#/components/schemas/AuditLogDto" }
           }
-        },
-        "required": [
-          "totalCount",
-          "items"
-        ]
+        }
       }
     }
   }

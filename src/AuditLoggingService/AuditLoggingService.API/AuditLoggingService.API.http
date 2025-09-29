@@ -1,6 +1,66 @@
-@AuditLoggingService.API_HostAddress = http://localhost:5230
+@AuditLoggingService_API = http://localhost:5601
+@APIGateway            = http://localhost:8080
+@AuditBasePath         = /auditlogs
 
-GET {{AuditLoggingService.API_HostAddress}}/weatherforecast/
+
+### HEALTH (API сервис напрямую)
+GET {{AuditLoggingService_API}}/health/ready
+
+### Поиск логов (напрямую)
+GET {{AuditLoggingService_API}}{{AuditBasePath}}?limit=5
 Accept: application/json
 
-###
+### Поиск с фильтрами (action, userId, from/to)
+# Пример GUID и диапазона времени
+@SampleUserId = 8bfbdace-33b7-4764-9903-39a6dc48bf7d
+GET {{AuditLoggingService_API}}{{AuditBasePath}}?action=Access.Revoke&userId={{SampleUserId}}&from=2025-09-01T00:00:00Z&to=2025-09-30T23:59:59Z&limit=20
+Accept: application/json
+
+### Создать запись аудита (если метод POST оставлен/нужен)
+# Удалите/закомментируйте, если создание у вас идёт только через шину (RabbitMQ)
+POST {{AuditLoggingService_API}}{{AuditBasePath}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "action": "Access.Revoke",
+  "target": "Memory:42",
+  "details": "revoked by admin",
+  "result": "success",
+  "data": "{\"extra\":\"value\"}",
+  "userId": "{{SampleUserId}}",
+  "timestamp": "2025-09-29T12:34:56Z",
+  "ipAddress": "127.0.0.1",
+  "userAgent": "API.http"
+}
+
+### Получить по id (замени {{id}} на реальный из предыдущего ответа)
+GET {{AuditLoggingService_API}}{{AuditBasePath}}/{{id}}
+Accept: application/json
+
+### Удалить по id
+DELETE {{AuditLoggingService_API}}{{AuditBasePath}}/{{id}}
+
+
+
+########## ЧЕРЕЗ GATEWAY ##########
+
+### HEALTH (Gateway обычно не проксирует /health, но оставлю для удобства)
+GET {{APIGateway}}/health/ready
+
+### Поиск через Gateway
+# В YARP у тебя префикс сервиса /audit-logging, он снимается трансформом PathRemovePrefix
+# Поэтому дальше путь должен совпадать с маршрутом контроллера:
+GET {{APIGateway}}/audit-logging{{AuditBasePath}}?limit=5
+Accept: application/json
+
+### Поиск с фильтрами через Gateway
+GET {{APIGateway}}/audit-logging{{AuditBasePath}}?action=Access.Revoke&userId={{SampleUserId}}&from=2025-09-01T00:00:00Z&to=2025-09-30T23:59:59Z&limit=20
+Accept: application/json
+
+### Получить по id через Gateway
+GET {{APIGateway}}/audit-logging{{AuditBasePath}}/{{id}}
+Accept: application/json
+
+### Удалить по id через Gateway
+DELETE {{APIGateway}}/audit-logging{{AuditBasePath}}/{{id}}
