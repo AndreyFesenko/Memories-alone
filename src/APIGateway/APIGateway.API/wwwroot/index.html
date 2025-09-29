@@ -459,7 +459,7 @@
                     },
                     login: {
                         label: 'Login', method: 'POST', urlTemplate: 'http://localhost:8080/identity/login', mode: 'json',
-                        json: { username: 'user1', password: 'User1!pass' }, hint: 'Вернёт accessToken → сохраняем'
+                        json: { username: 'Admin', password: 'Admin!123' }, hint: 'Вернёт accessToken → сохраняем'
                     },
                     refresh: {
                         label: 'Refresh', method: 'POST', urlTemplate: 'http://localhost:8080/identity/refresh', mode: 'json',
@@ -474,9 +474,9 @@
                 memory: {
                     create: {
                         label: 'CreateMemory (multipart)', method: 'POST', urlTemplate: 'http://localhost:8080/memory/api/memory', mode: 'form',
-                        form: { OwnerId: '', Title: 'Trip to Alps', Description: 'Ski weekend', MediaType: 'Image', AccessLevel: 'Private', Tags: 'alps,trip' }, hint: 'FormData + File'
+                        form: { OwnerId: 'fdd2eee1-7871-45da-a3b4-c6a214ef4928', Title: 'Trip to Alps', Description: 'Ski weekend', MediaType: 'Image', AccessLevel: 'Private', Tags: 'alps,trip' }, hint: 'FormData + File'
                     },
-                    get: { label: 'GetMemoryById', method: 'GET', urlTemplate: 'http://localhost:8080/memory/api/memory/{memoryId}', mode: 'none' },
+                    get: { label: 'GetMemoryById', method: 'GET', urlTemplate: 'http://localhost:8080/memory/api/memory/1f6cbd66-dc14-4c35-a1f1-94928a4caa5f', mode: 'none' },
                     update: {
                         label: 'UpdateMemory', method: 'PUT', urlTemplate: 'http://localhost:8080/memory/api/memory/{memoryId}', mode: 'json',
                         json: { title: 'New title', description: 'Updated', accessLevel: 'Public', tags: ['alps', 'winter'] }
@@ -495,7 +495,7 @@
                     mediaDel: { label: 'DeleteMedia', method: 'DELETE', urlTemplate: 'http://localhost:8080/memory/api/memory/{memoryId}/media/{mediaId}', mode: 'none' },
 
                     listUser: {
-                        label: 'ListByUser', method: 'GET', urlTemplate: 'http://localhost:8080/memory/api/memory/user/{userId}?page=1&pageSize=10', mode: 'none',
+                        label: 'ListByUser', method: 'GET', urlTemplate: 'http://localhost:8080/memory/api/memory/user/fdd2eee1-7871-45da-a3b4-c6a214ef4928?page=1&pageSize=10', mode: 'none',
                         hint: 'Опц.: accessLevel=Private|Public|FriendsOnly'
                     }
                 },
@@ -503,17 +503,17 @@
                 access: {
                     grant: {
                         label: 'Grant', method: 'POST', urlTemplate: 'http://localhost:8080/access-control/api/access/grant', mode: 'json',
-                        json: { subjectId: '{subjectId}', subjectType: 'User', resourceType: 'Memory', resourceId: '{memoryId}', permission: 'View', expiresAt: null }
+                        json: { subjectId: '4beed3da-37f8-423b-a16b-5a0fea4bbc38', subjectType: 'User', resourceType: 'Memory', resourceId: '17e5b201-d562-4c5c-b90f-414349bca627', permission: 'Edit', expiresAt: null }
                     },
                     revoke: {
                         label: 'Revoke', method: 'POST', urlTemplate: 'http://localhost:8080/access-control/api/access/revoke', mode: 'json',
-                        json: { subjectId: '{subjectId}', subjectType: 'User', resourceType: 'Memory', resourceId: '{memoryId}', permission: 'View' }
+                        json: { subjectId: '4beed3da-37f8-423b-a16b-5a0fea4bbc38', subjectType: 'User', resourceType: 'Memory', resourceId: '17e5b201-d562-4c5c-b90f-414349bca627', permission: 'Edit' }
                     },
                     check: {
                         label: 'Check', method: 'POST', urlTemplate: 'http://localhost:8080/access-control/api/access/check', mode: 'json',
-                        json: { subjectId: '{subjectId}', resourceType: 'Memory', resourceId: '{memoryId}', permission: 'View' }
+                        json: { subjectId: '8bfbdace-33b7-4764-9903-39a6dc48bf7d', resourceType: 'Memory', resourceId: '17e5b201-d562-4c5c-b90f-414349bca627', permission: 'Edit' }
                     },
-                    shares: { label: 'List Shares', method: 'GET', urlTemplate: 'http://localhost:8080/access-control/api/access/memory/{memoryId}/shares', mode: 'none' }
+                    shares: { label: 'List Shares', method: 'GET', urlTemplate: 'http://localhost:8080/access-control/api/access/memory/17e5b201-d562-4c5c-b90f-414349bca627/shares', mode: 'none' }
                 },
 
                 audit: {
@@ -530,7 +530,7 @@
                         label: 'Search', method: 'GET', urlTemplate: 'http://localhost:8080/audit-logging/auditlogs', mode: 'none',
                         hint: '?action=&userId=&from=&to=&offset=&limit='
                     },
-                    getById: { label: 'GetById', method: 'GET', urlTemplate: 'http://localhost:8080/audit-logging/auditlogs/{id}', mode: 'none' },
+                    getById: { label: 'GetById', method: 'GET', urlTemplate: 'http://localhost:8080/audit-logging/auditlogs/0cf44724-b65d-48da-a340-0c0cb653503c', mode: 'none' },
                     delete: { label: 'Delete', method: 'DELETE', urlTemplate: 'http://localhost:8080/audit-logging/auditlogs/{id}', mode: 'none' }
                 }
             };

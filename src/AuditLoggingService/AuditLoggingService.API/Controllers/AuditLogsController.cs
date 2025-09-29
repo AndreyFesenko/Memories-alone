@@ -1,24 +1,35 @@
-﻿// src\AuditLoggingService\AuditLoggingService.API\Controllers\AuditLogsController.cs
+﻿// src/AuditLoggingService/AuditLoggingService.API/Controllers/AuditLogsController.cs
 using AuditLoggingService.Application.Commands;
 using AuditLoggingService.Application.DTOs;
 using AuditLoggingService.Application.Queries;
+using AuditLoggingService.Application.Interfaces;
+using AuditLoggingService.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using AuditLoggingService.Application.Commands;
 
 namespace AuditLoggingService.API.Controllers;
 
 [ApiController]
-[Route("auditlogs")] // было: [Route("api/[controller]")]
+[Route("auditlogs")]
 public class AuditLogsController : ControllerBase
 {
     private readonly IMediator _mediator;
-    public AuditLogsController(IMediator mediator) => _mediator = mediator;
+    private readonly IAuditLogRepository _repo;
 
-    [HttpPost] // POST /auditlogs
+    public AuditLogsController(IMediator mediator, IAuditLogRepository repo)
+    {
+        _mediator = mediator;
+        _repo = repo;
+    }
+
+    /// <summary>Create audit log</summary>
+    [HttpPost]
     public async Task<ActionResult<AuditLogDto>> Create([FromBody] CreateAuditLogCommand cmd)
         => Ok(await _mediator.Send(cmd));
 
-    [HttpGet] // GET /auditlogs
+    /// <summary>Search audit logs (paged)</summary>
+    [HttpGet]
     public async Task<ActionResult<PagedResult<AuditLogDto>>> Search(
         [FromQuery] string? action,
         [FromQuery] Guid? userId,
@@ -26,7 +37,8 @@ public class AuditLogsController : ControllerBase
         [FromQuery] DateTime? to,
         [FromQuery] int offset = 0,
         [FromQuery] int limit = 20)
-        => Ok(await _mediator.Send(new SearchAuditLogsQuery
+    {
+        var result = await _mediator.Send(new SearchAuditLogsQuery
         {
             Action = action,
             UserId = userId,
@@ -34,17 +46,39 @@ public class AuditLogsController : ControllerBase
             To = to,
             Offset = offset,
             Limit = limit
-        }));
+        });
+        return Ok(result);
+    }
 
-    [HttpDelete("{id:guid}")] // DELETE /auditlogs/{id}
+    /// <summary>Get audit log by id</summary>
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<AuditLogDto>> GetById(Guid id, CancellationToken ct)
+    {
+        var x = await _repo.GetByIdAsync(id, ct);
+        if (x is null) return NotFound();
+
+        var dto = new AuditLogDto
+        {
+            Id = x.Id,
+            Action = x.Action,
+            Target = x.Target,
+            Details = x.Details,
+            Result = x.Result,
+            Data = x.Data,
+            UserId = x.UserId,
+            Timestamp = x.Timestamp,
+            CreatedAt = x.CreatedAt,
+            IpAddress = x.IpAddress,
+            UserAgent = x.UserAgent
+        };
+        return Ok(dto);
+    }
+
+    [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        await _mediator.Send(new DeleteAuditLogCommand { Id = id });
+        await _mediator.Send(new DeleteAuditLogCommand(id));
         return NoContent();
     }
-}
 
-public class DeleteAuditLogCommand : IRequest
-{
-    public Guid Id { get; set; }
 }
