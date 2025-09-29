@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "Memories – Unified API",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "description": "Gateway spec combining microservices: Identity, MemoryArchive, Profile, Notification, AccessControl, AuditLogging"
   },
   "servers": [
@@ -20,9 +20,7 @@
     { "name": "AuditLogging" },
     { "name": "System" }
   ],
-  "security": [
-    { "Bearer": [] }
-  ],
+  "security": [ { "Bearer": [] } ],
   "paths": {
     "/health/live": {
       "get": {
@@ -454,6 +452,20 @@
       }
     },
     "/auditlogs": {
+      "post": {
+        "tags": [ "AuditLogging" ],
+        "summary": "Создать запись аудита",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateAuditLogRequest" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuditLogDto" } } }
+          }
+        }
+      },
       "get": {
         "tags": [ "AuditLogging" ],
         "summary": "Поиск аудиторских записей",
@@ -864,6 +876,44 @@
       "CheckAccessResponse": {
         "type": "object",
         "properties": { "allowed": { "type": "boolean" } }
+      },
+      "CreateAuditLogRequest": {
+        "type": "object",
+        "properties": {
+          "action": { "type": "string" },
+          "target": { "type": "string" },
+          "details": {
+            "type": "string",
+            "nullable": true
+          },
+          "result": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "string",
+            "nullable": true
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "ipAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "userAgent": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [ "action", "target" ]
       },
       "AuditLogDto": {
         "type": "object",

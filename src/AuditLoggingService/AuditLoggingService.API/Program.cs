@@ -98,7 +98,7 @@ builder.Host.UseSerilog((ctx, lc) =>
 var app = builder.Build();
 
 // Middleware & endpoints
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
