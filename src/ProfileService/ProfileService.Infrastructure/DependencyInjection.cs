@@ -1,21 +1,23 @@
-﻿// Infrastructure/DependencyInjection.cs
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.EntityFrameworkCore;
-using ProfileService.Infrastructure.Repositories;
 using ProfileService.Application.Interfaces;
+using ProfileService.Infrastructure.Repositories;
 
+namespace ProfileService.Infrastructure;
 
-namespace ProfileService.Infrastructure
+public static class DependencyInjection
 {
-    public static class DependencyInjection
+    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
-        public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
+        services.AddDbContext<ProfilesDbContext>(opts =>
         {
-            services.AddDbContext<ProfilesDbContext>(options =>
-                options.UseNpgsql(configuration.GetConnectionString("Default")));
-            services.AddScoped<IProfileRepository, ProfileRepository>();
-            return services;
-        }
+            var cs = configuration.GetConnectionString("Default")
+                     ?? throw new InvalidOperationException("ConnectionStrings:Default is not configured");
+            opts.UseNpgsql(cs, npg => npg.MigrationsHistoryTable("__EFMigrationsHistory", "profile"));
+        });
+
+        services.AddScoped<IProfileRepository, ProfileRepository>();
+        return services;
     }
 }

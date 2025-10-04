@@ -8,11 +8,11 @@ namespace ProfileService.Application.Handlers;
 
 public class CreateProfileCommandHandler : IRequestHandler<CreateProfileCommand, UserProfileDto>
 {
-    private readonly IProfileRepository _profiles;
+    private readonly IProfileRepository _repo;
 
-    public CreateProfileCommandHandler(IProfileRepository profiles)
+    public CreateProfileCommandHandler(IProfileRepository repo)
     {
-        _profiles = profiles;
+        _repo = repo;
     }
 
     public async Task<UserProfileDto> Handle(CreateProfileCommand request, CancellationToken cancellationToken)
@@ -21,22 +21,28 @@ public class CreateProfileCommandHandler : IRequestHandler<CreateProfileCommand,
         {
             UserId = request.UserId,
             FullName = request.FullName,
+            BirthDate = request.BirthDate,
+            DisplayName = request.DisplayName,
             Bio = request.Bio,
-            AvatarUrl = request.AvatarUrl,
-            AccessMode = request.AccessMode ?? "AfterDeath",
-            DeathConfirmed = false
+            AccessMode = request.AccessMode,
+            AvatarUrl = request.AvatarUrl
         };
 
-        await _profiles.CreateAsync(entity, cancellationToken);
+        var created = await _repo.CreateAsync(entity, cancellationToken);
 
         return new UserProfileDto
         {
-            UserId = entity.UserId,
-            FullName = entity.FullName,
-            Bio = entity.Bio,
-            AvatarUrl = entity.AvatarUrl,
-            AccessMode = entity.AccessMode,
-            DeathConfirmed = entity.DeathConfirmed
+            Id = created.Id,
+            UserId = created.UserId,
+            FullName = created.FullName,
+            BirthDate = created.BirthDate,
+            DisplayName = created.DisplayName,
+            Bio = created.Bio,
+            DeathConfirmed = created.DeathConfirmed,
+            AccessMode = created.AccessMode,
+            CreatedAt = created.CreatedAt,
+            UpdatedAt = created.UpdatedAt,
+            AvatarUrl = created.AvatarUrl
         };
     }
 }

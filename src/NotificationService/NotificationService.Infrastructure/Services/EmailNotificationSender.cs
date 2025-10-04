@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace NotificationService.Infrastructure.Services;
 
+
 public class EmailNotificationSender : IEmailSender
 {
     private readonly ILogger<EmailNotificationSender> _logger;

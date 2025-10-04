@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <title>Memories – Unified API</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: #111827;
+            --ink: #e5e7eb;
+            --muted: #9ca3af;
+            --accent: #22c55e
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font: 14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif
+        }
+
+        header {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid #1f2937;
+            background: #0b1220;
+            position: sticky;
+            top: 0;
+            z-index: 3
+        }
+
+            header h1 {
+                font-size: 16px;
+                margin: 0;
+                font-weight: 600
+            }
+
+            header .env {
+                font-size: 12px;
+                color: var(--muted)
+            }
+
+        main {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 16px;
+            padding: 16px;
+            max-width: 1500px;
+            margin: 0 auto
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid #1f2937;
+            border-radius: 12px;
+            overflow: hidden
+        }
+
+            .card h3 {
+                margin: 0;
+                padding: 12px 14px;
+                border-bottom: 1px solid #1f2937;
+                font-size: 13px;
+                letter-spacing: .2px;
+                color: #cbd5e1
+            }
+
+            .card .body {
+                padding: 12px 14px;
+                display: grid;
+                gap: 10px
+            }
+
+        label {
+            display: grid;
+            gap: 6px;
+            font-size: 12px;
+            color: #cbd5e1
+        }
+
+        input[type="text"], input[type="url"], input[type="file"], select, textarea {
+            width: 100%;
+            background: #0b1220;
+            color: var(--ink);
+            border: 1px solid #1f2937;
+            border-radius: 8px;
+            padding: 9px 10px;
+            font-size: 13px
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--accent);
+            border: none;
+            color: #052e16;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-weight: 600;
+            cursor: pointer
+        }
+
+            .btn.secondary {
+                background: #1f2937;
+                color: #e5e7eb
+            }
+
+            .btn.small {
+                padding: 4px 8px;
+                font-size: 11px
+            }
+
+            .btn.ghost {
+                background: #0b1220;
+                border: 1px solid #1f2937;
+                color: #cbd5e1
+            }
+
+        .tabs {
+            display: flex;
+            gap: 6px
+        }
+
+        .tab {
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid #1f2937;
+            background: #0b1220;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700
+        }
+
+            .tab.active {
+                background: #1f2937;
+                color: #fff
+            }
+
+        pre, code {
+            font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+            font-size: 12px
+        }
+
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 520px;
+            overflow: auto;
+            background: #0b1220;
+            border-top: 1px solid #1f2937;
+            padding: 12px 14px
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 11px
+        }
+
+            .pill.get {
+                background: #052e16;
+                color: #86efac;
+                border: 1px solid #166534
+            }
+
+            .pill.post {
+                background: #111827;
+                color: #93c5fd;
+                border: 1px solid #1d4ed8
+            }
+
+        .muted {
+            color: #9ca3af;
+            font-size: 12px
+        }
+
+        .divider {
+            height: 1px;
+            background: #1f2937;
+            margin: 8px 0
+        }
+
+        .hint {
+            font-size: 11px;
+            color: #a3a3a3
+        }
+
+        .inline {
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+
+        .grid2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px
+        }
+
+        kbd {
+            background: #0b1220;
+            border: 1px solid #1f2937;
+            border-radius: 6px;
+            padding: 2px 6px;
+            font-size: 11px
+        }
+
+        .file-preview {
+            font-size: 12px;
+            color: #cbd5e1;
+            background: #0b1220;
+            border: 1px dashed #334155;
+            border-radius: 8px;
+            padding: 8px
+        }
+
+        .preview {
+            margin: 0;
+            padding: 12px 14px;
+            border-top: 1px solid #1f2937
+        }
+
+            .preview .toolbar {
+                display: flex;
+                gap: 8px;
+                align-items: center;
+                justify-content: flex-start;
+                margin-bottom: 8px;
+                flex-wrap: wrap
+            }
+
+            .preview h4 {
+                margin: 0 0 8px 0;
+                font-size: 13px;
+                color: #cbd5e1
+            }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill,minmax(160px,1fr));
+            gap: 8px
+        }
+
+        .preview-item {
+            background: #0b1220;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 8px;
+            overflow: hidden
+        }
+
+            .preview-item img, .preview-item video {
+                width: 100%;
+                height: 130px;
+                object-fit: cover;
+                border-radius: 8px;
+                display: block
+            }
+
+            .preview-item audio {
+                width: 100%;
+                display: block
+            }
+
+            .preview-item .meta {
+                font-size: 11px;
+                color: #9ca3af;
+                margin-top: 6px;
+                word-break: break-word
+            }
+
+            .preview-item a {
+                text-decoration: none;
+                color: #93c5fd;
+                font-size: 12px
+            }
+
+        .tiny {
+            font-size: 11px;
+            color: #9ca3af
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="inline">
+            <h1>Memories – Unified API</h1>
+            <span class="env">Gateway: <code>http://localhost:8080</code></span>
+        </div>
+        <div class="tabs" id="tabs">
+            <button class="tab" data-tab="identity">Identity</button>
+            <button class="tab" data-tab="memory">MemoryArchive</button>
+            <button class="tab" data-tab="access">AccessControl</button>
+            <button class="tab active" data-tab="audit">AuditLogging</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- LEFT -->
+        <section class="card">
+            <h3>Запрос</h3>
+            <div class="body" id="reqPane">
+                <div class="row">
+                    <label>Метод <select id="method"></select></label>
+                    <label>Endpoint <select id="endpoint"></select></label>
+                </div>
+
+                <label>
+                    URL (через Gateway)
+                    <input id="url" type="url" />
+                    <span id="urlHint" class="hint"></span>
+                </label>
+
+                <div class="inline">
+                    <label style="flex:1">
+                        Authorization (Bearer)
+                        <input id="auth" type="text" placeholder="вставьте JWT без 'Bearer '" />
+                    </label>
+                    <button class="btn small secondary" id="copyJwt" title="Скопировать токен">📋</button>
+                </div>
+                <span class="hint">JWT сохраняется в localStorage. Для /identity/me, Memory и Access — обязателен.</span>
+
+                <label class="inline">
+                    <input type="checkbox" id="persistBodies" />
+                    <span class="hint">Сохранять тело запроса между эндпоинтами</span>
+                </label>
+
+                <div id="jsonBlock">
+                    <label>JSON Body<textarea id="json" spellcheck="false"></textarea></label>
+                </div>
+
+                <div id="formBlock" style="display:none;">
+                    <div class="grid2">
+                        <label>OwnerId<input id="OwnerId" type="text" placeholder="uuid" /></label>
+                        <label>Title<input id="Title" type="text" /></label>
+                        <label>Description<textarea id="Description"></textarea></label>
+                        <label>
+                            MediaType
+                            <select id="MediaType">
+                                <option>Image</option>
+                                <option>Video</option>
+                                <option>Audio</option>
+                                <option>Document</option>
+                            </select>
+                        </label>
+                        <label>
+                            AccessLevel
+                            <select id="AccessLevel">
+                                <option>Private</option>
+                                <option>Public</option>
+                                <option>FriendsOnly</option>
+                            </select>
+                        </label>
+                        <label>Tags (через запятую)<input id="Tags" type="text" placeholder="tag1,tag2" /></label>
+                        <label>Файл<input id="File" type="file" /></label>
+                        <label>FileName (опц.)<input id="FileName" type="text" /></label>
+                    </div>
+                    <div class="file-preview" id="filePreview">Файл не выбран</div>
+                </div>
+
+                <div class="row">
+                    <button class="btn" id="send">Отправить</button>
+                    <button class="btn secondary" id="fill">Заполнить пример</button>
+                </div>
+
+                <div class="divider"></div>
+                <div class="inline">
+                    <label style="flex:1">
+                        Сгенерированный curl
+                        <textarea id="curl" readonly></textarea>
+                    </label>
+                    <button class="btn small secondary" id="copyCurl" title="Скопировать curl">📋</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- RIGHT -->
+        <section class="card">
+            <h3>Ответ</h3>
+            <div class="body">
+                <div class="inline"><span class="muted">HTTP Status:</span><span id="status" class="pill get">—</span></div>
+                <label>Заголовки<textarea id="respHeaders" readonly></textarea></label>
+            </div>
+            <h3>Тело ответа</h3>
+            <pre><code id="resp" class="language-json">—</code></pre>
+
+            <div id="preview" class="preview" style="display:none;">
+                <div class="toolbar" id="previewToolbar" style="display:none;">
+                    <button class="btn small ghost" id="openAll">Открыть всё</button>
+                    <button class="btn small ghost" id="copyIds">Скопировать mediaId</button>
+                    <button class="btn small ghost" id="downloadAll">Скачать всё (zip)</button>
+                    <span class="tiny" id="dlHint" style="display:none;"></span>
+                </div>
+                <h4>Медиа</h4>
+                <div class="preview-grid" id="previewGrid"></div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        (() => {
+            hljs.highlightAll();
+
+            const method = document.getElementById('method'),
+                endpointSel = document.getElementById('endpoint'),
+                url = document.getElementById('url'), urlHint = document.getElementById('urlHint'),
+                auth = document.getElementById('auth'), json = document.getElementById('json'),
+                jsonBlock = document.getElementById('jsonBlock'), formBlock = document.getElementById('formBlock'),
+                fileInput = document.getElementById('File'), filePreview = document.getElementById('filePreview'),
+                sendBtn = document.getElementById('send'), fillBtn = document.getElementById('fill'),
+                curlBox = document.getElementById('curl'), respEl = document.getElementById('resp'),
+                statusEl = document.getElementById('status'), respHeaders = document.getElementById('respHeaders'),
+                tabs = document.getElementById('tabs'), persistBodies = document.getElementById('persistBodies'),
+                preview = document.getElementById('preview'), previewGrid = document.getElementById('previewGrid'),
+                previewToolbar = document.getElementById('previewToolbar');
+
+            // local state
+            let currentTab = 'audit', currentEndpointKey = '';
+            const LS_JWT_KEY = 'memories.jwt';
+            const LS_PERSIST = 'memories.persist';
+            const LS_STATE = 'memories.state.v7';
+
+            // Endpoints presets (как раньше) + Audit
+            const endpoints = {
+                identity: {
+                    register: {
+                        label: 'Register', method: 'POST', urlTemplate: 'http://localhost:8080/identity/register', mode: 'json',
+                        json: { username: 'user1', password: 'User1!pass', email: 'u1@example.com', displayName: 'User 1' }
+                    },
+                    login: {
+                        label: 'Login', method: 'POST', urlTemplate: 'http://localhost:8080/identity/login', mode: 'json',
+                        json: { username: 'Admin', password: 'Admin!123' }, hint: 'Вернёт accessToken → сохраняем'
+                    },
+                    refresh: {
+                        label: 'Refresh', method: 'POST', urlTemplate: 'http://localhost:8080/identity/refresh', mode: 'json',
+                        json: { refreshToken: '<your-refresh-token>' }
+                    },
+                    me: {
+                        label: 'Me', method: 'GET', urlTemplate: 'http://localhost:8080/identity/me', mode: 'none',
+                        hint: 'Нужен Bearer accessToken'
+                    }
+                },
+
+                memory: {
+                    create: {
+                        label: 'CreateMemory (multipart)', method: 'POST', urlTemplate: 'http://localhost:8080/memory/api/memory', mode: 'form',
+                        form: { OwnerId: 'fdd2eee1-7871-45da-a3b4-c6a214ef4928', Title: 'Trip to Alps', Description: 'Ski weekend', MediaType: 'Image', AccessLevel: 'Private', Tags: 'alps,trip' }, hint: 'FormData + File'
+                    },
+                    get: { label: 'GetMemoryById', method: 'GET', urlTemplate: 'http://localhost:8080/memory/api/memory/1f6cbd66-dc14-4c35-a1f1-94928a4caa5f', mode: 'none' },
+                    update: {
+                        label: 'UpdateMemory', method: 'PUT', urlTemplate: 'http://localhost:8080/memory/api/memory/{memoryId}', mode: 'json',
+                        json: { title: 'New title', description: 'Updated', accessLevel: 'Public', tags: ['alps', 'winter'] }
+                    },
+                    delete: { label: 'DeleteMemory', method: 'DELETE', urlTemplate: 'http://localhost:8080/memory/api/memory/{memoryId}', mode: 'none' },
+
+                    upload: {
+                        label: 'UploadMedia (multipart)', method: 'POST', urlTemplate: 'http://localhost:8080/memory/api/memory/{memoryId}/media', mode: 'form',
+                        form: { MediaType: 'Image', FileName: 'pic1.jpg' }, hint: 'FormData + File'
+                    },
+                    mediaGet: { label: 'GetMediaById', method: 'GET', urlTemplate: 'http://localhost:8080/memory/api/media/{mediaId}', mode: 'none' },
+                    mediaUpd: {
+                        label: 'UpdateMedia', method: 'PUT', urlTemplate: 'http://localhost:8080/memory/api/memory/{memoryId}/media/{mediaId}', mode: 'json',
+                        json: { fileName: 'renamed.jpg', mediaType: 'Image' }
+                    },
+                    mediaDel: { label: 'DeleteMedia', method: 'DELETE', urlTemplate: 'http://localhost:8080/memory/api/memory/{memoryId}/media/{mediaId}', mode: 'none' },
+
+                    listUser: {
+                        label: 'ListByUser', method: 'GET', urlTemplate: 'http://localhost:8080/memory/api/memory/user/fdd2eee1-7871-45da-a3b4-c6a214ef4928?page=1&pageSize=10', mode: 'none',
+                        hint: 'Опц.: accessLevel=Private|Public|FriendsOnly'
+                    }
+                },
+
+                access: {
+                    grant: {
+                        label: 'Grant', method: 'POST', urlTemplate: 'http://localhost:8080/access-control/api/access/grant', mode: 'json',
+                        json: { subjectId: '4beed3da-37f8-423b-a16b-5a0fea4bbc38', subjectType: 'User', resourceType: 'Memory', resourceId: '17e5b201-d562-4c5c-b90f-414349bca627', permission: 'Edit', expiresAt: null }
+                    },
+                    revoke: {
+                        label: 'Revoke', method: 'POST', urlTemplate: 'http://localhost:8080/access-control/api/access/revoke', mode: 'json',
+                        json: { subjectId: '4beed3da-37f8-423b-a16b-5a0fea4bbc38', subjectType: 'User', resourceType: 'Memory', resourceId: '17e5b201-d562-4c5c-b90f-414349bca627', permission: 'Edit' }
+                    },
+                    check: {
+                        label: 'Check', method: 'POST', urlTemplate: 'http://localhost:8080/access-control/api/access/check', mode: 'json',
+                        json: { subjectId: '8bfbdace-33b7-4764-9903-39a6dc48bf7d', resourceType: 'Memory', resourceId: '17e5b201-d562-4c5c-b90f-414349bca627', permission: 'Edit' }
+                    },
+                    shares: { label: 'List Shares', method: 'GET', urlTemplate: 'http://localhost:8080/access-control/api/access/memory/17e5b201-d562-4c5c-b90f-414349bca627/shares', mode: 'none' }
+                },
+
+                audit: {
+                    create: {
+                        label: 'Create', method: 'POST', urlTemplate: 'http://localhost:8080/audit-logging/auditlogs', mode: 'json',
+                        json: {
+                            action: 'Access.Revoke', target: 'Memory:42', details: 'revoked by admin', result: 'success',
+                            data: '{"extra":"value"}', userId: '00000000-0000-0000-0000-000000000000',
+                            timestamp: new Date().toISOString(), ipAddress: '127.0.0.1', userAgent: 'UnifiedAPI UI'
+                        },
+                        hint: 'POST /auditlogs'
+                    },
+                    search: {
+                        label: 'Search', method: 'GET', urlTemplate: 'http://localhost:8080/audit-logging/auditlogs', mode: 'none',
+                        hint: '?action=&userId=&from=&to=&offset=&limit='
+                    },
+                    getById: { label: 'GetById', method: 'GET', urlTemplate: 'http://localhost:8080/audit-logging/auditlogs/0cf44724-b65d-48da-a340-0c0cb653503c', mode: 'none' },
+                    delete: { label: 'Delete', method: 'DELETE', urlTemplate: 'http://localhost:8080/audit-logging/auditlogs/{id}', mode: 'none' }
+                }
+            };
+
+            function fillMethodList() { method.innerHTML = '';['GET', 'POST', 'PUT', 'DELETE'].forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; method.appendChild(o) }) }
+            function fillEndpointList(tab) {
+                endpointSel.innerHTML = ''; Object.entries(endpoints[tab]).forEach(([k, v]) => { const o = document.createElement('option'); o.value = k; o.textContent = v.label; endpointSel.appendChild(o) });
+                currentEndpointKey = Object.keys(endpoints[tab])[0]; endpointSel.value = currentEndpointKey;
+            }
+
+            function setMode(mode) {
+                const isJson = mode === 'json', isForm = mode === 'form';
+                jsonBlock.style.display = isJson ? '' : 'none';
+                formBlock.style.display = isForm ? '' : 'none';
+                updateCurl();
+            }
+
+            function applyPreset(tab, key) {
+                const p = endpoints[tab][key]; if (!p) return;
+                method.value = p.method; url.value = p.urlTemplate; urlHint.textContent = p.hint || '';
+                setMode(p.mode);
+                if (p.mode === 'json') { json.value = typeof p.json === 'string' ? p.json : JSON.stringify(p.json, null, 2); }
+                if (p.mode === 'form') { // примеры для форм
+                    document.getElementById('OwnerId').value = p.form?.OwnerId ?? '';
+                    document.getElementById('Title').value = p.form?.Title ?? '';
+                    document.getElementById('Description').value = p.form?.Description ?? '';
+                    document.getElementById('MediaType').value = p.form?.MediaType ?? 'Image';
+                    document.getElementById('AccessLevel').value = p.form?.AccessLevel ?? 'Private';
+                    document.getElementById('Tags').value = p.form?.Tags ?? '';
+                    document.getElementById('FileName').value = p.form?.FileName ?? '';
+                    fileInput.value = '';
+                    filePreview.textContent = 'Файл не выбран';
+                }
+                updateCurl();
+            }
+
+            function ph(u) {
+                // простая подстановка — чтобы curl выглядел рабочим
+                return u
+                    .replace('{memoryId}', '00000000-0000-0000-0000-000000000001')
+                    .replace('{mediaId}', '00000000-0000-0000-0000-000000000002')
+                    .replace('{userId}', '00000000-0000-0000-0000-000000000003')
+                    .replace('{subjectId}', '00000000-0000-0000-0000-000000000004')
+                    .replace('{id}', '00000000-0000-0000-0000-000000000005');
+            }
+
+            function escSh(s) { return s.replaceAll("'", "'\"'\"'") }
+
+            function buildCurl() {
+                const m = method.value, u = ph(url.value);
+                const token = auth.value.trim();
+                let parts = [`curl -X '${m}' \\`, `  '${u}' \\`];
+                if (token) parts.push(`  -H 'Authorization: Bearer ${escSh(token)}' \\`);
+
+                if (jsonBlock.style.display !== 'none') { // JSON
+                    parts.push(`  -H 'Content-Type: application/json' \\`);
+                    if (json.value) parts.push(`  -d '${escSh(json.value)}'`);
+                } else if (formBlock.style.display !== 'none') { // multipart
+                    const ownerId = document.getElementById('OwnerId').value;
+                    const title = document.getElementById('Title').value;
+                    const description = document.getElementById('Description').value;
+                    const mediaType = document.getElementById('MediaType').value;
+                    const accessLevel = document.getElementById('AccessLevel').value;
+                    const tags = document.getElementById('Tags').value;
+                    const fileName = document.getElementById('FileName').value;
+
+                    const toF = (k, v) => v ? `  -F '${k}=${escSh(v)}' \\` : '';
+                    parts.push(toF('OwnerId', ownerId));
+                    parts.push(toF('Title', title));
+                    parts.push(toF('Description', description));
+                    parts.push(toF('MediaType', mediaType));
+                    parts.push(toF('AccessLevel', accessLevel));
+                    if (tags) tags.split(',').map(t => t.trim()).filter(Boolean).forEach(t => parts.push(`  -F 'Tags=${escSh(t)}' \\`));
+                    if (fileInput.files?.length) {
+                        const f = fileInput.files[0];
+                        parts.push(`  -F 'File=@${escSh(f.name)}' \\`);
+                    } else {
+                        parts.push(`  -F 'File=@<path-to-file>' \\`);
+                    }
+                    if (fileName) parts.push(`  -F 'FileName=${escSh(fileName)}' \\`);
+                    // remove trailing slash-continuation
+                    if (parts[parts.length - 1].endsWith('\\')) parts[parts.length - 1] = parts[parts.length - 1].slice(0, -2);
+                }
+                return parts.filter(Boolean).join('\n');
+            }
+
+            function updateCurl() { curlBox.value = buildCurl(); }
+
+            async function sendRequest() {
+                sendBtn.disabled = true; statusEl.textContent = '…'; statusEl.className = 'pill ' + (method.value === 'GET' ? 'get' : 'post');
+                preview.style.display = 'none'; previewGrid.innerHTML = ''; previewToolbar.style.display = 'none';
+                try {
+                    const u = ph(url.value);
+                    const token = auth.value.trim();
+                    const headers = new Headers();
+                    if (token) headers.set('Authorization', `Bearer ${token}`);
+
+                    let body, init = { method: method.value, headers };
+                    if (jsonBlock.style.display !== 'none') {
+                        headers.set('Content-Type', 'application/json');
+                        body = json.value || '';
+                        init.body = body;
+                    } else if (formBlock.style.display !== 'none') {
+                        const fd = new FormData();
+                        const ownerId = document.getElementById('OwnerId').value;
+                        const title = document.getElementById('Title').value;
+                        const description = document.getElementById('Description').value;
+                        const mediaType = document.getElementById('MediaType').value;
+                        const accessLevel = document.getElementById('AccessLevel').value;
+                        const tags = document.getElementById('Tags').value;
+                        const fileName = document.getElementById('FileName').value;
+                        if (ownerId) fd.append('OwnerId', ownerId);
+                        if (title) fd.append('Title', title);
+                        if (description) fd.append('Description', description);
+                        if (mediaType) fd.append('MediaType', mediaType);
+                        if (accessLevel) fd.append('AccessLevel', accessLevel);
+                        if (tags) tags.split(',').map(t => t.trim()).filter(Boolean).forEach(t => fd.append('Tags', t));
+                        if (fileInput.files?.length) fd.append('File', fileInput.files[0], fileInput.files[0].name || 'upload.bin');
+                        if (fileName) fd.append('FileName', fileName);
+                        init.body = fd;
+                    }
+
+                    const res = await fetch(u, init);
+                    statusEl.textContent = res.status + ' ' + res.statusText;
+
+                    // headers viewer
+                    const hdrs = []; res.headers.forEach((v, k) => hdrs.push(`${k}: ${v}`)); respHeaders.value = hdrs.join('\n');
+
+                    // parse body
+                    const ct = res.headers.get('content-type') || '';
+                    let text;
+                    if (ct.includes('application/json')) {
+                        const j = await res.json().catch(() => ({}));
+                        if (j && j.accessToken) { auth.value = j.accessToken; localStorage.setItem(LS_JWT_KEY, j.accessToken); }
+                        text = JSON.stringify(j, null, 2);
+                        tryRenderPreview(j);
+                    } else {
+                        text = await res.text();
+                    }
+                    respEl.textContent = text || '—'; hljs.highlightElement(respEl);
+                } catch (e) {
+                    statusEl.textContent = 'ERR';
+                    respEl.textContent = String(e); hljs.highlightElement(respEl);
+                } finally {
+                    sendBtn.disabled = false; updateCurl();
+                }
+            }
+
+            function tryRenderPreview(obj) {
+                // Отобразим медиа, если это MemoryDto или список mediaFiles
+                const mf = (obj && obj.mediaFiles) ? obj.mediaFiles
+                    : (Array.isArray(obj?.items) && obj.items.length && obj.items[0]?.mediaFiles) ? obj.items[0].mediaFiles
+                        : [];
+                if (!Array.isArray(mf) || !mf.length) return;
+
+                preview.style.display = 'block'; previewToolbar.style.display = 'flex';
+                previewGrid.innerHTML = '';
+                for (const m of mf) {
+                    const item = document.createElement('div'); item.className = 'preview-item';
+                    let media = '';
+                    const mt = (m.mediaType || '').toLowerCase();
+                    if (mt.includes('image')) media = `<img src="${m.url || '#'}" alt="${m.fileName || m.id}" />`;
+                    else if (mt.includes('video')) media = `<video src="${m.url || '#'}" controls></video>`;
+                    else if (mt.includes('audio')) media = `<audio src="${m.url || '#'}" controls></audio>`;
+                    else media = `<a href="${m.url || '#'}" target="_blank">Открыть файл</a>`;
+                    item.innerHTML = `${media}<div class="meta">${m.fileName || ''}<br>${m.mediaType || ''}</div>`;
+                    previewGrid.appendChild(item);
+                }
+            }
+
+            // events
+            sendBtn.addEventListener('click', sendRequest);
+            fillBtn.addEventListener('click', () => applyPreset(currentTab, currentEndpointKey));
+            endpointSel.addEventListener('change', () => { currentEndpointKey = endpointSel.value; applyPreset(currentTab, currentEndpointKey) });
+            tabs.addEventListener('click', e => {
+                const b = e.target.closest('[data-tab]'); if (!b) return;
+                [...tabs.children].forEach(x => x.classList.toggle('active', x === b));
+                currentTab = b.dataset.tab; fillEndpointList(currentTab); applyPreset(currentTab, Object.keys(endpoints[currentTab])[0]);
+            });
+            ;['change', 'input'].forEach(ev => { method.addEventListener(ev, updateCurl); url.addEventListener(ev, updateCurl); auth.addEventListener(ev, updateCurl); json.addEventListener(ev, updateCurl); });
+
+            document.getElementById('copyJwt').addEventListener('click', () => navigator.clipboard.writeText(auth.value || ''));
+            document.getElementById('copyCurl').addEventListener('click', () => navigator.clipboard.writeText(curlBox.value || ''));
+            persistBodies.addEventListener('change', () => localStorage.setItem(LS_PERSIST, persistBodies.checked ? '1' : '0'));
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files?.length) { const f = fileInput.files[0]; filePreview.textContent = `${f.name} (${f.type || 'binary'}, ${f.size} bytes)`; }
+                else filePreview.textContent = 'Файл не выбран';
+                updateCurl();
+            });
+
+            // init
+            (function init() {
+                const savedJwt = localStorage.getItem(LS_JWT_KEY); if (savedJwt) auth.value = savedJwt;
+                persistBodies.checked = (localStorage.getItem(LS_PERSIST) === '1');
+                fillMethodList();
+                // стартуем с Audit → Create (можно сменить)
+                currentTab = 'audit'; fillEndpointList('audit'); endpointSel.value = 'create'; currentEndpointKey = 'create';
+                applyPreset('audit', 'create');
+            })();
+        })();
+    </script>
+</body>
+</html>

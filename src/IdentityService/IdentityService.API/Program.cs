@@ -30,7 +30,7 @@ var cfg = builder.Configuration;
 var jwt = cfg.GetSection("Jwt");
 var issuer = jwt["Issuer"] ?? "memories-issuer";
 var audience = jwt["Audience"] ?? "memories-audience";
-var key = jwt["Key"] ?? "super-secret-dev-key-change-it";
+var key = jwt["Key"] ?? "supersecretkey_should_be_env_or_user_secret";
 var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
 
 // ---- Controllers + JSON ----

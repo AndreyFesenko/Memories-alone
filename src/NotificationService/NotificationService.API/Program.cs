@@ -1,47 +1,36 @@
-//C:\Users\user\Source\Repos\Memories-alone\src\NotificationService\NotificationService.API\Program.cs
-using System.Text.Json.Serialization;
-using System.Threading.RateLimiting;
+// C:\Users\user\Source\Repos\Memories-alone\src\NotificationService\NotificationService.API\Program.cs
 using MassTransit;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using NotificationService.Application;
 using NotificationService.Application.Consumers;
 using NotificationService.Application.Hubs;
 using NotificationService.Infrastructure;
-using RabbitMQ.Client;
 using Scalar.AspNetCore;
 using Serilog;
-using StackExchange.Redis;
+using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// JSON enum as strings
+// JSON enums как строки
 builder.Services.AddControllers()
-    .AddJsonOptions(o =>
-    {
-        o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    });
+    .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 // App services
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
-// Redis config
+// ----------------- Redis: строка подключени€ (без IConnectionMultiplexer в DI) -----------------
 var redisCfg = builder.Configuration.GetSection("Redis");
-var redisOptions = new ConfigurationOptions
-{
-    EndPoints = { $"{redisCfg["Host"]}:{redisCfg["Port"]}" },
-    Password = redisCfg["Password"],
-    Ssl = redisCfg.GetValue<bool>("Ssl"),
-    AbortOnConnectFail = false
-};
+string redisConnString = $"{redisCfg["Host"]}:{redisCfg["Port"]},abortConnect=False"
+    + (redisCfg.GetValue<bool>("Ssl") ? ",ssl=True" : ",ssl=False")
+    + (!string.IsNullOrWhiteSpace(redisCfg["Password"]) ? $",password={redisCfg["Password"]}" : "");
 
-// SignalR + Redis backplane
+// SignalR + Redis backplane через connection string (совместимо со всеми верси€ми)
 builder.Services.AddSignalR()
-    .AddStackExchangeRedis(redisOptions.ToString());
-
-// Redis connection singleton (дл€ HealthCheck)
-builder.Services.AddSingleton<IConnectionMultiplexer>(
-    ConnectionMultiplexer.Connect(redisOptions));
+    .AddStackExchangeRedis(redisConnString);
 
 // CORS
 builder.Services.AddCors(opts =>
@@ -53,13 +42,15 @@ builder.Services.AddCors(opts =>
         .SetIsOriginAllowed(_ => true));
 });
 
-// Rate Limiting
+// Rate Limiting (одна политика notifications + глобальный лимитер)
 builder.Services.AddRateLimiter(options =>
 {
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
     {
-        var user = context.User.Identity?.Name ?? context.Connection.RemoteIpAddress?.ToString() ?? "anon";
-        return RateLimitPartition.GetFixedWindowLimiter(user, _ => new FixedWindowRateLimiterOptions
+        var key = context.User.Identity?.Name
+                  ?? context.Connection.RemoteIpAddress?.ToString()
+                  ?? "anon";
+        return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
         {
             PermitLimit = 5,
             Window = TimeSpan.FromSeconds(10),
@@ -68,19 +59,24 @@ builder.Services.AddRateLimiter(options =>
         });
     });
 
-    options.AddFixedWindowLimiter("notifications", opts =>
-    {
-        opts.PermitLimit = 10;
-        opts.Window = TimeSpan.FromMinutes(1);
-        opts.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        opts.QueueLimit = 3;
-    });
+    options.AddPolicy("notifications", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.User?.Identity?.Name
+                          ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                          ?? "anon",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 60,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }));
 });
 
 // OpenAPI + Scalar
 builder.Services.AddOpenApi();
 
-// MassTransit + RabbitMQ
+// ----------------- MassTransit + RabbitMQ -----------------
 var rabbitCfg = builder.Configuration.GetSection("RabbitMq");
 builder.Services.AddMassTransit(x =>
 {
@@ -93,18 +89,14 @@ builder.Services.AddMassTransit(x =>
         var user = rabbitCfg["User"] ?? "guest";
         var pass = rabbitCfg["Password"] ?? "guest";
         var queue = rabbitCfg["Queue"] ?? "notifications.queue";
-        var exchange = rabbitCfg["Exchange"] ?? "notifications";
+        var exch = rabbitCfg["Exchange"] ?? "notifications";
 
-        cfg.Host(host, vhost, h =>
-        {
-            h.Username(user);
-            h.Password(pass);
-        });
+        cfg.Host(host, vhost, h => { h.Username(user); h.Password(pass); });
 
         cfg.ReceiveEndpoint(queue, e =>
         {
             e.ConfigureConsumeTopology = false;
-            e.Bind(exchange, s =>
+            e.Bind(exch, s =>
             {
                 s.ExchangeType = "topic";
                 s.RoutingKey = "notification.*";
@@ -115,60 +107,53 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
-// RabbitMQ connection
-builder.Services.AddSingleton<ConnectionFactory>(sp => new ConnectionFactory
+// ----------------- HealthChecks: Postgres / RabbitMQ / Redis Ч только строками -----------------
+string Pg() => builder.Configuration.GetConnectionString("Default")!;
+string Amqp()
 {
-    Uri = new Uri($"amqp://{rabbitCfg["User"]}:{rabbitCfg["Password"]}@{rabbitCfg["Host"]}/{rabbitCfg["VirtualHost"] ?? "/"}")
-});
+    var host = rabbitCfg["Host"] ?? "localhost";
+    var vhost = Uri.EscapeDataString(rabbitCfg["VirtualHost"] ?? "/"); // "/" -> "%2F"
+    var user = rabbitCfg["User"] ?? "guest";
+    var pass = rabbitCfg["Password"] ?? "guest";
+    return $"amqp://{user}:{pass}@{host}/{vhost}";
+}
 
-builder.Services.AddSingleton<RabbitMqConnectionService>();
-builder.Services.AddSingleton<IConnection>(sp => sp.GetRequiredService<RabbitMqConnectionService>().Connection);
-
-// HealthChecks
 builder.Services.AddHealthChecks()
-    .AddNpgSql(
-        builder.Configuration.GetConnectionString("Default")!,
-        name: "postgres",
-        tags: new[] { "ready" }
-    )
+    .AddNpgSql(Pg(), name: "postgres", tags: new[] { "ready" })
     .AddRabbitMQ(
-        factory: sp => sp.GetRequiredService<IConnection>(),
+        factory: sp =>
+        {
+            var f = new RabbitMQ.Client.ConnectionFactory { Uri = new Uri(Amqp()) };
+            // если есть только async-метод:
+            return f.CreateConnectionAsync().GetAwaiter().GetResult();
+            
+        },
         name: "rabbitmq",
         tags: new[] { "ready" }
     )
-    .AddRedis(
-        redisConnectionString: redisOptions.ToString(),
-        name: "redis",
-        tags: new[] { "ready" }
-    );
+    .AddRedis(redisConnString, name: "redis", tags: new[] { "ready" });
 
 // Serilog
-builder.Host.UseSerilog((ctx, lc) => lc.ReadFrom.Configuration(ctx.Configuration));
+builder.Host.UseSerilog((ctx, lc) =>
+    lc.ReadFrom.Configuration(ctx.Configuration)
+      .WriteTo.Console()
+      .Enrich.FromLogContext());
 
-// Build App
 var app = builder.Build();
 
-// Init RabbitMQ
-var rabbitMqService = app.Services.GetRequiredService<RabbitMqConnectionService>();
-await rabbitMqService.InitializeAsync();
-
-// Middleware & endpoints
+// --------- ѕор€док middleware ---------
+// Ѕез UseHttpsRedirection в dev (чтобы не было 307 через Gateway)
 app.UseMiddleware<ErrorHandlingMiddleware>();
-app.MapControllers();
-app.MapHub<NotificationHub>("/hubs/notifications");
-app.UseRateLimiter();
 app.UseCors("AllowAll");
+app.UseRateLimiter();
 app.UseAuthorization();
 
+app.MapControllers();
+app.MapHub<NotificationHub>("/hubs/notifications");
+
 // Health endpoints
-app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
-{
-    Predicate = _ => false
-});
-app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
-{
-    Predicate = check => check.Tags.Contains("ready")
-});
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions { Predicate = _ => false });
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") });
 
 // Swagger & Scalar (dev only)
 if (app.Environment.IsDevelopment())
@@ -178,43 +163,3 @@ if (app.Environment.IsDevelopment())
 }
 
 app.Run();
-
-/// <summary>
-/// Service to handle persistent RabbitMQ connection.
-/// </summary>
-public class RabbitMqConnectionService : IAsyncDisposable
-{
-    private readonly ConnectionFactory _factory;
-    private IConnection? _connection;
-
-    public RabbitMqConnectionService(ConnectionFactory factory)
-    {
-        _factory = factory;
-    }
-
-    public IConnection Connection => _connection ?? throw new InvalidOperationException("RabbitMQ connection not initialized");
-
-    public async Task InitializeAsync()
-    {
-        try
-        {
-            _connection = await _factory.CreateConnectionAsync();
-            Log.Information("RabbitMQ connection established");
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Failed to establish RabbitMQ connection");
-            throw;
-        }
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_connection != null)
-        {
-            await _connection.CloseAsync();
-            _connection.Dispose();
-        }
-    }
-}
-

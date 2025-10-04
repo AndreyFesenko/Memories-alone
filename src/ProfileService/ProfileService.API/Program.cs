@@ -1,46 +1,101 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using ProfileService.Application;
-using ProfileService.Application.Interfaces;
 using ProfileService.Infrastructure;
-using ProfileService.Infrastructure.Repositories;
 using Scalar.AspNetCore;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Application & Infrastructure DI
+// Слои
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
-// Controllers
+// ===== JWT =====
+var jwt = builder.Configuration.GetSection("Jwt");
+var issuer = jwt["Issuer"];
+var audience = jwt["Audience"];
+// поддержка обоих ключей конфигурации: Secret ИЛИ Key
+var secret = jwt["Secret"] ?? jwt["Key"];
+var authority = jwt["Authority"]; // на будущее (RS256/JWKS)
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        // RS256 через Authority (если когда-то перейдёте на OIDC/JWKS)
+        if (!string.IsNullOrWhiteSpace(authority))
+        {
+            options.Authority = authority;
+            options.RequireHttpsMetadata = false;
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = !string.IsNullOrWhiteSpace(audience),
+                ValidAudience = audience,
+                ClockSkew = TimeSpan.FromMinutes(2)
+            };
+            return;
+        }
+
+        // HS256 по shared secret (наш текущий случай)
+        if (string.IsNullOrWhiteSpace(secret))
+            throw new InvalidOperationException("JWT secret is not configured. Set Jwt:Secret or Jwt:Key.");
+
+        options.RequireHttpsMetadata = false;
+        options.SaveToken = true;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)),
+
+            ValidateIssuer = !string.IsNullOrWhiteSpace(issuer),
+            ValidIssuer = issuer,
+
+            // Валидируем аудиторию только если она указана в конфиге
+            ValidateAudience = !string.IsNullOrWhiteSpace(audience),
+            ValidAudience = audience,
+
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(2)
+        };
+    });
+
+builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
-// OpenAPI Generation (Swagger)
+// Swagger/Scalar + bearer-схема
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
+builder.Services.AddSwaggerGen(c =>
 {
-    options.SwaggerDoc("v1", new() { Title = "ProfileService API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "ProfileService API", Version = "v1" });
+    var jwtScheme = new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Введите JWT без 'Bearer '"
+    };
+    c.AddSecurityDefinition("Bearer", jwtScheme);
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement { { jwtScheme, Array.Empty<string>() } });
 });
-
-// Scalar/OpenApi
-builder.Services.AddOpenApi(); // Для генерации openapi.json
-builder.Services.AddAuthorization();
-builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
 
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    // Сервис отдаёт OpenAPI json по пути /openapi/v1.json
-    app.UseSwagger(options => options.RouteTemplate = "/openapi/{documentName}.json");
-    app.MapOpenApi(); // JSON OpenAPI по маршруту
-    app.MapScalarApiReference(); // UI Scalar по http://localhost:5228/scalar/v1
+    app.UseSwagger(c => c.RouteTemplate = "openapi/{documentName}.json");
+    app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
-//app.UseHttpsRedirection();
+app.UseRouting();
+app.UseAuthentication(); // важно: до UseAuthorization
 app.UseAuthorization();
 app.MapControllers();
-
 app.Run();

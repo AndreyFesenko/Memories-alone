@@ -4,7 +4,8 @@ using System.Net.Http.Json;
 
 namespace IdentityService.Infrastructure.Services;
 
-public class ProfileServiceHttpClient : IProfileServiceClient
+public class 
+    ProfileServiceHttpClient : IProfileServiceClient
 {
     private readonly HttpClient _client;
 

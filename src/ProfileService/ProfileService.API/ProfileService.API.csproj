@@ -8,6 +8,7 @@
     <!-- NuGet пакеты -->
     <PackageReference Include="FluentValidation" />
     <PackageReference Include="MediatR" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -26,5 +27,8 @@
     <ProjectReference Include="..\ProfileService.Application\ProfileService.Application.csproj" />
     <ProjectReference Include="..\ProfileService.Infrastructure\ProfileService.Infrastructure.csproj" />
     <ProjectReference Include="..\ProfileService.Domain\ProfileService.Domain.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Persistence\" />
   </ItemGroup>
 </Project>

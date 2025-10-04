@@ -6,16 +6,16 @@ namespace ProfileService.Application.Handlers;
 
 public class DeleteProfileCommandHandler : IRequestHandler<DeleteProfileCommand, Unit>
 {
-    private readonly IProfileRepository _profiles;
+    private readonly IProfileRepository _repo;
 
-    public DeleteProfileCommandHandler(IProfileRepository profiles)
+    public DeleteProfileCommandHandler(IProfileRepository repo)
     {
-        _profiles = profiles;
+        _repo = repo;
     }
 
     public async Task<Unit> Handle(DeleteProfileCommand request, CancellationToken cancellationToken)
     {
-        await _profiles.DeleteAsync(request.UserId, cancellationToken);
+        await _repo.DeleteAsync(request.Id, cancellationToken);
         return Unit.Value;
     }
 }

@@ -1,4 +1,5 @@
-﻿namespace NotificationService.Domain.Entities;
+﻿//  src\NotificationService\NotificationService.Domain\Entities\NotificationMessage.cs
+namespace NotificationService.Domain.Entities;
 
 /// <summary>
 /// Сущность для хранения сообщения уведомления.

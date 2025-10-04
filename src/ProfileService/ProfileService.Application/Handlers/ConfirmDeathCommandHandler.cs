@@ -16,8 +16,7 @@ public class ConfirmDeathCommandHandler : IRequestHandler<ConfirmDeathCommand, U
     public async Task<Unit> Handle(ConfirmDeathCommand request, CancellationToken cancellationToken)
     {
         var profile = await _profiles.GetByUserIdAsync(request.UserId, cancellationToken);
-        if (profile == null)
-            throw new Exception("Profile not found");
+        if (profile is null) return Unit.Value;
 
         profile.DeathConfirmed = true;
         await _profiles.UpdateAsync(profile, cancellationToken);

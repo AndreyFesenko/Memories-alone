@@ -9,7 +9,8 @@ public class UserProfileDto
     public string? DisplayName { get; set; }
     public string? Bio { get; set; }
     public bool DeathConfirmed { get; set; }
-    public string AccessMode { get; set; } = "AfterDeath"; // "Anytime", "AfterDeath"
+    // "Anytime" | "AfterDeath"
+    public string AccessMode { get; set; } = "AfterDeath";
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public string? AvatarUrl { get; set; }
