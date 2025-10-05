@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "PublicViewService.API": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "http://localhost:5701;https://localhost:7701"
+    }
+  }
+}

@@ -6,8 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
         :root {
             --bg: #0f172a;
@@ -25,15 +23,15 @@
             margin: 0;
             background: var(--bg);
             color: var(--ink);
-            font: 14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif
+            font: 14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu
         }
 
         header {
             display: flex;
-            gap: 16px;
+            gap: 12px;
             align-items: center;
             justify-content: space-between;
-            padding: 16px 20px;
+            padding: 12px 16px;
             border-bottom: 1px solid #1f2937;
             background: #0b1220;
             position: sticky;
@@ -47,9 +45,30 @@
                 font-weight: 600
             }
 
-            header .env {
-                font-size: 12px;
-                color: var(--muted)
+        .env-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+
+        .tabs {
+            display: flex;
+            gap: 6px
+        }
+
+        .tab {
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid #1f2937;
+            background: #0b1220;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700
+        }
+
+            .tab.active {
+                background: #1f2937
             }
 
         main {
@@ -73,7 +92,6 @@
                 padding: 12px 14px;
                 border-bottom: 1px solid #1f2937;
                 font-size: 13px;
-                letter-spacing: .2px;
                 color: #cbd5e1
             }
 
@@ -140,26 +158,15 @@
                 color: #cbd5e1
             }
 
-        .tabs {
-            display: flex;
-            gap: 6px
+        .muted {
+            color: #9ca3af;
+            font-size: 12px
         }
 
-        .tab {
-            padding: 6px 10px;
-            border-radius: 8px;
-            border: 1px solid #1f2937;
-            background: #0b1220;
-            color: #fff;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 700
+        .hint {
+            font-size: 11px;
+            color: #a3a3a3
         }
-
-            .tab.active {
-                background: #1f2937;
-                color: #fff
-            }
 
         pre, code {
             font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
@@ -199,71 +206,11 @@
                 border: 1px solid #1d4ed8
             }
 
-        .muted {
-            color: #9ca3af;
-            font-size: 12px
-        }
-
-        .divider {
-            height: 1px;
-            background: #1f2937;
-            margin: 8px 0
-        }
-
-        .hint {
-            font-size: 11px;
-            color: #a3a3a3
-        }
-
-        .inline {
-            display: flex;
-            gap: 8px;
-            align-items: center
-        }
-
-        .grid2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px
-        }
-
-        kbd {
-            background: #0b1220;
-            border: 1px solid #1f2937;
-            border-radius: 6px;
-            padding: 2px 6px;
-            font-size: 11px
-        }
-
-        .file-preview {
-            font-size: 12px;
-            color: #cbd5e1;
-            background: #0b1220;
-            border: 1px dashed #334155;
-            border-radius: 8px;
-            padding: 8px
-        }
-
         .preview {
             margin: 0;
             padding: 12px 14px;
             border-top: 1px solid #1f2937
         }
-
-            .preview .toolbar {
-                display: flex;
-                gap: 8px;
-                align-items: center;
-                justify-content: flex-start;
-                margin-bottom: 8px;
-                flex-wrap: wrap
-            }
-
-            .preview h4 {
-                margin: 0 0 8px 0;
-                font-size: 13px;
-                color: #cbd5e1
-            }
 
         .preview-grid {
             display: grid;
@@ -279,35 +226,36 @@
             overflow: hidden
         }
 
-            .preview-item img, .preview-item video {
-                width: 100%;
-                height: 130px;
-                object-fit: cover;
-                border-radius: 8px;
-                display: block
+        .file-preview {
+            font-size: 12px;
+            color: #cbd5e1;
+            background: #0b1220;
+            border: 1px dashed #334155;
+            border-radius: 8px;
+            padding: 8px
+        }
+
+        .doc {
+            max-width: 1500px;
+            margin: 16px auto
+        }
+
+            .doc details {
+                background: #0b1220;
+                border: 1px solid #1f2937;
+                border-radius: 10px;
+                padding: 8px 10px
             }
 
-            .preview-item audio {
-                width: 100%;
-                display: block
+            .doc summary {
+                cursor: pointer;
+                font-weight: 700;
+                color: #cbd5e1
             }
 
-            .preview-item .meta {
-                font-size: 11px;
-                color: #9ca3af;
-                margin-top: 6px;
-                word-break: break-word
-            }
-
-            .preview-item a {
-                text-decoration: none;
-                color: #93c5fd;
-                font-size: 12px
-            }
-
-        .tiny {
-            font-size: 11px;
-            color: #9ca3af
+        .mono {
+            font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+            font-size: 12px
         }
     </style>
 </head>
@@ -315,13 +263,30 @@
     <header>
         <div class="inline">
             <h1>Memories – Unified API</h1>
-            <span class="env">Gateway: <code>http://localhost:8080</code></span>
+            <span class="env muted">Gateway: <code id="gatewayDisplay">http://localhost:8080</code></span>
         </div>
-        <div class="tabs" id="tabs">
-            <button class="tab" data-tab="identity">Identity</button>
-            <button class="tab" data-tab="memory">MemoryArchive</button>
-            <button class="tab" data-tab="access">AccessControl</button>
-            <button class="tab active" data-tab="audit">AuditLogging</button>
+
+        <div class="env-controls">
+            <label class="muted" for="envSelect" style="margin:0 4px 0 0">ENV</label>
+            <select id="envSelect" title="Выберите окружение">
+                <option value="dev">dev</option>
+                <option value="stage">stage</option>
+                <option value="prod">prod</option>
+            </select>
+
+            <button id="quickLogin" class="btn small" title="Открыть Identity → Login и выполнить">Quick Login</button>
+            <div style="width:12px"></div>
+
+            <div class="tabs" id="tabs">
+                <button class="tab" data-tab="identity">Identity</button>
+                <button class="tab" data-tab="memory">MemoryArchive</button>
+                <button class="tab" data-tab="access">AccessControl</button>
+                <button class="tab" data-tab="audit">AuditLogging</button>
+                <button class="tab" data-tab="notification">Notification</button>
+                <button class="tab" data-tab="profile">ProfileService</button>
+                <button class="tab" data-tab="moderation">Moderation</button>
+                <button class="tab" data-tab="publicview">PublicView</button>
+            </div>
         </div>
     </header>
 
@@ -348,7 +313,7 @@
                     </label>
                     <button class="btn small secondary" id="copyJwt" title="Скопировать токен">📋</button>
                 </div>
-                <span class="hint">JWT сохраняется в localStorage. Для /identity/me, Memory и Access — обязателен.</span>
+                <span class="hint">JWT сохраняется в localStorage. Для защищённых маршрутов — обязателен.</span>
 
                 <label class="inline">
                     <input type="checkbox" id="persistBodies" />
@@ -360,7 +325,7 @@
                 </div>
 
                 <div id="formBlock" style="display:none;">
-                    <div class="grid2">
+                    <div class="grid2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
                         <label>OwnerId<input id="OwnerId" type="text" placeholder="uuid" /></label>
                         <label>Title<input id="Title" type="text" /></label>
                         <label>Description<textarea id="Description"></textarea></label>
@@ -427,118 +392,267 @@
         </section>
     </main>
 
+    <!-- Документация (снизу) -->
+    <section class="card doc">
+        <h3>Памятка для фронтенда — краткие контракты</h3>
+        <div class="body">
+            <details open>
+                <summary>Identity</summary>
+                <pre class="mono">
+Login — POST /identity/login
+Request: { "username":"...", "password":"..." }
+Response: { "accessToken":"...", "refreshToken":"...", "expiresAt":"..." }
+
+Register — POST /identity/register
+Refresh — POST /identity/refresh
+Me — GET /identity/me
+        </pre>
+            </details>
+
+            <details>
+                <summary>MemoryArchive</summary>
+                <pre class="mono">
+CreateMemory — POST /memory/api/memory (multipart/form-data)
+Get/Update/Delete Memory — /memory/api/memory/{id}
+UploadMedia — POST /memory/api/memory/{id}/media (multipart)
+GetMedia — GET /memory/api/media/{id}
+ListByUser — GET /memory/api/memory/user/{userId}
+        </pre>
+            </details>
+
+            <details>
+                <summary>AccessControl</summary>
+                <pre class="mono">
+Grant — POST /access-control/api/access/grant
+Revoke — POST /access-control/api/access/revoke
+Check — POST /access-control/api/access/check
+List Shares — GET /access-control/api/access/memory/{id}/shares
+        </pre>
+            </details>
+
+            <details>
+                <summary>AuditLogging</summary>
+                <pre class="mono">
+Create — POST /audit-logging/auditlogs
+Search — GET /audit-logging/auditlogs
+GetById/Delete — /audit-logging/auditlogs/{id}
+        </pre>
+            </details>
+
+            <details>
+                <summary>Notification</summary>
+                <pre class="mono">
+NotifyUser — POST /notification/api/Notification/notify
+NotifyUsers — POST /notification/api/Notification/notify-many
+Broadcast — POST /notification/api/Notification/broadcast (may be 501)
+Health — GET /notification/health/ready
+        </pre>
+            </details>
+
+            <details>
+                <summary>ProfileService</summary>
+                <pre class="mono">
+CreateProfile — POST /profile/api/profile
+GetById — GET /profile/api/profile/{id}
+GetByUser — GET /profile/api/profile/by-user/{userId}
+Update — PUT /profile/api/profile/{id}
+Delete — DELETE /profile/api/profile/{id}
+ConfirmDeath — POST /profile/api/profile/{userId}/confirm-death
+        </pre>
+            </details>
+
+            <details>
+                <summary>Moderation (новая вкладка)</summary>
+                <pre class="mono">
+CreateReview — POST /moderation/api/reviews
+GetReview — GET /moderation/api/reviews/{id}
+ListReviews — GET /moderation/api/reviews?status=Pending&page=1&pageSize=20
+DecideReview — POST /moderation/api/reviews/{id}/decide
+        </pre>
+            </details>
+
+            <details>
+                <summary>PublicView (новая вкладка)</summary>
+                <pre class="mono">
+GetPublicProfile — GET /public/api/profile/{userId}
+GetPublicMemory — GET /public/api/memory/{memoryId}
+        </pre>
+            </details>
+
+            <div class="hint">Для защищённых маршрутов добавляйте заголовок Authorization: Bearer &lt;token&gt;. Плейсхолдеры {id}, {userId}, {memoryId}, {mediaId} подставляются автоматически.</div>
+        </div>
+    </section>
+
     <script>
-        (() => {
+        (function () {
             hljs.highlightAll();
 
-            const method = document.getElementById('method'),
+            // UI elements
+            const envSelect = document.getElementById('envSelect'),
+                gatewayDisplay = document.getElementById('gatewayDisplay'),
+                quickLoginBtn = document.getElementById('quickLogin'),
+                method = document.getElementById('method'),
                 endpointSel = document.getElementById('endpoint'),
-                url = document.getElementById('url'), urlHint = document.getElementById('urlHint'),
-                auth = document.getElementById('auth'), json = document.getElementById('json'),
-                jsonBlock = document.getElementById('jsonBlock'), formBlock = document.getElementById('formBlock'),
-                fileInput = document.getElementById('File'), filePreview = document.getElementById('filePreview'),
-                sendBtn = document.getElementById('send'), fillBtn = document.getElementById('fill'),
-                curlBox = document.getElementById('curl'), respEl = document.getElementById('resp'),
-                statusEl = document.getElementById('status'), respHeaders = document.getElementById('respHeaders'),
-                tabs = document.getElementById('tabs'), persistBodies = document.getElementById('persistBodies'),
-                preview = document.getElementById('preview'), previewGrid = document.getElementById('previewGrid'),
+                url = document.getElementById('url'),
+                urlHint = document.getElementById('urlHint'),
+                auth = document.getElementById('auth'),
+                json = document.getElementById('json'),
+                jsonBlock = document.getElementById('jsonBlock'),
+                formBlock = document.getElementById('formBlock'),
+                fileInput = document.getElementById('File'),
+                filePreview = document.getElementById('filePreview'),
+                sendBtn = document.getElementById('send'),
+                fillBtn = document.getElementById('fill'),
+                curlBox = document.getElementById('curl'),
+                respEl = document.getElementById('resp'),
+                statusEl = document.getElementById('status'),
+                respHeaders = document.getElementById('respHeaders'),
+                tabs = document.getElementById('tabs'),
+                preview = document.getElementById('preview'),
+                previewGrid = document.getElementById('previewGrid'),
                 previewToolbar = document.getElementById('previewToolbar');
 
-            // local state
-            let currentTab = 'audit', currentEndpointKey = '';
             const LS_JWT_KEY = 'memories.jwt';
             const LS_PERSIST = 'memories.persist';
-            const LS_STATE = 'memories.state.v7';
 
-            // Endpoints presets (как раньше) + Audit
+            const ENV_PRESETS = {
+                dev: {
+                    gateway: 'http://localhost:8080',
+                    services: {
+                        identity: 'http://localhost:8080',
+                        profile: 'http://localhost:8080',
+                        memory: 'http://localhost:8080',
+                        access: 'http://localhost:8080',
+                        audit: 'http://localhost:8080',
+                        notification: 'http://localhost:8080',
+                        moderation: 'http://localhost:8080',
+                        publicview: 'http://localhost:8080'
+                    }
+                },
+                stage: {
+                    gateway: 'https://stage.api.memories.local',
+                    services: {}
+                },
+                prod: {
+                    gateway: 'https://api.memories.app',
+                    services: {}
+                }
+            };
+
+            let currentEnv = 'dev';
+            let currentTab = 'identity';
+            let currentEndpointKey = '';
+
+            // Endpoints (preserve all previous ones and add moderation + publicview)
             const endpoints = {
                 identity: {
-                    register: {
-                        label: 'Register', method: 'POST', urlTemplate: 'http://localhost:8080/identity/register', mode: 'json',
-                        json: { username: 'user1', password: 'User1!pass', email: 'u1@example.com', displayName: 'User 1' }
-                    },
                     login: {
-                        label: 'Login', method: 'POST', urlTemplate: 'http://localhost:8080/identity/login', mode: 'json',
-                        json: { username: 'Admin', password: 'Admin!123' }, hint: 'Вернёт accessToken → сохраняем'
+                        label: 'Login', method: 'POST', service: 'identity', path: '/identity/login', mode: 'json',
+                        json: { username: 'Admin', password: 'Admin!123' },
+                        hint: 'Выдаёт accessToken/refreshToken — используйте первым, чтобы получить JWT.'
+                    },
+                    register: {
+                        label: 'Register', method: 'POST', service: 'identity', path: '/identity/register', mode: 'json',
+                        json: { username: 'user1', password: 'User1!pass', email: 'u1@example.com', displayName: 'User 1' },
+                        hint: 'Регистрация нового пользователя.'
                     },
                     refresh: {
-                        label: 'Refresh', method: 'POST', urlTemplate: 'http://localhost:8080/identity/refresh', mode: 'json',
-                        json: { refreshToken: '<your-refresh-token>' }
+                        label: 'Refresh', method: 'POST', service: 'identity', path: '/identity/refresh', mode: 'json',
+                        json: { refreshToken: '<your-refresh-token>' }, hint: 'Обновляет accessToken по refreshToken.'
                     },
-                    me: {
-                        label: 'Me', method: 'GET', urlTemplate: 'http://localhost:8080/identity/me', mode: 'none',
-                        hint: 'Нужен Bearer accessToken'
-                    }
+                    me: { label: 'Me', method: 'GET', service: 'identity', path: '/identity/me', mode: 'none', hint: 'Возвращает текущего пользователя по токену.' }
                 },
 
                 memory: {
                     create: {
-                        label: 'CreateMemory (multipart)', method: 'POST', urlTemplate: 'http://localhost:8080/memory/api/memory', mode: 'form',
-                        form: { OwnerId: 'fdd2eee1-7871-45da-a3b4-c6a214ef4928', Title: 'Trip to Alps', Description: 'Ski weekend', MediaType: 'Image', AccessLevel: 'Private', Tags: 'alps,trip' }, hint: 'FormData + File'
+                        label: 'CreateMemory (multipart)', method: 'POST', service: 'memory', path: '/memory/api/memory', mode: 'form',
+                        form: { OwnerId: 'fdd2eee1-7871-45da-a3b4-c6a214ef4928', Title: 'Trip to Alps', Description: 'Ski weekend', MediaType: 'Image', AccessLevel: 'Private', Tags: 'alps,trip' },
+                        hint: 'Создать запись с файлом (FormData + File).'
                     },
-                    get: { label: 'GetMemoryById', method: 'GET', urlTemplate: 'http://localhost:8080/memory/api/memory/1f6cbd66-dc14-4c35-a1f1-94928a4caa5f', mode: 'none' },
+                    get: { label: 'GetMemoryById', method: 'GET', service: 'memory', path: '/memory/api/memory/{memoryId}', mode: 'none', hint: 'Получить запись по id.' },
                     update: {
-                        label: 'UpdateMemory', method: 'PUT', urlTemplate: 'http://localhost:8080/memory/api/memory/{memoryId}', mode: 'json',
-                        json: { title: 'New title', description: 'Updated', accessLevel: 'Public', tags: ['alps', 'winter'] }
+                        label: 'UpdateMemory', method: 'PUT', service: 'memory', path: '/memory/api/memory/{memoryId}', mode: 'json',
+                        json: { title: 'New title', description: 'Updated', accessLevel: 'Public', tags: ['alps', 'winter'] }, hint: 'Обновить метаданные.'
                     },
-                    delete: { label: 'DeleteMemory', method: 'DELETE', urlTemplate: 'http://localhost:8080/memory/api/memory/{memoryId}', mode: 'none' },
+                    delete: { label: 'DeleteMemory', method: 'DELETE', service: 'memory', path: '/memory/api/memory/{memoryId}', mode: 'none', hint: 'Удалить запись.' },
 
                     upload: {
-                        label: 'UploadMedia (multipart)', method: 'POST', urlTemplate: 'http://localhost:8080/memory/api/memory/{memoryId}/media', mode: 'form',
-                        form: { MediaType: 'Image', FileName: 'pic1.jpg' }, hint: 'FormData + File'
+                        label: 'UploadMedia (multipart)', method: 'POST', service: 'memory', path: '/memory/api/memory/{memoryId}/media', mode: 'form',
+                        form: { MediaType: 'Image', FileName: 'pic1.jpg' }, hint: 'Загрузить файл к записи.'
                     },
-                    mediaGet: { label: 'GetMediaById', method: 'GET', urlTemplate: 'http://localhost:8080/memory/api/media/{mediaId}', mode: 'none' },
-                    mediaUpd: {
-                        label: 'UpdateMedia', method: 'PUT', urlTemplate: 'http://localhost:8080/memory/api/memory/{memoryId}/media/{mediaId}', mode: 'json',
-                        json: { fileName: 'renamed.jpg', mediaType: 'Image' }
-                    },
-                    mediaDel: { label: 'DeleteMedia', method: 'DELETE', urlTemplate: 'http://localhost:8080/memory/api/memory/{memoryId}/media/{mediaId}', mode: 'none' },
+                    mediaGet: { label: 'GetMediaById', method: 'GET', service: 'memory', path: '/memory/api/media/{mediaId}', mode: 'none', hint: 'Метаданные медиа.' },
+                    mediaUpd: { label: 'UpdateMedia', method: 'PUT', service: 'memory', path: '/memory/api/memory/{memoryId}/media/{mediaId}', mode: 'json', json: { fileName: 'renamed.jpg', mediaType: 'Image' }, hint: 'Переименовать медиа.' },
+                    mediaDel: { label: 'DeleteMedia', method: 'DELETE', service: 'memory', path: '/memory/api/memory/{memoryId}/media/{mediaId}', mode: 'none', hint: 'Удалить медиа.' },
 
-                    listUser: {
-                        label: 'ListByUser', method: 'GET', urlTemplate: 'http://localhost:8080/memory/api/memory/user/fdd2eee1-7871-45da-a3b4-c6a214ef4928?page=1&pageSize=10', mode: 'none',
-                        hint: 'Опц.: accessLevel=Private|Public|FriendsOnly'
-                    }
+                    listUser: { label: 'ListByUser', method: 'GET', service: 'memory', path: '/memory/api/memory/user/fdd2eee1-7871-45da-a3b4-c6a214ef4928?page=1&pageSize=10', mode: 'none', hint: 'Список записей пользователя.' }
                 },
 
                 access: {
-                    grant: {
-                        label: 'Grant', method: 'POST', urlTemplate: 'http://localhost:8080/access-control/api/access/grant', mode: 'json',
-                        json: { subjectId: '4beed3da-37f8-423b-a16b-5a0fea4bbc38', subjectType: 'User', resourceType: 'Memory', resourceId: '17e5b201-d562-4c5c-b90f-414349bca627', permission: 'Edit', expiresAt: null }
-                    },
-                    revoke: {
-                        label: 'Revoke', method: 'POST', urlTemplate: 'http://localhost:8080/access-control/api/access/revoke', mode: 'json',
-                        json: { subjectId: '4beed3da-37f8-423b-a16b-5a0fea4bbc38', subjectType: 'User', resourceType: 'Memory', resourceId: '17e5b201-d562-4c5c-b90f-414349bca627', permission: 'Edit' }
-                    },
-                    check: {
-                        label: 'Check', method: 'POST', urlTemplate: 'http://localhost:8080/access-control/api/access/check', mode: 'json',
-                        json: { subjectId: '8bfbdace-33b7-4764-9903-39a6dc48bf7d', resourceType: 'Memory', resourceId: '17e5b201-d562-4c5c-b90f-414349bca627', permission: 'Edit' }
-                    },
-                    shares: { label: 'List Shares', method: 'GET', urlTemplate: 'http://localhost:8080/access-control/api/access/memory/17e5b201-d562-4c5c-b90f-414349bca627/shares', mode: 'none' }
+                    grant: { label: 'Grant', method: 'POST', service: 'access', path: '/access-control/api/access/grant', mode: 'json', json: { subjectId: '4beed3da-37f8-423b-a16b-5a0fea4bbc38', subjectType: 'User', resourceType: 'Memory', resourceId: '17e5b201-d562-4c5c-b90f-414349bca627', permission: 'Edit' }, hint: 'Выдать право на ресурс.' },
+                    revoke: { label: 'Revoke', method: 'POST', service: 'access', path: '/access-control/api/access/revoke', mode: 'json', json: { subjectId: '4beed3da-37f8-423b-a16b-5a0fea4bbc38', subjectType: 'User', resourceType: 'Memory', resourceId: '17e5b201-d562-4c5c-b90f-414349bca627', permission: 'Edit' }, hint: 'Отозвать право.' },
+                    check: { label: 'Check', method: 'POST', service: 'access', path: '/access-control/api/access/check', mode: 'json', json: { subjectId: '8bfbdace-33b7-4764-9903-39a6dc48bf7d', resourceType: 'Memory', resourceId: '17e5b201-d562-4c5c-b90f-414349bca627', permission: 'Edit' }, hint: 'Проверить право.' },
+                    shares: { label: 'List Shares', method: 'GET', service: 'access', path: '/access-control/api/access/memory/17e5b201-d562-4c5c-b90f-414349bca627/shares', mode: 'none', hint: 'Посмотреть все доступы к памяти.' }
                 },
 
                 audit: {
                     create: {
-                        label: 'Create', method: 'POST', urlTemplate: 'http://localhost:8080/audit-logging/auditlogs', mode: 'json',
-                        json: {
-                            action: 'Access.Revoke', target: 'Memory:42', details: 'revoked by admin', result: 'success',
-                            data: '{"extra":"value"}', userId: '00000000-0000-0000-0000-000000000000',
-                            timestamp: new Date().toISOString(), ipAddress: '127.0.0.1', userAgent: 'UnifiedAPI UI'
-                        },
-                        hint: 'POST /auditlogs'
+                        label: 'Create', method: 'POST', service: 'audit', path: '/audit-logging/auditlogs', mode: 'json',
+                        json: { action: 'Access.Revoke', target: 'Memory:42', details: 'revoked by admin', result: 'success', data: '{"extra":"value"}', userId: '00000000-0000-0000-0000-000000000000', timestamp: new Date().toISOString(), ipAddress: '127.0.0.1', userAgent: 'UnifiedAPI UI' },
+                        hint: 'Создать запись аудита.'
                     },
-                    search: {
-                        label: 'Search', method: 'GET', urlTemplate: 'http://localhost:8080/audit-logging/auditlogs', mode: 'none',
-                        hint: '?action=&userId=&from=&to=&offset=&limit='
-                    },
-                    getById: { label: 'GetById', method: 'GET', urlTemplate: 'http://localhost:8080/audit-logging/auditlogs/0cf44724-b65d-48da-a340-0c0cb653503c', mode: 'none' },
-                    delete: { label: 'Delete', method: 'DELETE', urlTemplate: 'http://localhost:8080/audit-logging/auditlogs/{id}', mode: 'none' }
+                    search: { label: 'Search', method: 'GET', service: 'audit', path: '/audit-logging/auditlogs', mode: 'none', hint: 'Поиск событий аудита.' },
+                    getById: { label: 'GetById', method: 'GET', service: 'audit', path: '/audit-logging/auditlogs/0cf44724-b65d-48da-a340-0c0cb653503c', mode: 'none', hint: 'Получить событие аудита.' },
+                    delete: { label: 'Delete', method: 'DELETE', service: 'audit', path: '/audit-logging/auditlogs/{id}', mode: 'none', hint: 'Удалить запись.' }
+                },
+
+                notification: {
+                    notifyUser: { label: 'NotifyUser', method: 'POST', service: 'notification', path: '/notification/api/Notification/notify', mode: 'json', json: { userId: 'fdd2eee1-7871-45da-a3b4-c6a214ef4928', subject: 'Hello!', body: 'You have a new message', type: 'General' }, hint: 'Отправить уведомление одному пользователю.' },
+                    notifyUsers: { label: 'NotifyUsers', method: 'POST', service: 'notification', path: '/notification/api/Notification/notify-many', mode: 'json', json: { userIds: ['fdd2eee1-7871-45da-a3b4-c6a214ef4928', '00000000-0000-0000-0000-000000000124'], subject: 'Maintenance', body: 'System maintenance at 22:00', type: 'SystemAlert' }, hint: 'Отправить уведомления группе пользователей.' },
+                    broadcast: { label: 'Broadcast (501)', method: 'POST', service: 'notification', path: '/notification/api/Notification/broadcast', mode: 'json', json: { subject: 'Global notice', body: 'We are deploying a new version', type: 'SystemAlert' }, hint: 'Широковещательная рассылка (не реализовано).' },
+                    health: { label: 'Health (ready)', method: 'GET', service: 'notification', path: '/notification/health/ready', mode: 'none', hint: 'Проверка готовности сервиса.' }
+                },
+
+                profile: {
+                    create: { label: 'CreateProfile', method: 'POST', service: 'profile', path: '/profile/api/profile', mode: 'json', json: { userId: '00000000-0000-0000-0000-000000000003', fullName: 'John Doe', birthDate: '1990-05-20T00:00:00Z', displayName: 'JD', bio: 'Hello there', accessMode: 'AfterDeath', avatarUrl: null }, hint: 'Создаёт профиль пользователя.' },
+                    getById: { label: 'GetById', method: 'GET', service: 'profile', path: '/profile/api/profile/{id}', mode: 'none', hint: 'Получить профиль по id.' },
+                    getByUser: { label: 'GetByUserId', method: 'GET', service: 'profile', path: '/profile/api/profile/by-user/{userId}', mode: 'none', hint: 'Получить профиль по userId.' },
+                    update: { label: 'UpdateProfile', method: 'PUT', service: 'profile', path: '/profile/api/profile/{id}', mode: 'json', json: { id: '00000000-0000-0000-0000-000000000005', fullName: 'Johnathan Doe', birthDate: '1990-05-20T00:00:00Z', displayName: 'Johnny', bio: 'Updated bio', accessMode: 'AfterDeath', avatarUrl: null }, hint: 'Обновить поля профиля.' },
+                    delete: { label: 'DeleteProfile', method: 'DELETE', service: 'profile', path: '/profile/api/profile/{id}', mode: 'none', hint: 'Удалить профиль.' },
+                    confirmDeath: { label: 'ConfirmDeath', method: 'POST', service: 'profile', path: '/profile/api/profile/{userId}/confirm-death', mode: 'none', hint: 'Отметить пользователя как DeathConfirmed.' }
+                },
+
+                moderation: {
+                    create: { label: 'CreateReview', method: 'POST', service: 'moderation', path: '/moderation/api/reviews', mode: 'json', json: { resourceType: 'Memory', resourceId: '00000000-0000-0000-0000-000000000010', content: 'Sample content' }, hint: 'Отправить контент на модерацию.' },
+                    get: { label: 'GetReview', method: 'GET', service: 'moderation', path: '/moderation/api/reviews/{id}', mode: 'none', hint: 'Получить ревью по id.' },
+                    list: { label: 'ListReviews', method: 'GET', service: 'moderation', path: '/moderation/api/reviews?status=Pending&page=1&pageSize=20', mode: 'none', hint: 'Список ревью.' },
+                    decide: { label: 'DecideReview', method: 'POST', service: 'moderation', path: '/moderation/api/reviews/{id}/decide', mode: 'json', json: { decision: 'Approved', moderatorId: 'mod-1', reason: 'ok' }, hint: 'Принять или отклонить ревью.' }
+                },
+
+                publicview: {
+                    profile: { label: 'PublicProfile', method: 'GET', service: 'publicview', path: '/public/api/profile/{userId}', mode: 'none', hint: 'Публичные данные профиля.' },
+                    memory: { label: 'PublicMemory', method: 'GET', service: 'publicview', path: '/public/api/memory/{memoryId}', mode: 'none', hint: 'Публичные данные памяти.' }
                 }
             };
 
-            function fillMethodList() { method.innerHTML = '';['GET', 'POST', 'PUT', 'DELETE'].forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; method.appendChild(o) }) }
+            function getServiceBase(service) {
+                const env = ENV_PRESETS[currentEnv];
+                return (env && env.services && env.services[service]) ? env.services[service] : env.gateway;
+            }
+
+            function fillMethodList() {
+                method.innerHTML = '';
+                ['GET', 'POST', 'PUT', 'DELETE'].forEach(m => {
+                    const o = document.createElement('option'); o.value = m; o.textContent = m; method.appendChild(o);
+                });
+            }
+
             function fillEndpointList(tab) {
-                endpointSel.innerHTML = ''; Object.entries(endpoints[tab]).forEach(([k, v]) => { const o = document.createElement('option'); o.value = k; o.textContent = v.label; endpointSel.appendChild(o) });
-                currentEndpointKey = Object.keys(endpoints[tab])[0]; endpointSel.value = currentEndpointKey;
+                endpointSel.innerHTML = '';
+                Object.entries(endpoints[tab]).forEach(([k, v]) => {
+                    const o = document.createElement('option'); o.value = k; o.textContent = v.label; endpointSel.appendChild(o);
+                });
+                currentEndpointKey = Object.keys(endpoints[tab])[0];
+                endpointSel.value = currentEndpointKey;
             }
 
             function setMode(mode) {
@@ -548,12 +662,20 @@
                 updateCurl();
             }
 
+            function buildFullUrl(p) {
+                if (!p) return '';
+                if (p.path.startsWith('http://') || p.path.startsWith('https://')) return p.path;
+                return getServiceBase(p.service || 'gateway').replace(/\/$/, '') + p.path;
+            }
+
             function applyPreset(tab, key) {
                 const p = endpoints[tab][key]; if (!p) return;
-                method.value = p.method; url.value = p.urlTemplate; urlHint.textContent = p.hint || '';
+                method.value = p.method;
+                url.value = buildFullUrl(p);
+                urlHint.textContent = p.hint || '';
                 setMode(p.mode);
-                if (p.mode === 'json') { json.value = typeof p.json === 'string' ? p.json : JSON.stringify(p.json, null, 2); }
-                if (p.mode === 'form') { // примеры для форм
+                if (p.mode === 'json') { json.value = typeof p.json === 'string' ? p.json : JSON.stringify(p.json || {}, null, 2); }
+                if (p.mode === 'form') {
                     document.getElementById('OwnerId').value = p.form?.OwnerId ?? '';
                     document.getElementById('Title').value = p.form?.Title ?? '';
                     document.getElementById('Description').value = p.form?.Description ?? '';
@@ -568,8 +690,7 @@
             }
 
             function ph(u) {
-                // простая подстановка — чтобы curl выглядел рабочим
-                return u
+                return (u || '')
                     .replace('{memoryId}', '00000000-0000-0000-0000-000000000001')
                     .replace('{mediaId}', '00000000-0000-0000-0000-000000000002')
                     .replace('{userId}', '00000000-0000-0000-0000-000000000003')
@@ -577,7 +698,7 @@
                     .replace('{id}', '00000000-0000-0000-0000-000000000005');
             }
 
-            function escSh(s) { return s.replaceAll("'", "'\"'\"'") }
+            function escSh(s) { return (s || '').replace(/'/g, `'\"'\"'`); }
 
             function buildCurl() {
                 const m = method.value, u = ph(url.value);
@@ -585,10 +706,10 @@
                 let parts = [`curl -X '${m}' \\`, `  '${u}' \\`];
                 if (token) parts.push(`  -H 'Authorization: Bearer ${escSh(token)}' \\`);
 
-                if (jsonBlock.style.display !== 'none') { // JSON
+                if (jsonBlock.style.display !== 'none') {
                     parts.push(`  -H 'Content-Type: application/json' \\`);
                     if (json.value) parts.push(`  -d '${escSh(json.value)}'`);
-                } else if (formBlock.style.display !== 'none') { // multipart
+                } else if (formBlock.style.display !== 'none') {
                     const ownerId = document.getElementById('OwnerId').value;
                     const title = document.getElementById('Title').value;
                     const description = document.getElementById('Description').value;
@@ -611,7 +732,6 @@
                         parts.push(`  -F 'File=@<path-to-file>' \\`);
                     }
                     if (fileName) parts.push(`  -F 'FileName=${escSh(fileName)}' \\`);
-                    // remove trailing slash-continuation
                     if (parts[parts.length - 1].endsWith('\\')) parts[parts.length - 1] = parts[parts.length - 1].slice(0, -2);
                 }
                 return parts.filter(Boolean).join('\n');
@@ -628,11 +748,10 @@
                     const headers = new Headers();
                     if (token) headers.set('Authorization', `Bearer ${token}`);
 
-                    let body, init = { method: method.value, headers };
+                    let init = { method: method.value, headers };
                     if (jsonBlock.style.display !== 'none') {
                         headers.set('Content-Type', 'application/json');
-                        body = json.value || '';
-                        init.body = body;
+                        init.body = json.value || '';
                     } else if (formBlock.style.display !== 'none') {
                         const fd = new FormData();
                         const ownerId = document.getElementById('OwnerId').value;
@@ -656,10 +775,8 @@
                     const res = await fetch(u, init);
                     statusEl.textContent = res.status + ' ' + res.statusText;
 
-                    // headers viewer
                     const hdrs = []; res.headers.forEach((v, k) => hdrs.push(`${k}: ${v}`)); respHeaders.value = hdrs.join('\n');
 
-                    // parse body
                     const ct = res.headers.get('content-type') || '';
                     let text;
                     if (ct.includes('application/json')) {
@@ -680,7 +797,6 @@
             }
 
             function tryRenderPreview(obj) {
-                // Отобразим медиа, если это MemoryDto или список mediaFiles
                 const mf = (obj && obj.mediaFiles) ? obj.mediaFiles
                     : (Array.isArray(obj?.items) && obj.items.length && obj.items[0]?.mediaFiles) ? obj.items[0].mediaFiles
                         : [];
@@ -704,31 +820,39 @@
             // events
             sendBtn.addEventListener('click', sendRequest);
             fillBtn.addEventListener('click', () => applyPreset(currentTab, currentEndpointKey));
-            endpointSel.addEventListener('change', () => { currentEndpointKey = endpointSel.value; applyPreset(currentTab, currentEndpointKey) });
+            endpointSel.addEventListener('change', () => { currentEndpointKey = endpointSel.value; applyPreset(currentTab, currentEndpointKey); });
             tabs.addEventListener('click', e => {
                 const b = e.target.closest('[data-tab]'); if (!b) return;
                 [...tabs.children].forEach(x => x.classList.toggle('active', x === b));
                 currentTab = b.dataset.tab; fillEndpointList(currentTab); applyPreset(currentTab, Object.keys(endpoints[currentTab])[0]);
             });
-            ;['change', 'input'].forEach(ev => { method.addEventListener(ev, updateCurl); url.addEventListener(ev, updateCurl); auth.addEventListener(ev, updateCurl); json.addEventListener(ev, updateCurl); });
+            ['change', 'input'].forEach(ev => { method.addEventListener(ev, updateCurl); url.addEventListener(ev, updateCurl); auth.addEventListener(ev, updateCurl); json.addEventListener(ev, updateCurl); });
 
             document.getElementById('copyJwt').addEventListener('click', () => navigator.clipboard.writeText(auth.value || ''));
             document.getElementById('copyCurl').addEventListener('click', () => navigator.clipboard.writeText(curlBox.value || ''));
             persistBodies.addEventListener('change', () => localStorage.setItem(LS_PERSIST, persistBodies.checked ? '1' : '0'));
-            fileInput.addEventListener('change', () => {
-                if (fileInput.files?.length) { const f = fileInput.files[0]; filePreview.textContent = `${f.name} (${f.type || 'binary'}, ${f.size} bytes)`; }
-                else filePreview.textContent = 'Файл не выбран';
-                updateCurl();
-            });
+            fileInput.addEventListener('change', () => { if (fileInput.files?.length) { const f = fileInput.files[0]; filePreview.textContent = `${f.name} (${f.type || 'binary'}, ${f.size} bytes)`; } else filePreview.textContent = 'Файл не выбран'; updateCurl(); });
+
+            envSelect.addEventListener('change', () => { currentEnv = envSelect.value; gatewayDisplay.textContent = ENV_PRESETS[currentEnv].gateway; applyPreset(currentTab, currentEndpointKey); });
+
+            quickLoginBtn.addEventListener('click', async () => { const target = [...tabs.children].find(b => b.dataset.tab === 'identity'); if (target) target.click(); currentEndpointKey = 'login'; endpointSel.value = 'login'; applyPreset('identity', 'login'); try { await sendRequest(); } catch (e) { console.error(e); } });
 
             // init
             (function init() {
                 const savedJwt = localStorage.getItem(LS_JWT_KEY); if (savedJwt) auth.value = savedJwt;
                 persistBodies.checked = (localStorage.getItem(LS_PERSIST) === '1');
+
                 fillMethodList();
-                // стартуем с Audit → Create (можно сменить)
-                currentTab = 'audit'; fillEndpointList('audit'); endpointSel.value = 'create'; currentEndpointKey = 'create';
-                applyPreset('audit', 'create');
+                currentEnv = 'dev';
+                envSelect.value = currentEnv;
+                gatewayDisplay.textContent = ENV_PRESETS[currentEnv].gateway;
+
+                // Start with Identity -> Login selected
+                currentTab = 'identity';
+                fillEndpointList('identity');
+                endpointSel.value = 'login'; currentEndpointKey = 'login';
+                applyPreset('identity', 'login');
+                [...tabs.children].forEach(x => x.classList.toggle('active', x.dataset.tab === 'identity'));
             })();
         })();
     </script>

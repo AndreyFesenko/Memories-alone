@@ -6,8 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
         :root {
             --bg: #0f172a;
@@ -25,15 +23,15 @@
             margin: 0;
             background: var(--bg);
             color: var(--ink);
-            font: 14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif
+            font: 14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu
         }
 
         header {
             display: flex;
-            gap: 16px;
+            gap: 12px;
             align-items: center;
             justify-content: space-between;
-            padding: 16px 20px;
+            padding: 12px 16px;
             border-bottom: 1px solid #1f2937;
             background: #0b1220;
             position: sticky;
@@ -47,9 +45,30 @@
                 font-weight: 600
             }
 
-            header .env {
-                font-size: 12px;
-                color: var(--muted)
+        .env-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+
+        .tabs {
+            display: flex;
+            gap: 6px
+        }
+
+        .tab {
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid #1f2937;
+            background: #0b1220;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700
+        }
+
+            .tab.active {
+                background: #1f2937
             }
 
         main {
@@ -73,7 +92,6 @@
                 padding: 12px 14px;
                 border-bottom: 1px solid #1f2937;
                 font-size: 13px;
-                letter-spacing: .2px;
                 color: #cbd5e1
             }
 
@@ -140,25 +158,15 @@
                 color: #cbd5e1
             }
 
-        .tabs {
-            display: flex;
-            gap: 6px
+        .muted {
+            color: #9ca3af;
+            font-size: 12px
         }
 
-        .tab {
-            padding: 6px 10px;
-            border-radius: 8px;
-            border: 1px solid #1f2937;
-            background: #0b1220;
-            color: #fff;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 700
+        .hint {
+            font-size: 11px;
+            color: #a3a3a3
         }
-
-            .tab.active {
-                background: #1f2937
-            }
 
         pre, code {
             font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
@@ -198,71 +206,11 @@
                 border: 1px solid #1d4ed8
             }
 
-        .muted {
-            color: #9ca3af;
-            font-size: 12px
-        }
-
-        .divider {
-            height: 1px;
-            background: #1f2937;
-            margin: 8px 0
-        }
-
-        .hint {
-            font-size: 11px;
-            color: #a3a3a3
-        }
-
-        .inline {
-            display: flex;
-            gap: 8px;
-            align-items: center
-        }
-
-        .grid2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px
-        }
-
-        kbd {
-            background: #0b1220;
-            border: 1px solid #1f2937;
-            border-radius: 6px;
-            padding: 2px 6px;
-            font-size: 11px
-        }
-
-        .file-preview {
-            font-size: 12px;
-            color: #cbd5e1;
-            background: #0b1220;
-            border: 1px dashed #334155;
-            border-radius: 8px;
-            padding: 8px
-        }
-
         .preview {
             margin: 0;
             padding: 12px 14px;
             border-top: 1px solid #1f2937
         }
-
-            .preview .toolbar {
-                display: flex;
-                gap: 8px;
-                align-items: center;
-                justify-content: flex-start;
-                margin-bottom: 8px;
-                flex-wrap: wrap
-            }
-
-            .preview h4 {
-                margin: 0 0 8px 0;
-                font-size: 13px;
-                color: #cbd5e1
-            }
 
         .preview-grid {
             display: grid;
@@ -278,53 +226,26 @@
             overflow: hidden
         }
 
-            .preview-item img, .preview-item video {
-                width: 100%;
-                height: 130px;
-                object-fit: cover;
-                border-radius: 8px;
-                display: block
-            }
-
-            .preview-item audio {
-                width: 100%;
-                display: block
-            }
-
-            .preview-item .meta {
-                font-size: 11px;
-                color: #9ca3af;
-                margin-top: 6px;
-                word-break: break-word
-            }
-
-            .preview-item a {
-                text-decoration: none;
-                color: #93c5fd;
-                font-size: 12px
-            }
-
-        .tiny {
-            font-size: 11px;
-            color: #9ca3af
+        .file-preview {
+            font-size: 12px;
+            color: #cbd5e1;
+            background: #0b1220;
+            border: 1px dashed #334155;
+            border-radius: 8px;
+            padding: 8px
         }
 
-        /* нижние секции (вне grid) */
         .doc {
             max-width: 1500px;
-            margin: 16px auto;
+            margin: 16px auto
         }
 
             .doc details {
                 background: #0b1220;
                 border: 1px solid #1f2937;
                 border-radius: 10px;
-                padding: 8px 10px;
+                padding: 8px 10px
             }
-
-                .doc details + details {
-                    margin-top: 10px
-                }
 
             .doc summary {
                 cursor: pointer;
@@ -342,15 +263,30 @@
     <header>
         <div class="inline">
             <h1>Memories – Unified API</h1>
-            <span class="env">Gateway: <code>http://localhost:8080</code></span>
+            <span class="env muted">Gateway: <code id="gatewayDisplay">http://localhost:8080</code></span>
         </div>
-        <div class="tabs" id="tabs">
-            <button class="tab active" data-tab="identity">Identity</button>
-            <button class="tab" data-tab="memory">MemoryArchive</button>
-            <button class="tab" data-tab="access">AccessControl</button>
-            <button class="tab" data-tab="audit">AuditLogging</button>
-            <button class="tab" data-tab="notification">Notification</button>
-            <button class="tab" data-tab="profile">ProfileService</button>
+
+        <div class="env-controls">
+            <label class="muted" for="envSelect" style="margin:0 4px 0 0">ENV</label>
+            <select id="envSelect" title="Выберите окружение">
+                <option value="dev">dev</option>
+                <option value="stage">stage</option>
+                <option value="prod">prod</option>
+            </select>
+
+            <button id="quickLogin" class="btn small" title="Открыть Identity → Login и выполнить">Quick Login</button>
+            <div style="width:12px"></div>
+
+            <div class="tabs" id="tabs">
+                <button class="tab" data-tab="identity">Identity</button>
+                <button class="tab" data-tab="memory">MemoryArchive</button>
+                <button class="tab" data-tab="access">AccessControl</button>
+                <button class="tab" data-tab="audit">AuditLogging</button>
+                <button class="tab" data-tab="notification">Notification</button>
+                <button class="tab" data-tab="profile">ProfileService</button>
+                <button class="tab" data-tab="moderation">Moderation</button>
+                <button class="tab" data-tab="publicview">PublicView</button>
+            </div>
         </div>
     </header>
 
@@ -377,7 +313,7 @@
                     </label>
                     <button class="btn small secondary" id="copyJwt" title="Скопировать токен">📋</button>
                 </div>
-                <span class="hint">JWT сохраняется в localStorage. Для /identity/me, Memory, Access, Profile — обязателен.</span>
+                <span class="hint">JWT сохраняется в localStorage. Для защищённых маршрутов — обязателен.</span>
 
                 <label class="inline">
                     <input type="checkbox" id="persistBodies" />
@@ -389,7 +325,7 @@
                 </div>
 
                 <div id="formBlock" style="display:none;">
-                    <div class="grid2">
+                    <div class="grid2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
                         <label>OwnerId<input id="OwnerId" type="text" placeholder="uuid" /></label>
                         <label>Title<input id="Title" type="text" /></label>
                         <label>Description<textarea id="Description"></textarea></label>
@@ -456,660 +392,260 @@
         </section>
     </main>
 
-    <!-- ====== ПАМЯТКА — КОНТРАКТЫ ====== -->
+    <!-- Документация (снизу) -->
     <section class="card doc">
-        <h3>Памятка для фронтенда — сервисы, экшены, контракты</h3>
-        <div class="body">
-
-            <details open>
-                <summary>ProfileService — /profile/api/profile</summary>
-<pre class="mono">Назначение: хранение пользовательского профиля (1:1 c пользователем). Требует JWT.
-
-• CreateProfile — СОЗДАЁТ профиль.
-POST /profile/api/profile
-Request:
-{
-  "userId": "guid",
-  "fullName": "string",
-  "birthDate": "2025-01-01T00:00:00Z",
-  "displayName": "string?",
-  "bio": "string?",
-  "accessMode": "Anytime | AfterDeath",
-  "avatarUrl": "string?"
-}
-Response 201:
-{ "id":"guid", "userId":"guid", "fullName":"...", "birthDate":"ISO", "displayName":"?", "bio":"?", "deathConfirmed":false,
-  "accessMode":"AfterDeath", "createdAt":"ISO", "updatedAt":null, "avatarUrl":"?" }
-
-• GetById — ПОЛУЧИТЬ профиль по идентификатору профиля.
-GET /profile/api/profile/{id}
-→ 200 UserProfileDto | 404
-
-• GetByUserId — ПОЛУЧИТЬ профиль по идентификатору пользователя.
-GET /profile/api/profile/by-user/{userId}
-→ 200 UserProfileDto | 404
-
-• UpdateProfile — ОБНОВИТЬ поля профиля.
-PUT /profile/api/profile/{id}
-Request: { "id":"guid", "fullName":"...", "birthDate":"ISO", "displayName":"?", "bio":"?", "accessMode":"Anytime|AfterDeath", "avatarUrl":"?" }
-→ 200 UserProfileDto | 404
-
-• DeleteProfile — УДАЛИТЬ профиль.
-DELETE /profile/api/profile/{id}
-→ 204
-
-• ConfirmDeath — ПОМЕТИТЬ статус 'DeathConfirmed'.
-POST /profile/api/profile/{userId}/confirm-death
-→ 200 { "message": "Death confirmed" }</pre>
-            </details>
-
-            <details>
-                <summary>Identity — /identity</summary>
-<pre class="mono">Назначение: аутентификация пользователей, выдача JWT.
-
-• Login — получить accessToken/refreshToken (используйте первым).
-POST /identity/login
-{ "username":"...", "password":"..." }
-→ 200 { "accessToken":"jwt", "refreshToken":"...", "expiresIn":3600 }
-
-• Register — регистрация нового пользователя.
-POST /identity/register
-{ "username":"...", "password":"...", "email":"...", "displayName":"..." }
-→ 200 { "userId":"guid" }
-
-• Refresh — обновление accessToken по refreshToken.
-POST /identity/refresh
-{ "refreshToken":"..." }
-→ 200 { "accessToken":"jwt" }
-
-• Me — получить профиль текущего пользователя (из токена).
-GET /identity/me
-→ 200 { "id":"guid", "username":"...", "email":"...", "displayName":"..." }</pre>
-            </details>
-
-            <details>
-                <summary>MemoryArchive — /memory/api</summary>
-<pre class="mono">Назначение: хранение воспоминаний и прикреплённых медиа.
-
-• CreateMemory — создать запись с файлом (multipart/form-data).
-POST /memory/api/memory
-Fields: OwnerId(uuid), Title, Description, MediaType(Image|Video|Audio|Document),
-        AccessLevel(Private|Public|FriendsOnly), Tags(repeatable), File(@file), FileName(opt)
-→ 201 { "id":"guid","ownerId":"guid","title":"...","mediaFiles":[{ "id":"guid","fileName":"...","mediaType":"image/jpeg","url":"..." }] }
-
-• GetMemoryById — получить запись.
-GET /memory/api/memory/{memoryId}
-→ 200 MemoryDto | 404
-
-• UpdateMemory — изменить метаданные записи.
-PUT /memory/api/memory/{memoryId}
-{ "title":"...", "description":"...", "accessLevel":"...", "tags":["a","b"] }
-→ 200 MemoryDto
-
-• DeleteMemory — удалить запись.
-DELETE /memory/api/memory/{memoryId}
-→ 204
-
-• UploadMedia — добавить файл к записи (multipart).
-POST /memory/api/memory/{memoryId}/media
-Fields: MediaType, File(@file), FileName(opt)
-→ 201 MediaDto
-
-• GetMediaById — получить медиа по id.
-GET /memory/api/media/{mediaId}
-→ 200 MediaDto | 404
-
-• UpdateMedia — переименовать/изменить тип.
-PUT /memory/api/memory/{memoryId}/media/{mediaId}
-{ "fileName":"...", "mediaType":"Image|Video|Audio|Document" }
-→ 200 MediaDto
-
-• DeleteMedia — удалить медиа.
-DELETE /memory/api/memory/{memoryId}/media/{mediaId}
-→ 204
-
-• ListByUser — список записей пользователя с пагинацией.
-GET /memory/api/memory/user/{userId}?page=1&pageSize=10[&accessLevel=...]
-→ 200 { "items":[...], "total":123 }</pre>
-            </details>
-
-            <details>
-                <summary>AccessControl — /access-control/api</summary>
-<pre class="mono">Назначение: управление правами доступа на ресурсы.
-
-• Grant — выдать право на ресурс.
-POST /access-control/api/access/grant
-{ "subjectId":"guid","subjectType":"User","resourceType":"Memory","resourceId":"guid","permission":"Read|Edit|...","expiresAt":null }
-→ 200/204
-
-• Revoke — отозвать право.
-POST /access-control/api/access/revoke
-{ "subjectId":"guid","subjectType":"User","resourceType":"Memory","resourceId":"guid","permission":"..." }
-→ 204
-
-• Check — проверить право.
-POST /access-control/api/access/check
-{ "subjectId":"guid","resourceType":"Memory","resourceId":"guid","permission":"..." }
-→ 200 { "allowed": true }
-
-• List Shares — список всех выданных прав по памяти.
-GET /access-control/api/access/memory/{id}/shares
-→ 200 [{ "subjectId":"guid", "permission":"Read", "expiresAt":null }]</pre>
-            </details>
-
-            <details>
-                <summary>AuditLogging — /audit-logging</summary>
-<pre class="mono">Назначение: аудит действий, поиск, чтение, удаление.
-
-• Create — записать событие аудита.
-POST /audit-logging/auditlogs
-{ "action":"Access.Revoke","target":"Memory:42","details":"...","result":"success|fail",
-  "data":"json-string","userId":"guid","timestamp":"ISO","ipAddress":"...","userAgent":"..." }
-→ 201 { "id":"guid", ... }
-
-• Search — поиск событий аудита.
-GET /audit-logging/auditlogs[?action=&userId=&from=&to=&offset=&limit=]
-→ 200 { "items":[...], "total":123 }
-
-• GetById — получить событие по id.
-GET /audit-logging/auditlogs/{id}
-→ 200 { ... } | 404
-
-• Delete — удалить событие.
-DELETE /audit-logging/auditlogs/{id}
-→ 204</pre>
-            </details>
-
-            <details>
-                <summary>Notification — /notification/api/Notification</summary>
-<pre class="mono">Назначение: отправка уведомлений пользователям.
-
-• NotifyUser — отправить одному пользователю.
-POST /notification/api/Notification/notify
-{ "userId":"guid","subject":"...","body":"...","type":"General|SystemAlert","channel":"InApp?","data":{"url":"/..."} }
-→ 202/200
-
-• NotifyUsers — отправить группе пользователей.
-POST /notification/api/Notification/notify-many
-{ "userIds":["guid","guid2"], "subject":"...", "body":"...", "type":"SystemAlert" }
-→ 202/200
-
-• Broadcast — широковещательная рассылка (не реализовано).
-POST /notification/api/Notification/broadcast
-{ "subject":"...", "body":"...", "type":"SystemAlert" }
-→ 501 Not Implemented
-
-• Health (ready) — проверка готовности сервиса.
-GET /notification/health/ready
-→ 200 {"status":"Healthy"}</pre>
-            </details>
-
-            <div class="hint">
-                Для защищённых маршрутов добавляйте <code>Authorization: Bearer &lt;jwt&gt;</code>. Плейсхолдеры
-                <code>{id}</code>, <code>{userId}</code>, <code>{memoryId}</code>, <code>{mediaId}</code> подставляются
-                автоматически в генераторе curl (левая панель).
-            </div>
-        </div>
-    </section>
-
-    <!-- ====== ТИПОВЫЕ ОШИБКИ И РЕШЕНИЯ ====== -->
-    <section class="card doc">
-        <h3>Типовые ошибки и решения</h3>
+        <h3>Памятка для фронтенда — краткие контракты</h3>
         <div class="body">
             <details open>
-                <summary>ProfileService</summary>
-<pre class="mono">401 invalid_token — "The signature key was not found"
-  • Причина: HS256/RS256 mismatch, другой секрет, неверный aud/iss, либо Gateway не прокинул заголовок.
-  • Решение: HS256 — одинаковый Jwt:Key/Secret c Identity; RS256 — Jwt:Authority + JWKS. Проверить iss/aud в payload.
-
-401 unauthorized — "No authenticationScheme..." / пустой Bearer
-  • Причина: не настроен AddAuthentication/UseAuthentication или нет заголовка Authorization.
-  • Решение: добавить схему JWT в Program.cs и передавать Bearer.
-
-403 forbidden
-  • Причина: аутентификация есть, но нет прав (политики/роли/владение профилем).
-  • Решение: уточнить политику и роль пользователя.
-
-404 not found
-  • Причина: в /profile/{id} передан userId; профиль не создан.
-  • Решение: сначала GET /profile/by-user/{userId}, а затем /profile/{profileId}.
-
-415 unsupported media type
-  • Причина: не 'application/json'.
-  • Решение: выставить корректный Content-Type.</pre>
-            </details>
-
-            <details>
                 <summary>Identity</summary>
-<pre class="mono">400 bad request
-  • Причина: слабый пароль/валидация.
-  • Решение: поправить поля.
+                <pre class="mono">
+Login — POST /identity/login
+Request: { "username":"...", "password":"..." }
+Response: { "accessToken":"...", "refreshToken":"...", "expiresAt":"..." }
 
-401 unauthorized
-  • Причина: неверные креды, просроченный refresh, нет Authorization.
-  • Решение: проверить логин/пароль, обновить refresh, добавить заголовок.
-
-429 too many requests
-  • Причина: лимиты попыток входа/refresh.
-  • Решение: снизить частоту.</pre>
+Register — POST /identity/register
+Refresh — POST /identity/refresh
+Me — GET /identity/me
+        </pre>
             </details>
 
             <details>
                 <summary>MemoryArchive</summary>
-<pre class="mono">400 bad request
-  • Причина: неверные поля (MediaType и т.п.).
-  • Решение: привести payload.
-
-401 unauthorized
-  • Причина: нет JWT/не прокинут через Gateway.
-  • Решение: добавить Authorization, проверить проксирование.
-
-404 not found
-  • Причина: неправильный memoryId/mediaId.
-  • Решение: использовать ответы create/list.
-
-415 unsupported media type
-  • Причина: JSON вместо multipart, либо файл не приложен.
-  • Решение: отправлять multipart/form-data c File.</pre>
+                <pre class="mono">
+CreateMemory — POST /memory/api/memory (multipart/form-data)
+Get/Update/Delete Memory — /memory/api/memory/{id}
+UploadMedia — POST /memory/api/memory/{id}/media (multipart)
+GetMedia — GET /memory/api/media/{id}
+ListByUser — GET /memory/api/memory/user/{userId}
+        </pre>
             </details>
 
             <details>
                 <summary>AccessControl</summary>
-<pre class="mono">400 bad request
-  • Причина: недопустимый subjectType/resourceType/permission.
-  • Решение: сверить значения.
-
-401 unauthorized
-  • Причина: нет JWT.
-  • Решение: добавить Authorization.
-
-403 forbidden
-  • Причина: нет прав управлять доступом.
-  • Решение: роль/владение ресурсом.
-
-404 not found
-  • Причина: ресурс/право не найдено.
-  • Решение: проверить resourceId/существование ресурса.</pre>
+                <pre class="mono">
+Grant — POST /access-control/api/access/grant
+Revoke — POST /access-control/api/access/revoke
+Check — POST /access-control/api/access/check
+List Shares — GET /access-control/api/access/memory/{id}/shares
+        </pre>
             </details>
 
             <details>
                 <summary>AuditLogging</summary>
-<pre class="mono">400 bad request
-  • Причина: timestamp не ISO, data не строка.
-  • Решение: привести типы.
-
-401 unauthorized
-  • Причина: нет JWT (если включено).
-  • Решение: добавить Authorization.
-
-404 not found
-  • Причина: неверный id при GetById/Delete.
-  • Решение: сверить id.
-
-415 unsupported media type
-  • Причина: Content-Type не 'application/json'.
-  • Решение: указать правильный заголовок.</pre>
+                <pre class="mono">
+Create — POST /audit-logging/auditlogs
+Search — GET /audit-logging/auditlogs
+GetById/Delete — /audit-logging/auditlogs/{id}
+        </pre>
             </details>
 
             <details>
                 <summary>Notification</summary>
-<pre class="mono">400 bad request
-  • Причина: пустой userIds, невалидный type.
-  • Решение: заполнить userIds, корректный type.
-
-401 unauthorized
-  • Причина: сервис защищён, а токена нет.
-  • Решение: добавить Authorization.
-
-501 not implemented (broadcast)
-  • Причина: провайдер не поддерживает широковещательную рассылку.
-  • Решение: использовать notify/notify-many.</pre>
-            </details>
-        </div>
-    </section>
-
-    <!-- ====== FAQ ПО GATEWAY ====== -->
-    <section class="card doc">
-        <h3>FAQ по Gateway (прокси)</h3>
-        <div class="body">
-            <details open>
-                <summary>Authorization / Bearer</summary>
-                <div class="muted">Заголовок <code>Authorization: Bearer &lt;jwt&gt;</code> должен проксироваться как есть.</div>
-<pre class="mono">Проверь в конфиге прокси:
-• НЕ вырезать/не переименовывать 'Authorization'.
-• Если есть re-write, сохранить значение без "Basic" конверсий.
-• Для CORS добавить 'Authorization' в allowed headers.</pre>
+                <pre class="mono">
+NotifyUser — POST /notification/api/Notification/notify
+NotifyUsers — POST /notification/api/Notification/notify-many
+Broadcast — POST /notification/api/Notification/broadcast (may be 501)
+Health — GET /notification/health/ready
+        </pre>
             </details>
 
             <details>
-                <summary>CORS</summary>
-<pre class="mono">• Access-Control-Allow-Origin: укажи точный Origin фронта или "*".
-• Access-Control-Allow-Headers: Authorization, Content-Type, X-Requested-With, ...
-• Access-Control-Allow-Methods: GET,POST,PUT,DELETE,OPTIONS
-• Обработай preflight (OPTIONS) на Gateway или сервисе.</pre>
+                <summary>ProfileService</summary>
+                <pre class="mono">
+CreateProfile — POST /profile/api/profile
+GetById — GET /profile/api/profile/{id}
+GetByUser — GET /profile/api/profile/by-user/{userId}
+Update — PUT /profile/api/profile/{id}
+Delete — DELETE /profile/api/profile/{id}
+ConfirmDeath — POST /profile/api/profile/{userId}/confirm-death
+        </pre>
             </details>
 
             <details>
-                <summary>Ограничения тела запроса (multipart/JSON)</summary>
-<pre class="mono">• Установи лимиты размера тела (body size) достаточными для файлов.
-• Для Kestrel: Kestrel:Limits:MaxRequestBodySize
-• На Nginx/Ingress: client_max_body_size / request-size аннотации.</pre>
+                <summary>Moderation (новая вкладка)</summary>
+                <pre class="mono">
+CreateReview — POST /moderation/api/reviews
+GetReview — GET /moderation/api/reviews/{id}
+ListReviews — GET /moderation/api/reviews?status=Pending&page=1&pageSize=20
+DecideReview — POST /moderation/api/reviews/{id}/decide
+        </pre>
             </details>
 
             <details>
-                <summary>Таймауты и ретраи</summary>
-<pre class="mono">• Проставь connect/read/send timeouts на уровне Gateway.
-• Для загрузок (multipart) увеличь timeouts.
-• Отключи агрессивные ретраи на идемпотентные только методы (GET).</pre>
+                <summary>PublicView (новая вкладка)</summary>
+                <pre class="mono">
+GetPublicProfile — GET /public/api/profile/{userId}
+GetPublicMemory — GET /public/api/memory/{memoryId}
+        </pre>
             </details>
 
-            <details>
-                <summary>Заголовки, которые полезно прокидывать</summary>
-<pre class="mono">• X-Forwarded-For / X-Real-IP
-• X-Forwarded-Proto / X-Forwarded-Host
-• X-Request-Id / Traceparent (для трассировки)
-• User-Agent (если не подменяется)</pre>
-            </details>
-
-            <details>
-                <summary>Логирование и трассировка</summary>
-<pre class="mono">• Логируй RequestId/Traceparent, статус-коды, время ответа.
-• Для проблем с токенами — логируй заголовки без тела.
-• Включи CORS/OPTIONS логи для дебага фронта.</pre>
-            </details>
-        </div>
-    </section>
-
-    <!-- ====== CHEAT-SHEET: CURL / POWERSHELL ====== -->
-    <section class="card doc">
-        <h3>Cheat-sheet: curl / PowerShell</h3>
-        <div class="body">
-            <details open>
-                <summary>curl — JSON</summary>
-<pre class="mono">POST JSON:
-curl -X POST 'http://host/path' \
-  -H 'Authorization: Bearer &lt;jwt&gt;' \
-  -H 'Content-Type: application/json' \
-  -d '{ "field": "value" }'
-
-GET JSON:
-curl -X GET 'http://host/path?param=1' \
-  -H 'Authorization: Bearer &lt;jwt&gt;'</pre>
-            </details>
-
-            <details>
-                <summary>curl — multipart/form-data</summary>
-<pre class="mono">Загрузка файла:
-curl -X POST 'http://host/path' \
-  -H 'Authorization: Bearer &lt;jwt&gt;' \
-  -F 'FieldA=Value' \
-  -F 'File=@/full/path/to/file.jpg'</pre>
-            </details>
-
-            <details>
-                <summary>PowerShell (Invoke-RestMethod)</summary>
-<pre class="mono">$jwt = '...'
-$headers = @{ Authorization = "Bearer $jwt" }
-
-# POST JSON
-$body = @{ field = 'value' } | ConvertTo-Json
-Invoke-RestMethod -Method Post -Uri 'http://host/path' -Headers $headers -ContentType 'application/json' -Body $body
-
-# GET
-Invoke-RestMethod -Method Get -Uri 'http://host/path?param=1' -Headers $headers
-
-# multipart (файл)
-$Form = @{
-  FieldA = 'Value'
-  File = Get-Item 'C:\path\file.jpg'
-}
-Invoke-RestMethod -Method Post -Uri 'http://host/path' -Headers $headers -Form $Form</pre>
-            </details>
-        </div>
-    </section>
-
-    <!-- ====== ОКРУЖЕНИЯ (DEV / STAGE / PROD) ====== -->
-    <section class="card doc">
-        <h3>Окружения (dev / stage / prod)</h3>
-        <div class="body">
-            <details open>
-                <summary>Базовые адреса сервисов</summary>
-<pre class="mono">DEV
-• Gateway:       http://localhost:8080
-• Identity:      http://localhost:5001
-• Profile:       http://localhost:5002
-• MemoryArchive: http://localhost:5003
-• AccessControl: http://localhost:5004
-• AuditLogging:  http://localhost:5005
-• Notification:  http://localhost:5006
-
-STAGE (пример)
-• Gateway:       https://stage.api.memories.local
-• Identity:      https://stage.identity.memories.local
-...
-
-PROD (пример)
-• Gateway:       https://api.memories.app
-• Identity:      https://identity.memories.app
-...</pre>
-            </details>
-
-            <details>
-                <summary>Параметры JWT</summary>
-<pre class="mono">HS256 (общее для DEV):
-• Jwt:Key / Secret: одинаковый у Identity и потребителей (Profile, Memory, ...)
-• Jwt:Issuer (iss): "Memories.Identity"
-• Jwt:Audience (aud): "Memories.Users" (или "Memories.Gateway" — согласовать)
-
-RS256 / OIDC (рекомендовано для STAGE/PROD):
-• Jwt:Authority: https://identity.domain/.well-known/openid-configuration
-• Jwt:Audience:  api-аудитория (например, "memories.api")
-• Не хранить приватные ключи в конфиге сервисов — только JWKS у провайдера.</pre>
-            </details>
-
-            <details>
-                <summary>Контейнеры и переменные окружения</summary>
-<pre class="mono">• ASPNETCORE_URLS=http://+:5000
-• ASPNETCORE_ENVIRONMENT=Development|Staging|Production
-• ConnectionStrings__Main=...
-• Jwt__Key / Jwt__Issuer / Jwt__Audience (HS) или Jwt__Authority (OIDC)
-• Logging__LogLevel__Default=Information</pre>
-            </details>
+            <div class="hint">Для защищённых маршрутов добавляйте заголовок Authorization: Bearer &lt;token&gt;. Плейсхолдеры {id}, {userId}, {memoryId}, {mediaId} подставляются автоматически.</div>
         </div>
     </section>
 
     <script>
-        (() => {
+        (function () {
             hljs.highlightAll();
 
-            const method = document.getElementById('method'),
+            // UI elements
+            const envSelect = document.getElementById('envSelect'),
+                gatewayDisplay = document.getElementById('gatewayDisplay'),
+                quickLoginBtn = document.getElementById('quickLogin'),
+                method = document.getElementById('method'),
                 endpointSel = document.getElementById('endpoint'),
-                url = document.getElementById('url'), urlHint = document.getElementById('urlHint'),
-                auth = document.getElementById('auth'), json = document.getElementById('json'),
-                jsonBlock = document.getElementById('jsonBlock'), formBlock = document.getElementById('formBlock'),
-                fileInput = document.getElementById('File'), filePreview = document.getElementById('filePreview'),
-                sendBtn = document.getElementById('send'), fillBtn = document.getElementById('fill'),
-                curlBox = document.getElementById('curl'), respEl = document.getElementById('resp'),
-                statusEl = document.getElementById('status'), respHeaders = document.getElementById('respHeaders'),
-                tabs = document.getElementById('tabs'), persistBodies = document.getElementById('persistBodies'),
-                preview = document.getElementById('preview'), previewGrid = document.getElementById('previewGrid'),
+                url = document.getElementById('url'),
+                urlHint = document.getElementById('urlHint'),
+                auth = document.getElementById('auth'),
+                json = document.getElementById('json'),
+                jsonBlock = document.getElementById('jsonBlock'),
+                formBlock = document.getElementById('formBlock'),
+                fileInput = document.getElementById('File'),
+                filePreview = document.getElementById('filePreview'),
+                sendBtn = document.getElementById('send'),
+                fillBtn = document.getElementById('fill'),
+                curlBox = document.getElementById('curl'),
+                respEl = document.getElementById('resp'),
+                statusEl = document.getElementById('status'),
+                respHeaders = document.getElementById('respHeaders'),
+                tabs = document.getElementById('tabs'),
+                preview = document.getElementById('preview'),
+                previewGrid = document.getElementById('previewGrid'),
                 previewToolbar = document.getElementById('previewToolbar');
 
-            let currentTab = 'identity', currentEndpointKey = '';
             const LS_JWT_KEY = 'memories.jwt';
             const LS_PERSIST = 'memories.persist';
 
+            const ENV_PRESETS = {
+                dev: {
+                    gateway: 'http://localhost:8080',
+                    services: {
+                        identity: 'http://localhost:8080',
+                        profile: 'http://localhost:8080',
+                        memory: 'http://localhost:8080',
+                        access: 'http://localhost:8080',
+                        audit: 'http://localhost:8080',
+                        notification: 'http://localhost:8080',
+                        moderation: 'http://localhost:8080',
+                        publicview: 'http://localhost:8080'
+                    }
+                },
+                stage: {
+                    gateway: 'https://stage.api.memories.local',
+                    services: {}
+                },
+                prod: {
+                    gateway: 'https://api.memories.app',
+                    services: {}
+                }
+            };
+
+            let currentEnv = 'dev';
+            let currentTab = 'identity';
+            let currentEndpointKey = '';
+
+            // Endpoints (preserve all previous ones and add moderation + publicview)
             const endpoints = {
-                // ВАЖНО: Login — первый!
                 identity: {
                     login: {
-                        label: 'Login', method: 'POST', urlTemplate: 'http://localhost:8080/identity/login', mode: 'json',
+                        label: 'Login', method: 'POST', service: 'identity', path: '/identity/login', mode: 'json',
                         json: { username: 'Admin', password: 'Admin!123' },
                         hint: 'Выдаёт accessToken/refreshToken — используйте первым, чтобы получить JWT.'
                     },
                     register: {
-                        label: 'Register', method: 'POST', urlTemplate: 'http://localhost:8080/identity/register', mode: 'json',
+                        label: 'Register', method: 'POST', service: 'identity', path: '/identity/register', mode: 'json',
                         json: { username: 'user1', password: 'User1!pass', email: 'u1@example.com', displayName: 'User 1' },
                         hint: 'Регистрация нового пользователя.'
                     },
                     refresh: {
-                        label: 'Refresh', method: 'POST', urlTemplate: 'http://localhost:8080/identity/refresh', mode: 'json',
-                        json: { refreshToken: '<your-refresh-token>' },
-                        hint: 'Обновляет accessToken по refreshToken.'
+                        label: 'Refresh', method: 'POST', service: 'identity', path: '/identity/refresh', mode: 'json',
+                        json: { refreshToken: '<your-refresh-token>' }, hint: 'Обновляет accessToken по refreshToken.'
                     },
-                    me: {
-                        label: 'Me', method: 'GET', urlTemplate: 'http://localhost:8080/identity/me', mode: 'none',
-                        hint: 'Возвращает текущего пользователя по токену (JWT обязателен).'
-                    }
+                    me: { label: 'Me', method: 'GET', service: 'identity', path: '/identity/me', mode: 'none', hint: 'Возвращает текущего пользователя по токену.' }
                 },
 
                 memory: {
                     create: {
-                        label: 'CreateMemory (multipart)', method: 'POST', urlTemplate: 'http://localhost:8080/memory/api/memory', mode: 'form',
+                        label: 'CreateMemory (multipart)', method: 'POST', service: 'memory', path: '/memory/api/memory', mode: 'form',
                         form: { OwnerId: 'fdd2eee1-7871-45da-a3b4-c6a214ef4928', Title: 'Trip to Alps', Description: 'Ski weekend', MediaType: 'Image', AccessLevel: 'Private', Tags: 'alps,trip' },
                         hint: 'Создать запись с файлом (FormData + File).'
                     },
-                    get: {
-                        label: 'GetMemoryById', method: 'GET', urlTemplate: 'http://localhost:8080/memory/api/memory/1f6cbd66-dc14-4c35-a1f1-94928a4caa5f', mode: 'none',
-                        hint: 'Получить запись по её идентификатору.'
-                    },
+                    get: { label: 'GetMemoryById', method: 'GET', service: 'memory', path: '/memory/api/memory/{memoryId}', mode: 'none', hint: 'Получить запись по id.' },
                     update: {
-                        label: 'UpdateMemory', method: 'PUT', urlTemplate: 'http://localhost:8080/memory/api/memory/{memoryId}', mode: 'json',
-                        json: { title: 'New title', description: 'Updated', accessLevel: 'Public', tags: ['alps', 'winter'] },
-                        hint: 'Обновить метаданные записи (не файлы).'
+                        label: 'UpdateMemory', method: 'PUT', service: 'memory', path: '/memory/api/memory/{memoryId}', mode: 'json',
+                        json: { title: 'New title', description: 'Updated', accessLevel: 'Public', tags: ['alps', 'winter'] }, hint: 'Обновить метаданные.'
                     },
-                    delete: {
-                        label: 'DeleteMemory', method: 'DELETE', urlTemplate: 'http://localhost:8080/memory/api/memory/{memoryId}', mode: 'none',
-                        hint: 'Удалить запись.'
-                    },
+                    delete: { label: 'DeleteMemory', method: 'DELETE', service: 'memory', path: '/memory/api/memory/{memoryId}', mode: 'none', hint: 'Удалить запись.' },
 
                     upload: {
-                        label: 'UploadMedia (multipart)', method: 'POST', urlTemplate: 'http://localhost:8080/memory/api/memory/{memoryId}/media', mode: 'form',
-                        form: { MediaType: 'Image', FileName: 'pic1.jpg' },
-                        hint: 'Загрузить файл к существующей записи (FormData + File).'
+                        label: 'UploadMedia (multipart)', method: 'POST', service: 'memory', path: '/memory/api/memory/{memoryId}/media', mode: 'form',
+                        form: { MediaType: 'Image', FileName: 'pic1.jpg' }, hint: 'Загрузить файл к записи.'
                     },
-                    mediaGet: {
-                        label: 'GetMediaById', method: 'GET', urlTemplate: 'http://localhost:8080/memory/api/media/{mediaId}', mode: 'none',
-                        hint: 'Получить метаданные медиа по id.'
-                    },
-                    mediaUpd: {
-                        label: 'UpdateMedia', method: 'PUT', urlTemplate: 'http://localhost:8080/memory/api/memory/{memoryId}/media/{mediaId}', mode: 'json',
-                        json: { fileName: 'renamed.jpg', mediaType: 'Image' },
-                        hint: 'Переименовать или сменить тип медиа.'
-                    },
-                    mediaDel: {
-                        label: 'DeleteMedia', method: 'DELETE', urlTemplate: 'http://localhost:8080/memory/api/memory/{memoryId}/media/{mediaId}', mode: 'none',
-                        hint: 'Удалить медиа.'
-                    },
+                    mediaGet: { label: 'GetMediaById', method: 'GET', service: 'memory', path: '/memory/api/media/{mediaId}', mode: 'none', hint: 'Метаданные медиа.' },
+                    mediaUpd: { label: 'UpdateMedia', method: 'PUT', service: 'memory', path: '/memory/api/memory/{memoryId}/media/{mediaId}', mode: 'json', json: { fileName: 'renamed.jpg', mediaType: 'Image' }, hint: 'Переименовать медиа.' },
+                    mediaDel: { label: 'DeleteMedia', method: 'DELETE', service: 'memory', path: '/memory/api/memory/{memoryId}/media/{mediaId}', mode: 'none', hint: 'Удалить медиа.' },
 
-                    listUser: {
-                        label: 'ListByUser', method: 'GET', urlTemplate: 'http://localhost:8080/memory/api/memory/user/fdd2eee1-7871-45da-a3b4-c6a214ef4928?page=1&pageSize=10', mode: 'none',
-                        hint: 'Список записей пользователя с пагинацией (опц. фильтр accessLevel).'
-                    }
+                    listUser: { label: 'ListByUser', method: 'GET', service: 'memory', path: '/memory/api/memory/user/fdd2eee1-7871-45da-a3b4-c6a214ef4928?page=1&pageSize=10', mode: 'none', hint: 'Список записей пользователя.' }
                 },
 
                 access: {
-                    grant: {
-                        label: 'Grant', method: 'POST', urlTemplate: 'http://localhost:8080/access-control/api/access/grant', mode: 'json',
-                        json: { subjectId: '4beed3da-37f8-423b-a16b-5a0fea4bbc38', subjectType: 'User', resourceType: 'Memory', resourceId: '17e5b201-d562-4c5c-b90f-414349bca627', permission: 'Edit', expiresAt: null },
-                        hint: 'Выдать право на ресурс.'
-                    },
-                    revoke: {
-                        label: 'Revoke', method: 'POST', urlTemplate: 'http://localhost:8080/access-control/api/access/revoke', mode: 'json',
-                        json: { subjectId: '4beed3da-37f8-423b-a16b-5a0fea4bbc38', subjectType: 'User', resourceType: 'Memory', resourceId: '17e5b201-d562-4c5c-b90f-414349bca627', permission: 'Edit' },
-                        hint: 'Отозвать право.'
-                    },
-                    check: {
-                        label: 'Check', method: 'POST', urlTemplate: 'http://localhost:8080/access-control/api/access/check', mode: 'json',
-                        json: { subjectId: '8bfbdace-33b7-4764-9903-39a6dc48bf7d', resourceType: 'Memory', resourceId: '17e5b201-d562-4c5c-b90f-414349bca627', permission: 'Edit' },
-                        hint: 'Проверить, есть ли право.'
-                    },
-                    shares: {
-                        label: 'List Shares', method: 'GET', urlTemplate: 'http://localhost:8080/access-control/api/access/memory/17e5b201-d562-4c5c-b90f-414349bca627/shares', mode: 'none',
-                        hint: 'Посмотреть все выданные доступы к памяти.'
-                    }
+                    grant: { label: 'Grant', method: 'POST', service: 'access', path: '/access-control/api/access/grant', mode: 'json', json: { subjectId: '4beed3da-37f8-423b-a16b-5a0fea4bbc38', subjectType: 'User', resourceType: 'Memory', resourceId: '17e5b201-d562-4c5c-b90f-414349bca627', permission: 'Edit' }, hint: 'Выдать право на ресурс.' },
+                    revoke: { label: 'Revoke', method: 'POST', service: 'access', path: '/access-control/api/access/revoke', mode: 'json', json: { subjectId: '4beed3da-37f8-423b-a16b-5a0fea4bbc38', subjectType: 'User', resourceType: 'Memory', resourceId: '17e5b201-d562-4c5c-b90f-414349bca627', permission: 'Edit' }, hint: 'Отозвать право.' },
+                    check: { label: 'Check', method: 'POST', service: 'access', path: '/access-control/api/access/check', mode: 'json', json: { subjectId: '8bfbdace-33b7-4764-9903-39a6dc48bf7d', resourceType: 'Memory', resourceId: '17e5b201-d562-4c5c-b90f-414349bca627', permission: 'Edit' }, hint: 'Проверить право.' },
+                    shares: { label: 'List Shares', method: 'GET', service: 'access', path: '/access-control/api/access/memory/17e5b201-d562-4c5c-b90f-414349bca627/shares', mode: 'none', hint: 'Посмотреть все доступы к памяти.' }
                 },
 
                 audit: {
                     create: {
-                        label: 'Create', method: 'POST', urlTemplate: 'http://localhost:8080/audit-logging/auditlogs', mode: 'json',
-                        json: {
-                            action: 'Access.Revoke', target: 'Memory:42', details: 'revoked by admin', result: 'success', data: '{"extra":"value"}',
-                            userId: '00000000-0000-0000-0000-000000000000', timestamp: new Date().toISOString(), ipAddress: '127.0.0.1', userAgent: 'UnifiedAPI UI'
-                        },
+                        label: 'Create', method: 'POST', service: 'audit', path: '/audit-logging/auditlogs', mode: 'json',
+                        json: { action: 'Access.Revoke', target: 'Memory:42', details: 'revoked by admin', result: 'success', data: '{"extra":"value"}', userId: '00000000-0000-0000-0000-000000000000', timestamp: new Date().toISOString(), ipAddress: '127.0.0.1', userAgent: 'UnifiedAPI UI' },
                         hint: 'Создать запись аудита.'
                     },
-                    search: {
-                        label: 'Search', method: 'GET', urlTemplate: 'http://localhost:8080/audit-logging/auditlogs', mode: 'none',
-                        hint: 'Поиск событий аудита по фильтрам (?action&userId&from&to&offset&limit).'
-                    },
-                    getById: {
-                        label: 'GetById', method: 'GET', urlTemplate: 'http://localhost:8080/audit-logging/auditlogs/0cf44724-b65d-48da-a340-0c0cb653503c', mode: 'none',
-                        hint: 'Получить событие аудита по id.'
-                    },
-                    delete: {
-                        label: 'Delete', method: 'DELETE', urlTemplate: 'http://localhost:8080/audit-logging/auditlogs/{id}', mode: 'none',
-                        hint: 'Удалить запись аудита.'
-                    }
+                    search: { label: 'Search', method: 'GET', service: 'audit', path: '/audit-logging/auditlogs', mode: 'none', hint: 'Поиск событий аудита.' },
+                    getById: { label: 'GetById', method: 'GET', service: 'audit', path: '/audit-logging/auditlogs/0cf44724-b65d-48da-a340-0c0cb653503c', mode: 'none', hint: 'Получить событие аудита.' },
+                    delete: { label: 'Delete', method: 'DELETE', service: 'audit', path: '/audit-logging/auditlogs/{id}', mode: 'none', hint: 'Удалить запись.' }
                 },
 
                 notification: {
-                    notifyUser: {
-                        label: 'NotifyUser', method: 'POST', urlTemplate: 'http://localhost:8080/notification/api/Notification/notify', mode: 'json',
-                        json: { userId: 'fdd2eee1-7871-45da-a3b4-c6a214ef4928', subject: 'Hello!', body: 'You have a new message', type: 'General' },
-                        hint: 'Отправить уведомление одному пользователю.'
-                    },
-                    notifyUsers: {
-                        label: 'NotifyUsers', method: 'POST', urlTemplate: 'http://localhost:8080/notification/api/Notification/notify-many', mode: 'json',
-                        json: { userIds: ['fdd2eee1-7871-45da-a3b4-c6a214ef4928', '00000000-0000-0000-0000-000000000124'], subject: 'Maintenance', body: 'System maintenance at 22:00', type: 'SystemAlert' },
-                        hint: 'Отправить уведомления группе пользователей.'
-                    },
-                    broadcast: {
-                        label: 'Broadcast (501)', method: 'POST', urlTemplate: 'http://localhost:8080/notification/api/Notification/broadcast', mode: 'json',
-                        json: { subject: 'Global notice', body: 'We are deploying a new version', type: 'SystemAlert' },
-                        hint: 'Широковещательная рассылка (не реализовано, вернёт 501).'
-                    },
-                    health: {
-                        label: 'Health (ready)', method: 'GET', urlTemplate: 'http://localhost:8080/notification/health/ready', mode: 'none',
-                        hint: 'Проверка готовности сервиса.'
-                    }
+                    notifyUser: { label: 'NotifyUser', method: 'POST', service: 'notification', path: '/notification/api/Notification/notify', mode: 'json', json: { userId: 'fdd2eee1-7871-45da-a3b4-c6a214ef4928', subject: 'Hello!', body: 'You have a new message', type: 'General' }, hint: 'Отправить уведомление одному пользователю.' },
+                    notifyUsers: { label: 'NotifyUsers', method: 'POST', service: 'notification', path: '/notification/api/Notification/notify-many', mode: 'json', json: { userIds: ['fdd2eee1-7871-45da-a3b4-c6a214ef4928', '00000000-0000-0000-0000-000000000124'], subject: 'Maintenance', body: 'System maintenance at 22:00', type: 'SystemAlert' }, hint: 'Отправить уведомления группе пользователей.' },
+                    broadcast: { label: 'Broadcast (501)', method: 'POST', service: 'notification', path: '/notification/api/Notification/broadcast', mode: 'json', json: { subject: 'Global notice', body: 'We are deploying a new version', type: 'SystemAlert' }, hint: 'Широковещательная рассылка (не реализовано).' },
+                    health: { label: 'Health (ready)', method: 'GET', service: 'notification', path: '/notification/health/ready', mode: 'none', hint: 'Проверка готовности сервиса.' }
                 },
 
                 profile: {
-                    create: {
-                        label: 'CreateProfile', method: 'POST', urlTemplate: 'http://localhost:8080/profile/api/profile', mode: 'json',
-                        json: { userId: '00000000-0000-0000-0000-000000000003', fullName: 'John Doe', birthDate: '1990-05-20T00:00:00Z', displayName: 'JD', bio: 'Hello there', accessMode: 'AfterDeath', avatarUrl: null },
-                        hint: 'Создаёт профиль пользователя.'
-                    },
-                    getById: {
-                        label: 'GetById', method: 'GET', urlTemplate: 'http://localhost:8080/profile/api/profile/{id}', mode: 'none',
-                        hint: 'Получить профиль по идентификатору профиля.'
-                    },
-                    getByUser: {
-                        label: 'GetByUserId', method: 'GET', urlTemplate: 'http://localhost:8080/profile/api/profile/by-user/{userId}', mode: 'none',
-                        hint: 'Получить профиль по идентификатору пользователя.'
-                    },
-                    update: {
-                        label: 'UpdateProfile', method: 'PUT', urlTemplate: 'http://localhost:8080/profile/api/profile/{id}', mode: 'json',
-                        json: { id: '00000000-0000-0000-0000-000000000005', fullName: 'Johnathan Doe', birthDate: '1990-05-20T00:00:00Z', displayName: 'Johnny', bio: 'Updated bio', accessMode: 'AfterDeath', avatarUrl: null },
-                        hint: 'Обновить поля профиля.'
-                    },
-                    delete: {
-                        label: 'DeleteProfile', method: 'DELETE', urlTemplate: 'http://localhost:8080/profile/api/profile/{id}', mode: 'none',
-                        hint: 'Удалить профиль.'
-                    },
-                    confirmDeath: {
-                        label: 'ConfirmDeath', method: 'POST', urlTemplate: 'http://localhost:8080/profile/api/profile/{userId}/confirm-death', mode: 'none',
-                        hint: 'Отметить пользователя как DeathConfirmed.'
-                    }
+                    create: { label: 'CreateProfile', method: 'POST', service: 'profile', path: '/profile/api/profile', mode: 'json', json: { userId: '00000000-0000-0000-0000-000000000003', fullName: 'John Doe', birthDate: '1990-05-20T00:00:00Z', displayName: 'JD', bio: 'Hello there', accessMode: 'AfterDeath', avatarUrl: null }, hint: 'Создаёт профиль пользователя.' },
+                    getById: { label: 'GetById', method: 'GET', service: 'profile', path: '/profile/api/profile/{id}', mode: 'none', hint: 'Получить профиль по id.' },
+                    getByUser: { label: 'GetByUserId', method: 'GET', service: 'profile', path: '/profile/api/profile/by-user/{userId}', mode: 'none', hint: 'Получить профиль по userId.' },
+                    update: { label: 'UpdateProfile', method: 'PUT', service: 'profile', path: '/profile/api/profile/{id}', mode: 'json', json: { id: '00000000-0000-0000-0000-000000000005', fullName: 'Johnathan Doe', birthDate: '1990-05-20T00:00:00Z', displayName: 'Johnny', bio: 'Updated bio', accessMode: 'AfterDeath', avatarUrl: null }, hint: 'Обновить поля профиля.' },
+                    delete: { label: 'DeleteProfile', method: 'DELETE', service: 'profile', path: '/profile/api/profile/{id}', mode: 'none', hint: 'Удалить профиль.' },
+                    confirmDeath: { label: 'ConfirmDeath', method: 'POST', service: 'profile', path: '/profile/api/profile/{userId}/confirm-death', mode: 'none', hint: 'Отметить пользователя как DeathConfirmed.' }
+                },
+
+                moderation: {
+                    create: { label: 'CreateReview', method: 'POST', service: 'moderation', path: '/moderation/api/reviews', mode: 'json', json: { resourceType: 'Memory', resourceId: '00000000-0000-0000-0000-000000000010', content: 'Sample content' }, hint: 'Отправить контент на модерацию.' },
+                    get: { label: 'GetReview', method: 'GET', service: 'moderation', path: '/moderation/api/reviews/{id}', mode: 'none', hint: 'Получить ревью по id.' },
+                    list: { label: 'ListReviews', method: 'GET', service: 'moderation', path: '/moderation/api/reviews?status=Pending&page=1&pageSize=20', mode: 'none', hint: 'Список ревью.' },
+                    decide: { label: 'DecideReview', method: 'POST', service: 'moderation', path: '/moderation/api/reviews/{id}/decide', mode: 'json', json: { decision: 'Approved', moderatorId: 'mod-1', reason: 'ok' }, hint: 'Принять или отклонить ревью.' }
+                },
+
+                publicview: {
+                    profile: { label: 'PublicProfile', method: 'GET', service: 'publicview', path: '/public/api/profile/{userId}', mode: 'none', hint: 'Публичные данные профиля.' },
+                    memory: { label: 'PublicMemory', method: 'GET', service: 'publicview', path: '/public/api/memory/{memoryId}', mode: 'none', hint: 'Публичные данные памяти.' }
                 }
             };
 
+            function getServiceBase(service) {
+                const env = ENV_PRESETS[currentEnv];
+                return (env && env.services && env.services[service]) ? env.services[service] : env.gateway;
+            }
+
             function fillMethodList() {
-                method.innerHTML = '';['GET', 'POST', 'PUT', 'DELETE'].forEach(m => {
+                method.innerHTML = '';
+                ['GET', 'POST', 'PUT', 'DELETE'].forEach(m => {
                     const o = document.createElement('option'); o.value = m; o.textContent = m; method.appendChild(o);
                 });
             }
+
             function fillEndpointList(tab) {
                 endpointSel.innerHTML = '';
                 Object.entries(endpoints[tab]).forEach(([k, v]) => {
@@ -1126,9 +662,17 @@ RS256 / OIDC (рекомендовано для STAGE/PROD):
                 updateCurl();
             }
 
+            function buildFullUrl(p) {
+                if (!p) return '';
+                if (p.path.startsWith('http://') || p.path.startsWith('https://')) return p.path;
+                return getServiceBase(p.service || 'gateway').replace(/\/$/, '') + p.path;
+            }
+
             function applyPreset(tab, key) {
                 const p = endpoints[tab][key]; if (!p) return;
-                method.value = p.method; url.value = p.urlTemplate; urlHint.textContent = p.hint || '';
+                method.value = p.method;
+                url.value = buildFullUrl(p);
+                urlHint.textContent = p.hint || '';
                 setMode(p.mode);
                 if (p.mode === 'json') { json.value = typeof p.json === 'string' ? p.json : JSON.stringify(p.json || {}, null, 2); }
                 if (p.mode === 'form') {
@@ -1139,13 +683,14 @@ RS256 / OIDC (рекомендовано для STAGE/PROD):
                     document.getElementById('AccessLevel').value = p.form?.AccessLevel ?? 'Private';
                     document.getElementById('Tags').value = p.form?.Tags ?? '';
                     document.getElementById('FileName').value = p.form?.FileName ?? '';
-                    fileInput.value = ''; filePreview.textContent = 'Файл не выбран';
+                    fileInput.value = '';
+                    filePreview.textContent = 'Файл не выбран';
                 }
                 updateCurl();
             }
 
             function ph(u) {
-                return u
+                return (u || '')
                     .replace('{memoryId}', '00000000-0000-0000-0000-000000000001')
                     .replace('{mediaId}', '00000000-0000-0000-0000-000000000002')
                     .replace('{userId}', '00000000-0000-0000-0000-000000000003')
@@ -1153,12 +698,12 @@ RS256 / OIDC (рекомендовано для STAGE/PROD):
                     .replace('{id}', '00000000-0000-0000-0000-000000000005');
             }
 
-            function escSh(s) { return s.replace(/'/g, `'\"'\"'`); }
+            function escSh(s) { return (s || '').replace(/'/g, `'\"'\"'`); }
 
             function buildCurl() {
                 const m = method.value, u = ph(url.value);
                 const token = auth.value.trim();
-                const parts = [`curl -X '${m}' \\`, `  '${u}' \\`];
+                let parts = [`curl -X '${m}' \\`, `  '${u}' \\`];
                 if (token) parts.push(`  -H 'Authorization: Bearer ${escSh(token)}' \\`);
 
                 if (jsonBlock.style.display !== 'none') {
@@ -1180,12 +725,18 @@ RS256 / OIDC (рекомендовано для STAGE/PROD):
                     parts.push(toF('MediaType', mediaType));
                     parts.push(toF('AccessLevel', accessLevel));
                     if (tags) tags.split(',').map(t => t.trim()).filter(Boolean).forEach(t => parts.push(`  -F 'Tags=${escSh(t)}' \\`));
-                    if (fileInput.files?.length) { const f = fileInput.files[0]; parts.push(`  -F 'File=@${escSh(f.name)}' \\`); } else { parts.push(`  -F 'File=@<path-to-file>' \\`); }
+                    if (fileInput.files?.length) {
+                        const f = fileInput.files[0];
+                        parts.push(`  -F 'File=@${escSh(f.name)}' \\`);
+                    } else {
+                        parts.push(`  -F 'File=@<path-to-file>' \\`);
+                    }
                     if (fileName) parts.push(`  -F 'FileName=${escSh(fileName)}' \\`);
                     if (parts[parts.length - 1].endsWith('\\')) parts[parts.length - 1] = parts[parts.length - 1].slice(0, -2);
                 }
                 return parts.filter(Boolean).join('\n');
             }
+
             function updateCurl() { curlBox.value = buildCurl(); }
 
             async function sendRequest() {
@@ -1255,7 +806,8 @@ RS256 / OIDC (рекомендовано для STAGE/PROD):
                 previewGrid.innerHTML = '';
                 for (const m of mf) {
                     const item = document.createElement('div'); item.className = 'preview-item';
-                    let media = ''; const mt = (m.mediaType || '').toLowerCase();
+                    let media = '';
+                    const mt = (m.mediaType || '').toLowerCase();
                     if (mt.includes('image')) media = `<img src="${m.url || '#'}" alt="${m.fileName || m.id}" />`;
                     else if (mt.includes('video')) media = `<video src="${m.url || '#'}" controls></video>`;
                     else if (mt.includes('audio')) media = `<audio src="${m.url || '#'}" controls></audio>`;
@@ -1274,32 +826,33 @@ RS256 / OIDC (рекомендовано для STAGE/PROD):
                 [...tabs.children].forEach(x => x.classList.toggle('active', x === b));
                 currentTab = b.dataset.tab; fillEndpointList(currentTab); applyPreset(currentTab, Object.keys(endpoints[currentTab])[0]);
             });
-            ['change', 'input'].forEach(ev => {
-                method.addEventListener(ev, updateCurl);
-                url.addEventListener(ev, updateCurl);
-                auth.addEventListener(ev, updateCurl);
-                json.addEventListener(ev, updateCurl);
-            });
+            ['change', 'input'].forEach(ev => { method.addEventListener(ev, updateCurl); url.addEventListener(ev, updateCurl); auth.addEventListener(ev, updateCurl); json.addEventListener(ev, updateCurl); });
 
             document.getElementById('copyJwt').addEventListener('click', () => navigator.clipboard.writeText(auth.value || ''));
             document.getElementById('copyCurl').addEventListener('click', () => navigator.clipboard.writeText(curlBox.value || ''));
             persistBodies.addEventListener('change', () => localStorage.setItem(LS_PERSIST, persistBodies.checked ? '1' : '0'));
-            fileInput.addEventListener('change', () => {
-                if (fileInput.files?.length) {
-                    const f = fileInput.files[0]; filePreview.textContent = `${f.name} (${f.type || 'binary'}, ${f.size} bytes)`;
-                } else filePreview.textContent = 'Файл не выбран';
-                updateCurl();
-            });
+            fileInput.addEventListener('change', () => { if (fileInput.files?.length) { const f = fileInput.files[0]; filePreview.textContent = `${f.name} (${f.type || 'binary'}, ${f.size} bytes)`; } else filePreview.textContent = 'Файл не выбран'; updateCurl(); });
 
-            // init — сразу открываем Identity.Login
+            envSelect.addEventListener('change', () => { currentEnv = envSelect.value; gatewayDisplay.textContent = ENV_PRESETS[currentEnv].gateway; applyPreset(currentTab, currentEndpointKey); });
+
+            quickLoginBtn.addEventListener('click', async () => { const target = [...tabs.children].find(b => b.dataset.tab === 'identity'); if (target) target.click(); currentEndpointKey = 'login'; endpointSel.value = 'login'; applyPreset('identity', 'login'); try { await sendRequest(); } catch (e) { console.error(e); } });
+
+            // init
             (function init() {
                 const savedJwt = localStorage.getItem(LS_JWT_KEY); if (savedJwt) auth.value = savedJwt;
                 persistBodies.checked = (localStorage.getItem(LS_PERSIST) === '1');
+
                 fillMethodList();
+                currentEnv = 'dev';
+                envSelect.value = currentEnv;
+                gatewayDisplay.textContent = ENV_PRESETS[currentEnv].gateway;
+
+                // Start with Identity -> Login selected
                 currentTab = 'identity';
-                fillEndpointList(currentTab);
+                fillEndpointList('identity');
                 endpointSel.value = 'login'; currentEndpointKey = 'login';
                 applyPreset('identity', 'login');
+                [...tabs.children].forEach(x => x.classList.toggle('active', x.dataset.tab === 'identity'));
             })();
         })();
     </script>
