@@ -10,4 +10,6 @@ public interface IMemoryRepository
     Task AddAsync(Memory memory, CancellationToken ct);
     Task UpdateAsync(Memory memory, CancellationToken ct);
     Task DeleteAsync(Guid id, CancellationToken ct);
+
+    //Task SaveChangesAsync(CancellationToken ct);
 }

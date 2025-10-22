@@ -3,7 +3,7 @@ using MemoryArchiveService.Application.DTOs;
 
 namespace MemoryArchiveService.Application.Queries;
 
-public class GetMediaQuery : IRequest<MediaFileDto>
+public sealed record GetMediaQuery : IRequest<MediaFileDto?>
 {
-    public Guid Id { get; set; }
+    public Guid Id { get; init; }
 }

@@ -712,21 +712,21 @@ GET /memory/api/memory/{memoryId}
                         hint: 'Получить запись по её идентификатору.'
                     },
                     update: {
-                        label: 'UpdateMemory', method: 'PUT', service: 'memory', path: '/memory/api/memory/{memoryId}', mode: 'json',
+                        label: 'UpdateMemory', method: 'PUT', service: 'memory', path: '/memory/api/memory/1f6cbd66-dc14-4c35-a1f1-94928a4caa5f', mode: 'json',
                         json: { title: 'New title', description: 'Updated', accessLevel: 'Public', tags: ['alps', 'winter'] }, hint: 'Обновить метаданные записи.'
                     },
-                    delete: { label: 'DeleteMemory', method: 'DELETE', service: 'memory', path: '/memory/api/memory/{memoryId}', mode: 'none', hint: 'Удалить запись.' },
+                    delete: { label: 'DeleteMemory', method: 'DELETE', service: 'memory', path: '/memory/api/memory/1f6cbd66-dc14-4c35-a1f1-94928a4caa5f', mode: 'none', hint: 'Удалить запись.' },
 
                     upload: {
-                        label: 'UploadMedia (multipart)', method: 'POST', service: 'memory', path: '/memory/api/memory/{memoryId}/media', mode: 'form',
+                        label: 'UploadMedia (multipart)', method: 'POST', service: 'memory', path: '/memory/api/memory/1f6cbd66-dc14-4c35-a1f1-94928a4caa5f/media', mode: 'form',
                         form: { MediaType: 'Image', FileName: 'pic1.jpg' }, hint: 'Загрузить файл к существующей записи (FormData + File).'
                     },
-                    mediaGet: { label: 'GetMediaById', method: 'GET', service: 'memory', path: '/memory/api/media/{mediaId}', mode: 'none', hint: 'Получить метаданные медиа по id.' },
+                    mediaGet: { label: 'GetMediaById', method: 'GET', service: 'memory', path: '/memory/api/media/e913eb2c-6075-429c-8240-e265c0c00ad0', mode: 'none', hint: 'Получить метаданные медиа по id.' },
                     mediaUpd: {
-                        label: 'UpdateMedia', method: 'PUT', service: 'memory', path: '/memory/api/memory/{memoryId}/media/{mediaId}', mode: 'json',
+                        label: 'UpdateMedia', method: 'PUT', service: 'memory', path: '/memory/api/memory/1f6cbd66-dc14-4c35-a1f1-94928a4caa5f/media/e913eb2c-6075-429c-8240-e265c0c00ad0', mode: 'json',
                         json: { fileName: 'renamed.jpg', mediaType: 'Image' }, hint: 'Переименовать или сменить тип медиа.'
                     },
-                    mediaDel: { label: 'DeleteMedia', method: 'DELETE', service: 'memory', path: '/memory/api/memory/{memoryId}/media/{mediaId}', mode: 'none', hint: 'Удалить медиа.' },
+                    mediaDel: { label: 'DeleteMedia', method: 'DELETE', service: 'memory', path: '/memory/api/memory/1f6cbd66-dc14-4c35-a1f1-94928a4caa5f/media/e913eb2c-6075-429c-8240-e265c0c00ad0', mode: 'none', hint: 'Удалить медиа.' },
 
                     listUser: {
                         label: 'ListByUser', method: 'GET', service: 'memory', path: '/memory/api/memory/user/fdd2eee1-7871-45da-a3b4-c6a214ef4928?page=1&pageSize=10', mode: 'none',
@@ -770,7 +770,7 @@ GET /memory/api/memory/{memoryId}
                         label: 'GetById', method: 'GET', service: 'audit', path: '/audit-logging/auditlogs/0cf44724-b65d-48da-a340-0c0cb653503c', mode: 'none',
                         hint: 'Получить событие аудита по id.'
                     },
-                    delete: { label: 'Delete', method: 'DELETE', service: 'audit', path: '/audit-logging/auditlogs/{id}', mode: 'none', hint: 'Удалить запись аудита.' }
+                    delete: { label: 'Delete', method: 'DELETE', service: 'audit', path: '/audit-logging/auditlogs/b8b613f3-5ff5-463a-ad5c-7a5e554a7d5a', mode: 'none', hint: 'Удалить запись аудита.' }
                 },
 
                 notification: {
@@ -804,8 +804,8 @@ GET /memory/api/memory/{memoryId}
                         json: { id: '00000000-0000-0000-0000-000000000005', fullName: 'Johnathan Doe', birthDate: '1990-05-20T00:00:00Z', displayName: 'Johnny', bio: 'Updated bio', accessMode: 'AfterDeath', avatarUrl: null },
                         hint: 'Обновить поля профиля.'
                     },
-                    delete: { label: 'DeleteProfile', method: 'DELETE', service: 'profile', path: '/profile/api/profile/{id}', mode: 'none', hint: 'Удалить профиль.' },
-                    confirmDeath: { label: 'ConfirmDeath', method: 'POST', service: 'profile', path: '/profile/api/profile/{userId}/confirm-death', mode: 'none', hint: 'Отметить пользователя как DeathConfirmed.' }
+                    delete: { label: 'DeleteProfile', method: 'DELETE', service: 'profile', path: '/profile/api/profile/fdd2eee1-7871-45da-a3b4-c6a214ef4928', mode: 'none', hint: 'Удалить профиль.' },
+                    confirmDeath: { label: 'ConfirmDeath', method: 'POST', service: 'profile', path: '/profile/api/profile/fdd2eee1-7871-45da-a3b4-c6a214ef4928/confirm-death', mode: 'none', hint: 'Отметить пользователя как DeathConfirmed.' }
                 },
 
                 // NEW: Moderation
@@ -824,7 +824,7 @@ GET /memory/api/memory/{memoryId}
                         hint: 'Список ревью (фильтр по статусу/pagination).'
                     },
                     decide: {
-                        label: 'DecideReview', method: 'POST', service: 'moderation', path: '/moderation/api/reviews/{id}/decide', mode: 'json',
+                        label: 'DecideReview', method: 'POST', service: 'moderation', path: '/moderation/api/reviews/00000000-0000-0000-0000-000000000011/decide', mode: 'json',
                         json: { Decision: 'Approve|Reject', ModeratorId: 'mod-123', Reason: 'Причина решения' },
                         hint: 'Модератор принимает решение по ревью.'
                     }
@@ -833,11 +833,11 @@ GET /memory/api/memory/{memoryId}
                 // NEW: PublicView
                 publicView: {
                     getPublicProfile: {
-                        label: 'GetPublicProfile', method: 'GET', service: 'publicView', path: '/public/api/profile/{userId}', mode: 'none',
+                        label: 'GetPublicProfile', method: 'GET', service: 'publicView', path: '/public/api/profile/fdd2eee1-7871-45da-a3b4-c6a214ef4928', mode: 'none',
                         hint: 'Получить публичную проекцию профиля пользователя (доступна без JWT, если публично).'
                     },
                     getPublicMemory: {
-                        label: 'GetPublicMemory', method: 'GET', service: 'publicView', path: '/public/api/memory/{memoryId}', mode: 'none',
+                        label: 'GetPublicMemory', method: 'GET', service: 'publicView', path: '/public/api/memory/1f6cbd66-dc14-4c35-a1f1-94928a4caa5f', mode: 'none',
                         hint: 'Получить публичную страницу памяти (media URLs и мета).'
                     }
                 },
