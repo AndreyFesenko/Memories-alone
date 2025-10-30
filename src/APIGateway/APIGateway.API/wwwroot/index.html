@@ -80,30 +80,16 @@
       <option value="stage">stage</option>
       <option value="prod">prod</option>
     </select>
-	<button id="demoBtn"
-  style="
-    position: fixed;
-    top: 55px;
-    left: 10px;
-    background: #10b981;
-    color: #fff;
-    border: none;
-    padding: 10px 14px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    box-shadow: 0 0 6px rgba(0,0,0,0.3);
-  ">
-  Открыть Demo Front
-</button>
 
-<script>
-  document.getElementById("demoBtn").onclick = () => {
-    window.open("http://localhost:5173/", "_blank");
-  };
-</script>
+    <!-- КНОПКА ОТКРЫТИЯ ДЕМО-ФРОНТА (перед Quick Login) -->
+    <button id="openDemo" class="btn small ghost" title="Открыть демо-фронт">
+      Открыть Demo Front
+    </button>
+
     <button id="quickLogin" class="btn small" title="Открыть Identity → Login и выполнить">Quick Login</button>
+
     <div style="width:12px"></div>
+
     <div class="tabs" id="tabs">
       <button class="tab" data-tab="identity">Identity</button>
       <button class="tab" data-tab="memory">MemoryArchive</button>
@@ -222,7 +208,6 @@
   </section>
 </main>
 
-<!-- documentation sections (не трогать) -->
 <section class="card doc">
   <h3>Памятка для фронтенда — сервисы, экшены, контракты</h3>
   <div class="body">
@@ -356,6 +341,7 @@ GET /memory/api/memory/{memoryId}
   // UI elements
   const envSelect = document.getElementById('envSelect'),
         gatewayDisplay = document.getElementById('gatewayDisplay'),
+        openDemoBtn = document.getElementById('openDemo'),
         quickLoginBtn = document.getElementById('quickLogin'),
         method = document.getElementById('method'),
         endpointSel = document.getElementById('endpoint'),
@@ -418,6 +404,17 @@ GET /memory/api/memory/{memoryId}
     const env = ENV_PRESETS[currentEnvKey];
     return (env && env.services && env.services[service]) ? env.services[service] : env.gateway;
   }
+
+  // === URL демо-фронта по ENV
+  function computeDemoUrl(){
+    if (currentEnvKey === 'dev') return 'http://localhost:5173/'; // Vite dev server
+    const env = ENV_PRESETS[currentEnvKey];
+    const base = (env?.gateway || location.origin).replace(/\/$/, '');
+    return `${base}/demo/memories-demo/`; // статика собранного фронта
+  }
+  openDemoBtn.addEventListener('click', () => {
+    window.open(computeDemoUrl(), '_blank', 'noopener');
+  });
 
   // endpoints
   const endpoints = {
@@ -672,7 +669,7 @@ GET /memory/api/memory/{memoryId}
         const title = document.getElementById('Title').value;
         const description = document.getElementById('Description').value;
         const mediaType = document.getElementById('MediaType').value;
-        const accessLevel = document.getElementById('AccessLevel').value;
+        theaccess = document.getElementById('AccessLevel').value;
         const tags = document.getElementById('Tags').value;
         const fileName = document.getElementById('FileName').value;
 
@@ -680,7 +677,7 @@ GET /memory/api/memory/{memoryId}
         if (title) fd.append('Title', title);
         if (description) fd.append('Description', description);
         if (mediaType) fd.append('MediaType', mediaType);
-        if (accessLevel) fd.append('AccessLevel', accessLevel);
+        if (theaccess) fd.append('AccessLevel', theaccess);
         if (tags) tags.split(',').map(t=>t.trim()).filter(Boolean).forEach(t=>fd.append('Tags', t));
 
         if (fileInput.files?.length) {
@@ -725,15 +722,13 @@ GET /memory/api/memory/{memoryId}
     }
   }
 
-  // === ПРАВКА: собираем медиа со всех items[], а не только из первого ===
+  // === Собираем медиа со всех items[], а не только из первого ===
   function tryRenderPreview(obj){
     let mf = [];
 
     if (Array.isArray(obj?.mediaFiles)) {
-      // Ответ одного MemoryDto
       mf = obj.mediaFiles;
     } else if (Array.isArray(obj?.items)) {
-      // Ответ PagedResult<MemoryDto> — плоско собираем все mediaFiles
       for (const it of obj.items) {
         if (Array.isArray(it?.mediaFiles) && it.mediaFiles.length) {
           const withMem = it.mediaFiles.map(m => ({ ...m, _memoryId: it.id }));
@@ -744,7 +739,6 @@ GET /memory/api/memory/{memoryId}
 
     if (!Array.isArray(mf) || !mf.length) return;
 
-    // убрать дубли по id/url
     const seen = new Set();
     mf = mf.filter(m => {
       const key = m.id || m.url;
