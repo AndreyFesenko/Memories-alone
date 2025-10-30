@@ -1,17 +1,22 @@
 ﻿// src/MemoryArchiveService/MemoryArchiveService.API/Models/CreateMemoryForm.cs
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
-using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc;
 
 namespace MemoryArchiveService.API.Models;
 
-public sealed class CreateMemoryForm
+public class CreateMemoryForm
 {
-    [Required] public string OwnerId { get; set; } = null!;
-    [Required] public string Title { get; set; } = null!;
-    [Required] public string Description { get; set; } = null!;
-    [Required] public string MediaType { get; set; } = "Image";
-    public string AccessLevel { get; set; } = "Private";
-    public List<string>? Tags { get; set; }
+    [FromForm] public string OwnerId { get; set; } = default!;
+    [FromForm] public string Title { get; set; } = default!;
+    [FromForm] public string? Description { get; set; }
+    [FromForm] public string MediaType { get; set; } = "Image";
+    [FromForm] public string AccessLevel { get; set; } = "Private";
+    [FromForm] public List<string>? Tags { get; set; }
 
-    [Required] public IFormFile File { get; set; } = null!;
+    // ВАЖНО: повторяющееся поле "File" → мультизагрузка
+    [FromForm(Name = "File")] public List<IFormFile>? Files { get; set; }
+
+    // Опциональный единый alias для имени файла(ов)
+    [FromForm] public string? FileName { get; set; }
 }

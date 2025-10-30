@@ -1,338 +1,233 @@
-<!doctype html> 
+<!doctype html>
 <html lang="ru">
 <head>
-    <meta charset="utf-8" />
-    <title>Memories – Unified API</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    <style>
-        :root {
-            --bg: #0f172a;
-            --panel: #111827;
-            --ink: #e5e7eb;
-            --muted: #9ca3af;
-            --accent: #22c55e
-        }
-
-        * { box-sizing: border-box }
-
-        body {
-            margin: 0;
-            background: var(--bg);
-            color: var(--ink);
-            font: 14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif
-        }
-
-        header {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 16px;
-            border-bottom: 1px solid #1f2937;
-            background: #0b1220;
-            position: sticky;
-            top: 0;
-            z-index: 3
-        }
-        header h1 { font-size: 16px; margin: 0; font-weight: 600 }
-        header .env { font-size: 12px; color: var(--muted) }
-
-        .env-controls { display: flex; gap: 8px; align-items: center; }
-
-        main {
-            display: grid;
-            grid-template-columns: 360px 1fr;
-            gap: 16px;
-            padding: 16px;
-            max-width: 1500px;
-            margin: 0 auto
-        }
-
-        .card {
-            background: var(--panel);
-            border: 1px solid #1f2937;
-            border-radius: 12px;
-            overflow: hidden
-        }
-        .card h3 {
-            margin: 0;
-            padding: 12px 14px;
-            border-bottom: 1px solid #1f2937;
-            font-size: 13px;
-            color: #cbd5e1
-        }
-        .card .body { padding: 12px 14px; display: grid; gap: 10px }
-
-        label { display: grid; gap: 6px; font-size: 12px; color: #cbd5e1 }
-
-        input[type="text"], input[type="url"], input[type="file"], select, textarea {
-            width: 100%;
-            background: #0b1220;
-            color: var(--ink);
-            border: 1px solid #1f2937;
-            border-radius: 8px;
-            padding: 9px 10px;
-            font-size: 13px
-        }
-        textarea { min-height: 120px; resize: vertical }
-
-        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: var(--accent);
-            border: none;
-            color: #052e16;
-            border-radius: 10px;
-            padding: 10px 14px;
-            font-weight: 600;
-            cursor: pointer
-        }
-        .btn.secondary { background: #1f2937; color: #e5e7eb }
-        .btn.small { padding: 4px 8px; font-size: 11px }
-        .btn.ghost { background: #0b1220; border: 1px solid #1f2937; color: #cbd5e1 }
-
-        .tabs { display: flex; gap: 6px }
-        .tab {
-            padding: 6px 10px;
-            border-radius: 8px;
-            border: 1px solid #1f2937;
-            background: #0b1220;
-            color: #fff;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 700
-        }
-        .tab.active { background: #1f2937 }
-
-        pre, code { font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace; font-size: 12px }
-        pre {
-            margin: 0;
-            white-space: pre-wrap;
-            word-break: break-word;
-            max-height: 520px;
-            overflow: auto;
-            background: #0b1220;
-            border-top: 1px solid #1f2937;
-            padding: 12px 14px
-        }
-
-        .pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-weight: 600; font-size: 11px }
-        .pill.get { background: #052e16; color: #86efac; border: 1px solid #166534 }
-        .pill.post { background: #111827; color: #93c5fd; border: 1px solid #1d4ed8 }
-
-        .muted { color: #9ca3af; font-size: 12px }
-        .divider { height: 1px; background: #1f2937; margin: 8px 0 }
-        .hint { font-size: 11px; color: #a3a3a3 }
-        .inline { display: flex; gap: 8px; align-items: center }
-        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
-
-        kbd { background: #0b1220; border: 1px solid #1f2937; border-radius: 6px; padding: 2px 6px; font-size: 11px }
-
-        .file-preview {
-            font-size: 12px; color: #cbd5e1; background: #0b1220;
-            border: 1px dashed #334155; border-radius: 8px; padding: 8px
-        }
-
-        .preview { margin: 0; padding: 12px 14px; border-top: 1px solid #1f2937 }
-        .preview .toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap }
-        .preview h4 { margin: 0 0 8px 0; font-size: 13px; color: #cbd5e1 }
-
-        .preview-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(160px,1fr)); gap: 8px }
-        .preview-item {
-            background: #0b1220; border: 1px solid #334155; border-radius: 10px;
-            padding: 8px; overflow: hidden
-        }
-        .preview-item img, .preview-item video {
-            width: 100%; height: 130px; object-fit: cover; border-radius: 8px; display: block; cursor: zoom-in;
-        }
-        .preview-item audio { width: 100%; display: block }
-        .preview-item .meta { font-size: 11px; color: #9ca3af; margin-top: 6px; word-break: break-word }
-        .preview-item a { text-decoration: none; color: #93c5fd; font-size: 12px }
-
-        .tiny { font-size: 11px; color: #9ca3af }
-
-        /* нижние секции (вне grid) */
-        .doc { max-width: 1500px; margin: 16px auto; }
-        .doc details { background: #0b1220; border: 1px solid #1f2937; border-radius: 10px; padding: 8px 10px; }
-        .doc details + details { margin-top: 10px }
-        .doc summary { cursor: pointer; font-weight: 700; color: #cbd5e1 }
-        .mono { font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace; font-size: 12px }
-
-        /* === Lightbox (fullscreen image viewer) === */
-        .lightbox {
-            position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
-            z-index: 50;
-        }
-        .lightbox.open { display: flex; }
-        .lightbox__backdrop {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(2px);
-        }
-        .lightbox__panel {
-            position: relative; margin: 24px; max-width: 95vw; max-height: 95vh;
-        }
-        .lightbox__panel img {
-            display: block; max-width: 95vw; max-height: 90vh; border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0,0,0,.6);
-        }
-        .lightbox__close {
-            position: absolute; top: -10px; right: -10px;
-            border-radius: 999px; padding: 6px 10px;
-            background: #0b1220; border: 1px solid #334155; color: #cbd5e1; cursor: pointer;
-        }
-        .lightbox__cap { margin-top: 8px; text-align: center; color: #9ca3af; font-size: 12px; }
-    </style>
+  <meta charset="utf-8" />
+  <title>Memories – Unified API</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <style>
+    :root { --bg:#0f172a; --panel:#111827; --ink:#e5e7eb; --muted:#9ca3af; --accent:#22c55e }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif}
+    header{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #1f2937;background:#0b1220;position:sticky;top:0;z-index:3}
+    header h1{font-size:16px;margin:0;font-weight:600}
+    header .env{font-size:12px;color:var(--muted)}
+    .env-controls{display:flex;gap:8px;align-items:center}
+    main{display:grid;grid-template-columns:360px 1fr;gap:16px;padding:16px;max-width:1500px;margin:0 auto}
+    .card{background:var(--panel);border:1px solid #1f2937;border-radius:12px;overflow:hidden}
+    .card h3{margin:0;padding:12px 14px;border-bottom:1px solid #1f2937;font-size:13px;color:#cbd5e1}
+    .card .body{padding:12px 14px;display:grid;gap:10px}
+    label{display:grid;gap:6px;font-size:12px;color:#cbd5e1}
+    input[type="text"],input[type="url"],input[type="file"],select,textarea{width:100%;background:#0b1220;color:var(--ink);border:1px solid #1f2937;border-radius:8px;padding:9px 10px;font-size:13px}
+    textarea{min-height:120px;resize:vertical}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);border:none;color:#052e16;border-radius:10px;padding:10px 14px;font-weight:600;cursor:pointer}
+    .btn.secondary{background:#1f2937;color:#e5e7eb}
+    .btn.small{padding:4px 8px;font-size:11px}
+    .btn.ghost{background:#0b1220;border:1px solid #1f2937;color:#cbd5e1}
+    .tabs{display:flex;gap:6px}
+    .tab{padding:6px 10px;border-radius:8px;border:1px solid #1f2937;background:#0b1220;color:#fff;cursor:pointer;font-size:14px;font-weight:700}
+    .tab.active{background:#1f2937}
+    pre,code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:12px}
+    pre{margin:0;white-space:pre-wrap;word-break:break-word;max-height:520px;overflow:auto;background:#0b1220;border-top:1px solid #1f2937;padding:12px 14px}
+    .pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-weight:600;font-size:11px}
+    .pill.get{background:#052e16;color:#86efac;border:1px solid #166534}
+    .pill.post{background:#111827;color:#93c5fd;border:1px solid #1d4ed8}
+    .muted{color:#9ca3af;font-size:12px}
+    .divider{height:1px;background:#1f2937;margin:8px 0}
+    .hint{font-size:11px;color:#a3a3a3}
+    .inline{display:flex;gap:8px;align-items:center}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    kbd{background:#0b1220;border:1px solid #1f2937;border-radius:6px;padding:2px 6px;font-size:11px}
+    .file-preview{font-size:12px;color:#cbd5e1;background:#0b1220;border:1px dashed #334155;border-radius:8px;padding:8px;white-space:pre-wrap}
+    .preview{margin:0;padding:12px 14px;border-top:1px solid #1f2937}
+    .preview .toolbar{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+    .preview h4{margin:0 0 8px 0;font-size:13px;color:#cbd5e1}
+    .preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+    .preview-item{background:#0b1220;border:1px solid #334155;border-radius:10px;padding:8px;overflow:hidden}
+    .preview-item img,.preview-item video{width:100%;height:130px;object-fit:cover;border-radius:8px;display:block;cursor:zoom-in}
+    .preview-item audio{width:100%;display:block}
+    .preview-item .meta{font-size:11px;color:#9ca3af;margin-top:6px;word-break:break-word}
+    .preview-item a{text-decoration:none;color:#93c5fd;font-size:12px}
+    .tiny{font-size:11px;color:#9ca3af}
+    .doc{max-width:1500px;margin:16px auto}
+    .doc details{background:#0b1220;border:1px solid #1f2937;border-radius:10px;padding:8px 10px}
+    .doc details+details{margin-top:10px}
+    .doc summary{cursor:pointer;font-weight:700;color:#cbd5e1}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:12px}
+    .lightbox{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:50}
+    .lightbox.open{display:flex}
+    .lightbox__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(2px)}
+    .lightbox__panel{position:relative;margin:24px;max-width:95vw;max-height:95vh}
+    .lightbox__panel img{display:block;max-width:95vw;max-height:90vh;border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+    .lightbox__close{position:absolute;top:-10px;right:-10px;border-radius:999px;padding:6px 10px;background:#0b1220;border:1px solid #334155;color:#cbd5e1;cursor:pointer}
+    .lightbox__cap{margin-top:8px;text-align:center;color:#9ca3af;font-size:12px}
+  </style>
 </head>
 <body>
-    <header>
-        <div class="inline">
-            <h1>Memories – Unified API</h1>
-            <span class="env">Gateway: <code id="gatewayDisplay">http://localhost:8080</code></span>
-        </div>
+<header>
+  <div class="inline">
+    <h1>Memories – Unified API</h1>
+    <span class="env">Gateway: <code id="gatewayDisplay">http://localhost:8080</code></span>
+  </div>
+  <div class="env-controls">
+    <label class="muted" for="envSelect" style="margin:0 4px 0 0">ENV</label>
+    <select id="envSelect" title="Выберите окружение">
+      <option value="dev">dev</option>
+      <option value="stage">stage</option>
+      <option value="prod">prod</option>
+    </select>
+	<button id="demoBtn"
+  style="
+    position: fixed;
+    top: 55px;
+    left: 10px;
+    background: #10b981;
+    color: #fff;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    box-shadow: 0 0 6px rgba(0,0,0,0.3);
+  ">
+  Открыть Demo Front
+</button>
 
-        <div class="env-controls">
-            <label class="muted" for="envSelect" style="margin:0 4px 0 0">ENV</label>
-            <select id="envSelect" title="Выберите окружение">
-                <option value="dev">dev</option>
-                <option value="stage">stage</option>
-                <option value="prod">prod</option>
+<script>
+  document.getElementById("demoBtn").onclick = () => {
+    window.open("http://localhost:5173/", "_blank");
+  };
+</script>
+    <button id="quickLogin" class="btn small" title="Открыть Identity → Login и выполнить">Quick Login</button>
+    <div style="width:12px"></div>
+    <div class="tabs" id="tabs">
+      <button class="tab" data-tab="identity">Identity</button>
+      <button class="tab" data-tab="memory">MemoryArchive</button>
+      <button class="tab" data-tab="access">AccessControl</button>
+      <button class="tab" data-tab="audit">AuditLogging</button>
+      <button class="tab" data-tab="notification">Notification</button>
+      <button class="tab" data-tab="profile">ProfileService</button>
+      <!-- NEW TABS -->
+      <button class="tab" data-tab="moderation">Moderation</button>
+      <button class="tab" data-tab="publicView">PublicView</button>
+      <button class="tab" data-tab="qrcode">QRCode</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- LEFT -->
+  <section class="card">
+    <h3>Запрос</h3>
+    <div class="body" id="reqPane">
+      <div class="row">
+        <label>Метод <select id="method"></select></label>
+        <label>Endpoint <select id="endpoint"></select></label>
+      </div>
+
+      <label>
+        URL (через Gateway)
+        <input id="url" type="url" />
+        <span id="urlHint" class="hint"></span>
+      </label>
+
+      <div class="inline">
+        <label style="flex:1">
+          Authorization (Bearer)
+          <input id="auth" type="text" placeholder="вставьте JWT без 'Bearer '" />
+        </label>
+        <button class="btn small secondary" id="copyJwt" title="Скопировать токен">📋</button>
+      </div>
+      <span class="hint">JWT сохраняется в localStorage. Для защищённых маршрутов (Memory, Profile, Access, Audit) — обязателен.</span>
+
+      <label class="inline">
+        <input type="checkbox" id="persistBodies" />
+        <span class="hint">Сохранять тело запроса между эндпоинтами</span>
+      </label>
+
+      <div id="jsonBlock">
+        <label>JSON Body<textarea id="json" spellcheck="false"></textarea></label>
+      </div>
+
+      <div id="formBlock" style="display:none;">
+        <div class="grid2">
+          <label>OwnerId<input id="OwnerId" type="text" placeholder="uuid" /></label>
+          <label>Title<input id="Title" type="text" /></label>
+          <label>Description<textarea id="Description"></textarea></label>
+          <label>
+            MediaType
+            <select id="MediaType">
+              <option>Image</option>
+              <option>Video</option>
+              <option>Audio</option>
+              <option>Document</option>
             </select>
-
-            <button id="quickLogin" class="btn small" title="Открыть Identity → Login и выполнить">Quick Login</button>
-
-            <div style="width:12px"></div>
-
-            <div class="tabs" id="tabs">
-                <button class="tab" data-tab="identity">Identity</button>
-                <button class="tab" data-tab="memory">MemoryArchive</button>
-                <button class="tab" data-tab="access">AccessControl</button>
-                <button class="tab" data-tab="audit">AuditLogging</button>
-                <button class="tab" data-tab="notification">Notification</button>
-                <button class="tab" data-tab="profile">ProfileService</button>
-
-                <!-- NEW TABS -->
-                <button class="tab" data-tab="moderation">Moderation</button>
-                <button class="tab" data-tab="publicView">PublicView</button>
-                <button class="tab" data-tab="qrcode">QRCode</button>
-            </div>
+          </label>
+          <label>
+            AccessLevel
+            <select id="AccessLevel">
+              <option>Private</option>
+              <option>Public</option>
+              <option>FriendsOnly</option>
+            </select>
+          </label>
+          <label>Tags (через запятую)<input id="Tags" type="text" placeholder="tag1,tag2" /></label>
+          <!-- MULTI -->
+          <label>Файлы<input id="File" type="file" multiple /></label>
+          <label>FileName (опц.)<input id="FileName" type="text" /></label>
         </div>
-    </header>
+        <div class="file-preview" id="filePreview">Файлы не выбраны</div>
+      </div>
 
-    <main>
-        <!-- LEFT -->
-        <section class="card">
-            <h3>Запрос</h3>
-            <div class="body" id="reqPane">
-                <div class="row">
-                    <label>Метод <select id="method"></select></label>
-                    <label>Endpoint <select id="endpoint"></select></label>
-                </div>
+      <div class="row">
+        <button class="btn" id="send">Отправить</button>
+        <button class="btn secondary" id="fill">Заполнить пример</button>
+      </div>
 
-                <label>
-                    URL (через Gateway)
-                    <input id="url" type="url" />
-                    <span id="urlHint" class="hint"></span>
-                </label>
+      <div class="divider"></div>
+      <div class="inline">
+        <label style="flex:1">
+          Сгенерированный curl
+          <textarea id="curl" readonly></textarea>
+        </label>
+        <button class="btn small secondary" id="copyCurl" title="Скопировать curl">📋</button>
+      </div>
+    </div>
+  </section>
 
-                <div class="inline">
-                    <label style="flex:1">
-                        Authorization (Bearer)
-                        <input id="auth" type="text" placeholder="вставьте JWT без 'Bearer '" />
-                    </label>
-                    <button class="btn small secondary" id="copyJwt" title="Скопировать токен">📋</button>
-                </div>
-                <span class="hint">JWT сохраняется в localStorage. Для защищённых маршрутов (Memory, Profile, Access, Audit) — обязателен.</span>
+  <!-- RIGHT -->
+  <section class="card">
+    <h3>Ответ</h3>
+    <div class="body">
+      <div class="inline"><span class="muted">HTTP Status:</span><span id="status" class="pill get">—</span></div>
+      <label>Заголовки<textarea id="respHeaders" readonly></textarea></label>
+    </div>
+    <h3>Тело ответа</h3>
+    <pre><code id="resp" class="language-json">—</code></pre>
 
-                <label class="inline">
-                    <input type="checkbox" id="persistBodies" />
-                    <span class="hint">Сохранять тело запроса между эндпоинтами</span>
-                </label>
+    <div id="preview" class="preview" style="display:none;">
+      <div class="toolbar" id="previewToolbar" style="display:none;">
+        <button class="btn small ghost" id="openAll">Открыть всё</button>
+        <button class="btn small ghost" id="copyIds">Скопировать mediaId</button>
+        <button class="btn small ghost" id="downloadAll">Скачать всё (zip)</button>
+        <span class="tiny" id="dlHint" style="display:none;"></span>
+      </div>
+      <h4>Медиа</h4>
+      <div class="preview-grid" id="previewGrid"></div>
+    </div>
+  </section>
+</main>
 
-                <div id="jsonBlock">
-                    <label>JSON Body<textarea id="json" spellcheck="false"></textarea></label>
-                </div>
-
-                <div id="formBlock" style="display:none;">
-                    <div class="grid2">
-                        <label>OwnerId<input id="OwnerId" type="text" placeholder="uuid" /></label>
-                        <label>Title<input id="Title" type="text" /></label>
-                        <label>Description<textarea id="Description"></textarea></label>
-                        <label>
-                            MediaType
-                            <select id="MediaType">
-                                <option>Image</option>
-                                <option>Video</option>
-                                <option>Audio</option>
-                                <option>Document</option>
-                            </select>
-                        </label>
-                        <label>
-                            AccessLevel
-                            <select id="AccessLevel">
-                                <option>Private</option>
-                                <option>Public</option>
-                                <option>FriendsOnly</option>
-                            </select>
-                        </label>
-                        <label>Tags (через запятую)<input id="Tags" type="text" placeholder="tag1,tag2" /></label>
-                        <label>Файл<input id="File" type="file" /></label>
-                        <label>FileName (опц.)<input id="FileName" type="text" /></label>
-                    </div>
-                    <div class="file-preview" id="filePreview">Файл не выбран</div>
-                </div>
-
-                <div class="row">
-                    <button class="btn" id="send">Отправить</button>
-                    <button class="btn secondary" id="fill">Заполнить пример</button>
-                </div>
-
-                <div class="divider"></div>
-                <div class="inline">
-                    <label style="flex:1">
-                        Сгенерированный curl
-                        <textarea id="curl" readonly></textarea>
-                    </label>
-                    <button class="btn small secondary" id="copyCurl" title="Скопировать curl">📋</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- RIGHT -->
-        <section class="card">
-            <h3>Ответ</h3>
-            <div class="body">
-                <div class="inline"><span class="muted">HTTP Status:</span><span id="status" class="pill get">—</span></div>
-                <label>Заголовки<textarea id="respHeaders" readonly></textarea></label>
-            </div>
-            <h3>Тело ответа</h3>
-            <pre><code id="resp" class="language-json">—</code></pre>
-
-            <div id="preview" class="preview" style="display:none;">
-                <div class="toolbar" id="previewToolbar" style="display:none;">
-                    <button class="btn small ghost" id="openAll">Открыть всё</button>
-                    <button class="btn small ghost" id="copyIds">Скопировать mediaId</button>
-                    <button class="btn small ghost" id="downloadAll">Скачать всё (zip)</button>
-                    <span class="tiny" id="dlHint" style="display:none;"></span>
-                </div>
-                <h4>Медиа</h4>
-                <div class="preview-grid" id="previewGrid"></div>
-            </div>
-        </section>
-    </main>
-
-    <!-- documentation sections (не трогать) -->
-    <section class="card doc">
-        <h3>Памятка для фронтенда — сервисы, экшены, контракты</h3>
-        <div class="body">
-            <!-- ProfileService -->
-            <details open>
-                <summary>ProfileService — /profile/api/profile</summary>
+<!-- documentation sections (не трогать) -->
+<section class="card doc">
+  <h3>Памятка для фронтенда — сервисы, экшены, контракты</h3>
+  <div class="body">
+    <details open>
+      <summary>ProfileService — /profile/api/profile</summary>
 <pre class="mono">Назначение: хранение пользовательского профиля (1:1 c пользователем). Требует JWT.
 
 • CreateProfile — СОЗДАЁТ профиль.
@@ -371,11 +266,10 @@ DELETE /profile/api/profile/{id}
 • ConfirmDeath — ПОМЕТИТЬ статус 'DeathConfirmed'.
 POST /profile/api/profile/{userId}/confirm-death
 → 200 { "message": "Death confirmed" }</pre>
-            </details>
+    </details>
 
-            <!-- Identity -->
-            <details>
-                <summary>Identity — /identity</summary>
+    <details>
+      <summary>Identity — /identity</summary>
 <pre class="mono">Назначение: аутентификация пользователей, выдача JWT.
 
 • Login — получить accessToken/refreshToken (используйте первым).
@@ -396,617 +290,598 @@ POST /identity/refresh
 • Me — получить профиль текущего пользователя (из токена).
 GET /identity/me
 → 200 { "id":"guid", "username":"...", "email":"...", "displayName":"..." }</pre>
-            </details>
+    </details>
 
-            <!-- MemoryArchive -->
-            <details>
-                <summary>MemoryArchive — /memory/api</summary>
+    <details>
+      <summary>MemoryArchive — /memory/api</summary>
 <pre class="mono">Назначение: хранение воспоминаний и прикреплённых медиа.
 
 • CreateMemory — создать запись с файлом (multipart/form-data).
 POST /memory/api/memory
 Fields: OwnerId(uuid), Title, Description, MediaType(Image|Video|Audio|Document),
-        AccessLevel(Private|Public|FriendsOnly), Tags(repeatable), File(@file), FileName(opt)
-→ 201 { "id":"guid","ownerId":"guid","title":"...","mediaFiles":[{ "id":"guid","fileName":"...","mediaType":"image/jpeg","url":"..." }] }
+        AccessLevel(Private|Public|FriendsOnly), Tags(repeatable), File(@file, repeatable), FileName(opt)
+→ 201 { "id":"guid","ownerId":"guid","title":"...","mediaFiles":[{ "id":"guid","fileName":"...","mediaType":"image/jpeg","url":"..." }, ...] }
 
 • GetMemoryById — получить запись.
 GET /memory/api/memory/{memoryId}
 → 200 MemoryDto | 404
 
-... (и т.д. — полнота сохранена)</pre>
-            </details>
+... (и т.д.)</pre>
+    </details>
 
-            <div class="hint">
-                Для защищённых маршрутов добавляйте <code>Authorization: Bearer &lt;jwt&gt;</code>. Плейсхолдеры
-                <code>{id}</code>, <code>{userId}</code>, <code>{memoryId}</code>, <code>{mediaId}</code> подставляются
-                автоматически в генераторе curl (левая панель).
-            </div>
-        </div>
-    </section>
+    <div class="hint">
+      Для защищённых маршрутов добавляйте <code>Authorization: Bearer &lt;jwt&gt;</code>. Плейсхолдеры
+      <code>{id}</code>, <code>{userId}</code>, <code>{memoryId}</code>, <code>{mediaId}</code> подставляются
+      автоматически в генераторе curl (левая панель).
+    </div>
+  </div>
+</section>
 
-    <section class="card doc">
-        <h3>Типовые ошибки и решения (коротко)</h3>
-        <div class="body">
-            <details open>
-                <summary>ProfileService</summary>
+<section class="card doc">
+  <h3>Типовые ошибки и решения (коротко)</h3>
+  <div class="body">
+    <details open>
+      <summary>ProfileService</summary>
 <pre class="mono">401 invalid_token — проверьте совпадение ключей/alg/iss/aud и проксирование Authorization.
 403 forbidden — проверьте политики/роли/владение ресурсом.
 404 not found — возможно передан userId вместо profileId; используйте /by-user.
 415 unsupported media type — проверьте Content-Type.</pre>
-            </details>
-
-            <details>
-                <summary>Identity</summary>
+    </details>
+    <details>
+      <summary>Identity</summary>
 <pre class="mono">401 — неверные креды/просрочен токен.
 400 — ошибки валидации (пароль, email).</pre>
-            </details>
-
-            <details>
-                <summary>MemoryArchive</summary>
+    </details>
+    <details>
+      <summary>MemoryArchive</summary>
 <pre class="mono">401 — нет JWT/не прокинули; 415 — JSON вместо multipart.</pre>
-            </details>
-        </div>
-    </section>
-    <!-- END: documentation sections -->
+    </details>
+  </div>
+</section>
 
-    <!-- Lightbox container -->
-    <div id="lightbox" class="lightbox" aria-hidden="true">
-        <div class="lightbox__backdrop" data-close="1"></div>
-        <figure class="lightbox__panel">
-            <button class="btn small ghost lightbox__close" type="button" title="Закрыть" data-close="1">✕</button>
-            <img id="lightboxImg" alt="">
-            <figcaption id="lightboxCap" class="lightbox__cap tiny"></figcaption>
-        </figure>
-    </div>
+<!-- Lightbox container -->
+<div id="lightbox" class="lightbox" aria-hidden="true">
+  <div class="lightbox__backdrop" data-close="1"></div>
+  <figure class="lightbox__panel">
+    <button class="btn small ghost lightbox__close" type="button" title="Закрыть" data-close="1">✕</button>
+    <img id="lightboxImg" alt="">
+    <figcaption id="lightboxCap" class="lightbox__cap tiny"></figcaption>
+  </figure>
+</div>
 
-    <script>
-        (() => {
-            hljs.highlightAll();
+<script>
+(() => {
+  hljs.highlightAll();
 
-            // UI elements
-            const envSelect = document.getElementById('envSelect'),
-                gatewayDisplay = document.getElementById('gatewayDisplay'),
-                quickLoginBtn = document.getElementById('quickLogin'),
+  // UI elements
+  const envSelect = document.getElementById('envSelect'),
+        gatewayDisplay = document.getElementById('gatewayDisplay'),
+        quickLoginBtn = document.getElementById('quickLogin'),
+        method = document.getElementById('method'),
+        endpointSel = document.getElementById('endpoint'),
+        url = document.getElementById('url'), urlHint = document.getElementById('urlHint'),
+        auth = document.getElementById('auth'), json = document.getElementById('json'),
+        jsonBlock = document.getElementById('jsonBlock'), formBlock = document.getElementById('formBlock'),
+        fileInput = document.getElementById('File'), filePreview = document.getElementById('filePreview'),
+        sendBtn = document.getElementById('send'), fillBtn = document.getElementById('fill'),
+        curlBox = document.getElementById('curl'), respEl = document.getElementById('resp'),
+        statusEl = document.getElementById('status'), respHeaders = document.getElementById('respHeaders'),
+        tabs = document.getElementById('tabs'), persistBodies = document.getElementById('persistBodies'),
+        preview = document.getElementById('preview'), previewGrid = document.getElementById('previewGrid'),
+        previewToolbar = document.getElementById('previewToolbar'),
+        openAllBtn = document.getElementById('openAll'),
+        copyIdsBtn = document.getElementById('copyIds'),
+        downloadAllBtn = document.getElementById('downloadAll'),
+        dlHint = document.getElementById('dlHint');
 
-                method = document.getElementById('method'),
-                endpointSel = document.getElementById('endpoint'),
-                url = document.getElementById('url'), urlHint = document.getElementById('urlHint'),
-                auth = document.getElementById('auth'), json = document.getElementById('json'),
-                jsonBlock = document.getElementById('jsonBlock'), formBlock = document.getElementById('formBlock'),
-                fileInput = document.getElementById('File'), filePreview = document.getElementById('filePreview'),
-                sendBtn = document.getElementById('send'), fillBtn = document.getElementById('fill'),
-                curlBox = document.getElementById('curl'), respEl = document.getElementById('resp'),
-                statusEl = document.getElementById('status'), respHeaders = document.getElementById('respHeaders'),
-                tabs = document.getElementById('tabs'), persistBodies = document.getElementById('persistBodies'),
-                preview = document.getElementById('preview'), previewGrid = document.getElementById('previewGrid'),
-                previewToolbar = document.getElementById('previewToolbar');
+  /* ==== Lightbox refs ==== */
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxCap = document.getElementById('lightboxCap');
 
-            /* ==== Lightbox refs ==== */
-            const lightbox = document.getElementById('lightbox');
-            const lightboxImg = document.getElementById('lightboxImg');
-            const lightboxCap = document.getElementById('lightboxCap');
+  function openLightbox(src, caption) {
+    lightboxImg.src = src || '';
+    lightboxImg.alt = caption || '';
+    lightboxCap.textContent = caption || '';
+    lightbox.classList.add('open');
+    lightbox.setAttribute('aria-hidden', 'false');
+  }
+  function closeLightbox() {
+    lightbox.classList.remove('open');
+    lightbox.setAttribute('aria-hidden', 'true');
+    lightboxImg.src = '';
+    lightboxImg.alt = '';
+    lightboxCap.textContent = '';
+  }
+  lightbox.addEventListener('click', (e) => { if (e.target.dataset.close) closeLightbox(); });
+  window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && lightbox.classList.contains('open')) closeLightbox(); });
 
-            function openLightbox(src, caption) {
-                lightboxImg.src = src || '';
-                lightboxImg.alt = caption || '';
-                lightboxCap.textContent = caption || '';
-                lightbox.classList.add('open');
-                lightbox.setAttribute('aria-hidden', 'false');
-            }
-            function closeLightbox() {
-                lightbox.classList.remove('open');
-                lightbox.setAttribute('aria-hidden', 'true');
-                lightboxImg.src = '';
-                lightboxImg.alt = '';
-                lightboxCap.textContent = '';
-            }
-            lightbox.addEventListener('click', (e) => {
-                if (e.target.dataset.close) closeLightbox();
-            });
-            window.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && lightbox.classList.contains('open')) closeLightbox();
-            });
+  // environment presets
+  const ENV_PRESETS = {
+    dev: { name:'dev', gateway:'http://localhost:8080', services: {
+      identity:'http://localhost:8080', profile:'http://localhost:8080', memory:'http://localhost:8080',
+      access:'http://localhost:8080', audit:'http://localhost:8080', notification:'http://localhost:8080',
+      moderation:'http://localhost:8080', publicView:'http://localhost:8080', qrcode:'http://localhost:8080' } },
+    stage:{ name:'stage', gateway:'https://stage.api.memories.local', services:{
+      identity:'https://stage.api.memories.local', profile:'https://stage.api.memories.local', memory:'https://stage.api.memories.local',
+      access:'https://stage.api.memories.local', audit:'https://stage.api.memories.local', notification:'https://stage.api.memories.local',
+      moderation:'https://stage.api.memories.local', publicView:'https://stage.api.memories.local', qrcode:'https://stage.api.memories.local' } },
+    prod:{ name:'prod', gateway:'https://api.memories.app', services:{
+      identity:'https://identity.memories.app', profile:'https://api.memories.app', memory:'https://api.memories.app',
+      access:'https://api.memories.app', audit:'https://api.memories.app', notification:'https://api.memories.app',
+      moderation:'https://moderation.memories.app', publicView:'https://public.memories.app', qrcode:'https://qrcode.memories.app' } }
+  };
 
-            // environment presets (gateway + optional service-specific bases)
-            const ENV_PRESETS = {
-                dev: {
-                    name: 'dev',
-                    gateway: 'http://localhost:8080',
-                    services: {
-                        identity: 'http://localhost:8080',
-                        profile: 'http://localhost:8080',
-                        memory: 'http://localhost:8080',
-                        access: 'http://localhost:8080',
-                        audit: 'http://localhost:8080',
-                        notification: 'http://localhost:8080',
-                        // new services routed through gateway in dev to avoid direct port hits
-                        moderation: 'http://localhost:8080',
-                        publicView: 'http://localhost:8080',
-                        qrcode: 'http://localhost:8080'
-                    }
-                },
-                stage: {
-                    name: 'stage',
-                    gateway: 'https://stage.api.memories.local',
-                    services: {
-                        identity: 'https://stage.api.memories.local',
-                        profile: 'https://stage.api.memories.local',
-                        memory: 'https://stage.api.memories.local',
-                        access: 'https://stage.api.memories.local',
-                        audit: 'https://stage.api.memories.local',
-                        notification: 'https://stage.api.memories.local',
-                        moderation: 'https://stage.api.memories.local',
-                        publicView: 'https://stage.api.memories.local',
-                        qrcode: 'https://stage.api.memories.local'
-                    }
-                },
-                prod: {
-                    name: 'prod',
-                    gateway: 'https://api.memories.app',
-                    services: {
-                        identity: 'https://identity.memories.app',
-                        profile: 'https://api.memories.app',
-                        memory: 'https://api.memories.app',
-                        access: 'https://api.memories.app',
-                        audit: 'https://api.memories.app',
-                        notification: 'https://api.memories.app',
-                        moderation: 'https://moderation.memories.app',
-                        publicView: 'https://public.memories.app',
-                        qrcode: 'https://qrcode.memories.app'
-                    }
-                }
-            };
+  let currentEnvKey = 'dev';
 
-            let currentEnvKey = 'dev';
+  function getServiceBase(service){
+    const env = ENV_PRESETS[currentEnvKey];
+    return (env && env.services && env.services[service]) ? env.services[service] : env.gateway;
+  }
 
-            function getServiceBase(service) {
-                const env = ENV_PRESETS[currentEnvKey];
-                return (env && env.services && env.services[service]) ? env.services[service] : env.gateway;
-            }
+  // endpoints
+  const endpoints = {
+    identity: {
+      login: { label:'Login', method:'POST', service:'identity', path:'/identity/login', mode:'json',
+        json:{ username:'andrey', password:'andrey256!' }, hint:'Выдаёт accessToken/refreshToken — используйте первым, чтобы получить JWT.' },
+      register: { label:'Register', method:'POST', service:'identity', path:'/identity/register', mode:'json',
+        json:{ username:'user1', password:'User1!pass', email:'u1@example.com', displayName:'User 1' }, hint:'Регистрация нового пользователя.' },
+      refresh: { label:'Refresh', method:'POST', service:'identity', path:'/identity/refresh', mode:'json',
+        json:{ refreshToken:'<your-refresh-token>' }, hint:'Обновляет accessToken по refreshToken.' },
+      me: { label:'Me', method:'GET', service:'identity', path:'/identity/me', mode:'none', hint:'Возвращает текущего пользователя по токену (JWT обязателен).' }
+    },
+    memory: {
+      create: { label:'CreateMemory (multipart)', method:'POST', service:'memory', path:'/memory/api/memory', mode:'form',
+        form:{ OwnerId:'fdd2eee1-7871-45da-a3b4-c6a214ef4928', Title:'Trip to Alps', Description:'Ski weekend', MediaType:'Image', AccessLevel:'Private', Tags:'alps,trip' },
+        hint:'Создать запись с файлами (FormData + File x N).' },
+      get: { label:'GetMemoryById', method:'GET', service:'memory',
+        path:'/memory/api/memory/1f6cbd66-dc14-4c35-a1f1-94928a4caa5f', mode:'none', hint:'Получить запись по её идентификатору.' },
+      update: { label:'UpdateMemory', method:'PUT', service:'memory',
+        path:'/memory/api/memory/1f6cbd66-dc14-4c35-a1f1-94928a4caa5f', mode:'json',
+        json:{ title:'New title', description:'Updated', accessLevel:'Public', tags:['alps','winter'] },
+        hint:'Обновить метаданные записи.' },
+      delete: { label:'DeleteMemory', method:'DELETE', service:'memory',
+        path:'/memory/api/memory/1f6cbd66-dc14-4c35-a1f1-94928a4caa5f', mode:'none', hint:'Удалить запись.' },
 
-            // endpoints defined with service + path
-            const endpoints = {
-                identity: {
-                    login: {
-                        label: 'Login', method: 'POST', service: 'identity', path: '/identity/login', mode: 'json',
-                        json: { username: 'andrey', password: 'andrey256!' },
-                        hint: 'Выдаёт accessToken/refreshToken — используйте первым, чтобы получить JWT.'
-                    },
-                    register: {
-                        label: 'Register', method: 'POST', service: 'identity', path: '/identity/register', mode: 'json',
-                        json: { username: 'user1', password: 'User1!pass', email: 'u1@example.com', displayName: 'User 1' },
-                        hint: 'Регистрация нового пользователя.'
-                    },
-                    refresh: {
-                        label: 'Refresh', method: 'POST', service: 'identity', path: '/identity/refresh', mode: 'json',
-                        json: { refreshToken: '<your-refresh-token>' }, hint: 'Обновляет accessToken по refreshToken.'
-                    },
-                    me: { label: 'Me', method: 'GET', service: 'identity', path: '/identity/me', mode: 'none', hint: 'Возвращает текущего пользователя по токену (JWT обязателен).' }
-                },
+      upload: { label:'UploadMedia (multipart)', method:'POST', service:'memory',
+        path:'/memory/api/memory/1f6cbd66-dc14-4c35-a1f1-94928a4caa5f/media', mode:'form',
+        form:{ MediaType:'Image', FileName:'pic1.jpg' }, hint:'Загрузить файл(ы) к существующей записи (FormData + File x N).' },
 
-                memory: {
-                    create: {
-                        label: 'CreateMemory (multipart)', method: 'POST', service: 'memory', path: '/memory/api/memory', mode: 'form',
-                        form: { OwnerId: 'fdd2eee1-7871-45da-a3b4-c6a214ef4928', Title: 'Trip to Alps', Description: 'Ski weekend', MediaType: 'Image', AccessLevel: 'Private', Tags: 'alps,trip' },
-                        hint: 'Создать запись с файлом (FormData + File).'
-                    },
-                    get: {
-                        label: 'GetMemoryById', method: 'GET', service: 'memory', path: '/memory/api/memory/1f6cbd66-dc14-4c35-a1f1-94928a4caa5f', mode: 'none',
-                        hint: 'Получить запись по её идентификатору.'
-                    },
-                    update: {
-                        label: 'UpdateMemory', method: 'PUT', service: 'memory', path: '/memory/api/memory/1f6cbd66-dc14-4c35-a1f1-94928a4caa5f', mode: 'json',
-                        json: { title: 'New title', description: 'Updated', accessLevel: 'Public', tags: ['alps', 'winter'] }, hint: 'Обновить метаданные записи.'
-                    },
-                    delete: { label: 'DeleteMemory', method: 'DELETE', service: 'memory', path: '/memory/api/memory/1f6cbd66-dc14-4c35-a1f1-94928a4caa5f', mode: 'none', hint: 'Удалить запись.' },
+      mediaGet: { label:'GetMediaById', method:'GET', service:'memory',
+        path:'/memory/api/media/936496b7-f08a-420f-a4f7-347fe6865934', mode:'none', hint:'Получить метаданные медиа по id.' },
+      mediaUpd: { label:'UpdateMedia', method:'PUT', service:'memory',
+        path:'/memory/api/memory/1f6cbd66-dc14-4c35-a1f1-94928a4caa5f/media/e913eb2c-6075-429c-8240-e265c0c00ad0', mode:'json',
+        json:{ fileName:'renamed.jpg', mediaType:'Image' }, hint:'Переименовать или сменить тип медиа.' },
+      mediaDel: { label:'DeleteMedia', method:'DELETE', service:'memory',
+        path:'/memory/api/memory/1f6cbd66-dc14-4c35-a1f1-94928a4caa5f/media/e913eb2c-6075-429c-8240-e265c0c00ad0', mode:'none', hint:'Удалить медиа.' },
 
-                    upload: {
-                        label: 'UploadMedia (multipart)', method: 'POST', service: 'memory', path: '/memory/api/memory/1f6cbd66-dc14-4c35-a1f1-94928a4caa5f/media', mode: 'form',
-                        form: { MediaType: 'Image', FileName: 'pic1.jpg' }, hint: 'Загрузить файл к существующей записи (FormData + File).'
-                    },
-                    mediaGet: { label: 'GetMediaById', method: 'GET', service: 'memory', path: '/memory/api/media/e913eb2c-6075-429c-8240-e265c0c00ad0', mode: 'none', hint: 'Получить метаданные медиа по id.' },
-                    mediaUpd: {
-                        label: 'UpdateMedia', method: 'PUT', service: 'memory', path: '/memory/api/memory/1f6cbd66-dc14-4c35-a1f1-94928a4caa5f/media/e913eb2c-6075-429c-8240-e265c0c00ad0', mode: 'json',
-                        json: { fileName: 'renamed.jpg', mediaType: 'Image' }, hint: 'Переименовать или сменить тип медиа.'
-                    },
-                    mediaDel: { label: 'DeleteMedia', method: 'DELETE', service: 'memory', path: '/memory/api/memory/1f6cbd66-dc14-4c35-a1f1-94928a4caa5f/media/e913eb2c-6075-429c-8240-e265c0c00ad0', mode: 'none', hint: 'Удалить медиа.' },
+      listUser: { label:'ListByUser', method:'GET', service:'memory',
+        path:'/memory/api/memory/user/fdd2eee1-7871-45da-a3b4-c6a214ef4928?page=1&pageSize=10', mode:'none',
+        hint:'Список записей пользователя с пагинацией.' }
+    },
+    access: {
+      grant: { label:'Grant', method:'POST', service:'access', path:'/access-control/api/access/grant', mode:'json',
+        json:{ subjectId:'4beed3da-37f8-423b-a16b-5a0fea4bbc38', subjectType:'User', resourceType:'Memory',
+               resourceId:'17e5b201-d562-4c5c-b90f-414349bca627', permission:'Edit', expiresAt:null },
+        hint:'Выдать право на ресурс.' },
+      revoke: { label:'Revoke', method:'POST', service:'access', path:'/access-control/api/access/revoke', mode:'json',
+        json:{ subjectId:'4beed3da-37f8-423b-a16b-5a0fea4bbc38', subjectType:'User', resourceType:'Memory',
+               resourceId:'17e5b201-d562-4c5c-b90f-414349bca627', permission:'Edit' },
+        hint:'Отозвать право.' },
+      check: { label:'Check', method:'POST', service:'access', path:'/access-control/api/access/check', mode:'json',
+        json:{ subjectId:'8bfbdace-33b7-4764-9903-39a6dc48bf7d', resourceType:'Memory',
+               resourceId:'17e5b201-d562-4c5c-b90f-414349bca627', permission:'Edit' },
+        hint:'Проверить, есть ли право.' },
+      shares: { label:'List Shares', method:'GET', service:'access',
+        path:'/access-control/api/access/memory/17e5b201-d562-4c5c-b90f-414349bca627/shares', mode:'none',
+        hint:'Посмотреть все выданные доступы к памяти.' }
+    },
+    audit: {
+      create: { label:'Create', method:'POST', service:'audit', path:'/audit-logging/auditlogs', mode:'json',
+        json:{ action:'Access.Revoke', target:'Memory:42', details:'revoked by admin', result:'success',
+               data:'{"extra":"value"}', userId:'00000000-0000-0000-0000-000000000000',
+               timestamp:new Date().toISOString(), ipAddress:'127.0.0.1', userAgent:'UnifiedAPI UI' },
+        hint:'Создать запись аудита.' },
+      search: { label:'Search', method:'GET', service:'audit', path:'/audit-logging/auditlogs', mode:'none', hint:'Поиск событий аудита.' },
+      getById: { label:'GetById', method:'GET', service:'audit', path:'/audit-logging/auditlogs/0cf44724-b65d-48da-a340-0c0cb653503c', mode:'none', hint:'Получить событие аудита по id.' },
+      delete: { label:'Delete', method:'DELETE', service:'audit', path:'/audit-logging/auditlogs/b8b613f3-5ff5-463a-ad5c-7a5e554a7d5a', mode:'none', hint:'Удалить запись аудита.' }
+    },
+    notification: {
+      notifyUser: { label:'NotifyUser', method:'POST', service:'notification', path:'/notification/api/Notification/notify', mode:'json',
+        json:{ userId:'fdd2eee1-7871-45da-a3b4-c6a214ef4928', subject:'Hello!', body:'You have a new message', type:'General' },
+        hint:'Отправить уведомление одному пользователю.' },
+      notifyUsers: { label:'NotifyUsers', method:'POST', service:'notification', path:'/notification/api/Notification/notify-many', mode:'json',
+        json:{ userIds:['fdd2eee1-7871-45da-a3b4-c6a214ef4928','00000000-0000-0000-0000-000000000124'], subject:'Maintenance', body:'System maintenance at 22:00', type:'SystemAlert' },
+        hint:'Отправить уведомления группе пользователей.' },
+      broadcast: { label:'Broadcast (501)', method:'POST', service:'notification', path:'/notification/api/Notification/broadcast', mode:'json',
+        json:{ subject:'Global notice', body:'We are deploying a new version', type:'SystemAlert' }, hint:'Широковещательная рассылка (не реализовано).' },
+      health: { label:'Health (ready)', method:'GET', service:'notification', path:'/notification/health/ready', mode:'none', hint:'Проверка готовности сервиса.' }
+    },
+    profile: {
+      create: { label:'CreateProfile', method:'POST', service:'profile', path:'/profile/api/profile', mode:'json',
+        json:{ userId:'00000000-0000-0000-0000-000000000003', fullName:'John Doe', birthDate:'1990-05-20T00:00:00Z',
+               displayName:'JD', bio:'Hello there', accessMode:'AfterDeath', avatarUrl:null },
+        hint:'Создаёт профиль пользователя.' },
+      getById: { label:'GetById', method:'GET', service:'profile', path:'/profile/api/profile/{id}', mode:'none', hint:'Получить профиль по id.' },
+      getByUser: { label:'GetByUserId', method:'GET', service:'profile', path:'/profile/api/profile/by-user/{userId}', mode:'none', hint:'Получить профиль по userId.' },
+      update: { label:'UpdateProfile', method:'PUT', service:'profile', path:'/profile/api/profile/{id}', mode:'json',
+        json:{ id:'00000000-0000-0000-0000-000000000005', fullName:'Johnathan Doe', birthDate:'1990-05-20T00:00:00Z',
+               displayName:'Johnny', bio:'Updated bio', accessMode:'AfterDeath', avatarUrl:null },
+        hint:'Обновить поля профиля.' },
+      delete: { label:'DeleteProfile', method:'DELETE', service:'profile', path:'/profile/api/profile/fdd2eee1-7871-45da-a3b4-c6a214ef4928', mode:'none', hint:'Удалить профиль.' },
+      confirmDeath: { label:'ConfirmDeath', method:'POST', service:'profile', path:'/profile/api/profile/fdd2eee1-7871-45da-a3b4-c6a214ef4928/confirm-death', mode:'none', hint:'Отметить пользователя как DeathConfirmed.' }
+    },
+    moderation: {
+      createReview: { label:'CreateReview', method:'POST', service:'moderation', path:'/moderation/api/reviews', mode:'json',
+        json:{ ResourceType:'Memory', ResourceId:'00000000-0000-0000-0000-000000000010', Content:'Пользователь нарушает правила' },
+        hint:'Создать запрос на модерацию (review) для ресурса.' },
+      getReview: { label:'GetReviewById', method:'GET', service:'moderation', path:'/moderation/api/reviews/00000000-0000-0000-0000-000000000011', mode:'none',
+        hint:'Получить статус/данные ревью по id.' },
+      listReviews: { label:'ListReviews', method:'GET', service:'moderation', path:'/moderation/api/reviews?status=Pending&page=1&pageSize=20', mode:'none',
+        hint:'Список ревью (фильтр по статусу/pagination).' },
+      decide: { label:'DecideReview', method:'POST', service:'moderation',
+        path:'/moderation/api/reviews/00000000-0000-0000-0000-000000000011/decide', mode:'json',
+        json:{ Decision:'Approve|Reject', ModeratorId:'mod-123', Reason:'Причина решения' },
+        hint:'Модератор принимает решение по ревью.' }
+    },
+    publicView: {
+      getPublicProfile: { label:'GetPublicProfile', method:'GET', service:'publicView', path:'/public/api/profile/fdd2eee1-7871-45da-a3b4-c6a214ef4928', mode:'none',
+        hint:'Публичная проекция профиля (без JWT, если публично).' },
+      getPublicMemory: { label:'GetPublicMemory', method:'GET', service:'publicView', path:'/public/api/memory/1f6cbd66-dc14-4c35-a1f1-94928a4caa5f', mode:'none',
+        hint:'Публичная страница памяти.' }
+    },
+    qrcode: {
+      genPng: { label:'GeneratePNG', method:'GET', service:'qrcode',
+        path:'/qrcode/api/generate?url=https://public.memories.app/u/4beed3da-37f8-423b-a16b-5a0fea4bbc38', mode:'none',
+        hint:'Сгенерировать PNG QR-код (image/png).' },
+      genDataUrl: { label:'GenerateDataUrl', method:'GET', service:'qrcode',
+        path:'/qrcode/api/generate-dataurl?url=https://public.memories.app/u/4beed3da-37f8-423b-a16b-5a0fea4bbc38', mode:'none',
+        hint:'Вернуть base64 data-url для QR.' }
+    }
+  };
 
-                    listUser: {
-                        label: 'ListByUser', method: 'GET', service: 'memory', path: '/memory/api/memory/user/fdd2eee1-7871-45da-a3b4-c6a214ef4928?page=1&pageSize=10', mode: 'none',
-                        hint: 'Список записей пользователя с пагинацией.'
-                    }
-                },
+  const LS_JWT_KEY = 'memories.jwt';
+  const LS_PERSIST = 'memories.persist';
+  let currentTab = 'identity', currentEndpointKey = '';
+  let lastMedia = []; // запоминаем медиа из последнего JSON-ответа
 
-                access: {
-                    grant: {
-                        label: 'Grant', method: 'POST', service: 'access', path: '/access-control/api/access/grant', mode: 'json',
-                        json: { subjectId: '4beed3da-37f8-423b-a16b-5a0fea4bbc38', subjectType: 'User', resourceType: 'Memory', resourceId: '17e5b201-d562-4c5c-b90f-414349bca627', permission: 'Edit', expiresAt: null },
-                        hint: 'Выдать право на ресурс.'
-                    },
-                    revoke: {
-                        label: 'Revoke', method: 'POST', service: 'access', path: '/access-control/api/access/revoke', mode: 'json',
-                        json: { subjectId: '4beed3da-37f8-423b-a16b-5a0fea4bbc38', subjectType: 'User', resourceType: 'Memory', resourceId: '17e5b201-d562-4c5c-b90f-414349bca627', permission: 'Edit' },
-                        hint: 'Отозвать право.'
-                    },
-                    check: {
-                        label: 'Check', method: 'POST', service: 'access', path: '/access-control/api/access/check', mode: 'json',
-                        json: { subjectId: '8bfbdace-33b7-4764-9903-39a6dc48bf7d', resourceType: 'Memory', resourceId: '17e5b201-d562-4c5c-b90f-414349bca627', permission: 'Edit' },
-                        hint: 'Проверить, есть ли право.'
-                    },
-                    shares: {
-                        label: 'List Shares', method: 'GET', service: 'access', path: '/access-control/api/access/memory/17e5b201-d562-4c5c-b90f-414349bca627/shares', mode: 'none',
-                        hint: 'Посмотреть все выданные доступы к памяти.'
-                    }
-                },
+  // Build full URL
+  function buildFullUrl(p){
+    const base = getServiceBase(p.service || 'gateway');
+    if (p.path.startsWith('http://') || p.path.startsWith('https://')) return p.path;
+    return base.replace(/\/$/, '') + p.path;
+  }
 
-                audit: {
-                    create: {
-                        label: 'Create', method: 'POST', service: 'audit', path: '/audit-logging/auditlogs', mode: 'json',
-                        json: {
-                            action: 'Access.Revoke', target: 'Memory:42', details: 'revoked by admin', result: 'success', data: '{"extra":"value"}',
-                            userId: '00000000-0000-0000-0000-000000000000', timestamp: new Date().toISOString(), ipAddress: '127.0.0.1', userAgent: 'UnifiedAPI UI'
-                        },
-                        hint: 'Создать запись аудита.'
-                    },
-                    search: { label: 'Search', method: 'GET', service: 'audit', path: '/audit-logging/auditlogs', mode: 'none', hint: 'Поиск событий аудита.' },
-                    getById: {
-                        label: 'GetById', method: 'GET', service: 'audit', path: '/audit-logging/auditlogs/0cf44724-b65d-48da-a340-0c0cb653503c', mode: 'none',
-                        hint: 'Получить событие аудита по id.'
-                    },
-                    delete: { label: 'Delete', method: 'DELETE', service: 'audit', path: '/audit-logging/auditlogs/b8b613f3-5ff5-463a-ad5c-7a5e554a7d5a', mode: 'none', hint: 'Удалить запись аудита.' }
-                },
+  function fillMethodList(){
+    method.innerHTML = '';
+    ['GET','POST','PUT','DELETE'].forEach(m=>{
+      const o = document.createElement('option'); o.value = m; o.textContent = m; method.appendChild(o);
+    });
+  }
 
-                notification: {
-                    notifyUser: {
-                        label: 'NotifyUser', method: 'POST', service: 'notification', path: '/notification/api/Notification/notify', mode: 'json',
-                        json: { userId: 'fdd2eee1-7871-45da-a3b4-c6a214ef4928', subject: 'Hello!', body: 'You have a new message', type: 'General' },
-                        hint: 'Отправить уведомление одному пользователю.'
-                    },
-                    notifyUsers: {
-                        label: 'NotifyUsers', method: 'POST', service: 'notification', path: '/notification/api/Notification/notify-many', mode: 'json',
-                        json: { userIds: ['fdd2eee1-7871-45da-a3b4-c6a214ef4928', '00000000-0000-0000-0000-000000000124'], subject: 'Maintenance', body: 'System maintenance at 22:00', type: 'SystemAlert' },
-                        hint: 'Отправить уведомления группе пользователей.'
-                    },
-                    broadcast: {
-                        label: 'Broadcast (501)', method: 'POST', service: 'notification', path: '/notification/api/Notification/broadcast', mode: 'json',
-                        json: { subject: 'Global notice', body: 'We are deploying a new version', type: 'SystemAlert' }, hint: 'Широковещательная рассылка (не реализовано).'
-                    },
-                    health: { label: 'Health (ready)', method: 'GET', service: 'notification', path: '/notification/health/ready', mode: 'none', hint: 'Проверка готовности сервиса.' }
-                },
+  function fillEndpointList(tab){
+    endpointSel.innerHTML = '';
+    Object.entries(endpoints[tab]).forEach(([k,v])=>{
+      const o = document.createElement('option'); o.value = k; o.textContent = v.label; endpointSel.appendChild(o);
+    });
+    currentEndpointKey = Object.keys(endpoints[tab])[0];
+    endpointSel.value = currentEndpointKey;
+  }
 
-                profile: {
-                    create: {
-                        label: 'CreateProfile', method: 'POST', service: 'profile', path: '/profile/api/profile', mode: 'json',
-                        json: { userId: '00000000-0000-0000-0000-000000000003', fullName: 'John Doe', birthDate: '1990-05-20T00:00:00Z', displayName: 'JD', bio: 'Hello there', accessMode: 'AfterDeath', avatarUrl: null },
-                        hint: 'Создаёт профиль пользователя.'
-                    },
-                    getById: { label: 'GetById', method: 'GET', service: 'profile', path: '/profile/api/profile/{id}', mode: 'none', hint: 'Получить профиль по id.' },
-                    getByUser: { label: 'GetByUserId', method: 'GET', service: 'profile', path: '/profile/api/profile/by-user/{userId}', mode: 'none', hint: 'Получить профиль по userId.' },
-                    update: {
-                        label: 'UpdateProfile', method: 'PUT', service: 'profile', path: '/profile/api/profile/{id}', mode: 'json',
-                        json: { id: '00000000-0000-0000-0000-000000000005', fullName: 'Johnathan Doe', birthDate: '1990-05-20T00:00:00Z', displayName: 'Johnny', bio: 'Updated bio', accessMode: 'AfterDeath', avatarUrl: null },
-                        hint: 'Обновить поля профиля.'
-                    },
-                    delete: { label: 'DeleteProfile', method: 'DELETE', service: 'profile', path: '/profile/api/profile/fdd2eee1-7871-45da-a3b4-c6a214ef4928', mode: 'none', hint: 'Удалить профиль.' },
-                    confirmDeath: { label: 'ConfirmDeath', method: 'POST', service: 'profile', path: '/profile/api/profile/fdd2eee1-7871-45da-a3b4-c6a214ef4928/confirm-death', mode: 'none', hint: 'Отметить пользователя как DeathConfirmed.' }
-                },
+  function setMode(mode){
+    const isJson = mode==='json', isForm = mode==='form';
+    jsonBlock.style.display = isJson ? '' : 'none';
+    formBlock.style.display = isForm ? '' : 'none';
+    updateCurl();
+  }
 
-                // NEW: Moderation
-                moderation: {
-                    createReview: {
-                        label: 'CreateReview', method: 'POST', service: 'moderation', path: '/moderation/api/reviews', mode: 'json',
-                        json: { ResourceType: 'Memory', ResourceId: '00000000-0000-0000-0000-000000000010', Content: 'Пользователь нарушает правила' },
-                        hint: 'Создать запрос на модерацию (review) для ресурса.'
-                    },
-                    getReview: {
-                        label: 'GetReviewById', method: 'GET', service: 'moderation', path: '/moderation/api/reviews/00000000-0000-0000-0000-000000000011', mode: 'none',
-                        hint: 'Получить статус/данные ревью по id.'
-                    },
-                    listReviews: {
-                        label: 'ListReviews', method: 'GET', service: 'moderation', path: '/moderation/api/reviews?status=Pending&page=1&pageSize=20', mode: 'none',
-                        hint: 'Список ревью (фильтр по статусу/pagination).'
-                    },
-                    decide: {
-                        label: 'DecideReview', method: 'POST', service: 'moderation', path: '/moderation/api/reviews/00000000-0000-0000-0000-000000000011/decide', mode: 'json',
-                        json: { Decision: 'Approve|Reject', ModeratorId: 'mod-123', Reason: 'Причина решения' },
-                        hint: 'Модератор принимает решение по ревью.'
-                    }
-                },
+  function applyPreset(tab, key){
+    const p = endpoints[tab][key]; if (!p) return;
+    method.value = p.method;
+    const full = buildFullUrl(p);
+    url.value = full;
+    urlHint.textContent = p.hint || '';
+    setMode(p.mode);
+    if (p.mode === 'json') {
+      json.value = typeof p.json === 'string' ? p.json : JSON.stringify(p.json || {}, null, 2);
+    }
+    if (p.mode === 'form') {
+      document.getElementById('OwnerId').value = p.form?.OwnerId ?? '';
+      document.getElementById('Title').value = p.form?.Title ?? '';
+      document.getElementById('Description').value = p.form?.Description ?? '';
+      document.getElementById('MediaType').value = p.form?.MediaType ?? 'Image';
+      document.getElementById('AccessLevel').value = p.form?.AccessLevel ?? 'Private';
+      document.getElementById('Tags').value = p.form?.Tags ?? '';
+      document.getElementById('FileName').value = p.form?.FileName ?? '';
+      fileInput.value = ''; filePreview.textContent = 'Файлы не выбраны';
+    }
+    updateCurl();
+  }
 
-                // NEW: PublicView
-                publicView: {
-                    getPublicProfile: {
-                        label: 'GetPublicProfile', method: 'GET', service: 'publicView', path: '/public/api/profile/fdd2eee1-7871-45da-a3b4-c6a214ef4928', mode: 'none',
-                        hint: 'Получить публичную проекцию профиля пользователя (доступна без JWT, если публично).'
-                    },
-                    getPublicMemory: {
-                        label: 'GetPublicMemory', method: 'GET', service: 'publicView', path: '/public/api/memory/1f6cbd66-dc14-4c35-a1f1-94928a4caa5f', mode: 'none',
-                        hint: 'Получить публичную страницу памяти (media URLs и мета).'
-                    }
-                },
+  function ph(u){
+    return u
+      .replace('{memoryId}','00000000-0000-0000-0000-000000000001')
+      .replace('{mediaId}','00000000-0000-0000-0000-000000000002')
+      .replace('{userId}','00000000-0000-0000-0000-000000000003')
+      .replace('{subjectId}','00000000-0000-0000-0000-000000000004')
+      .replace('{id}','00000000-0000-0000-0000-000000000005');
+  }
 
-                // NEW: QRCode
-                qrcode: {
-                    genPng: {
-                        label: 'GeneratePNG', method: 'GET', service: 'qrcode', path: '/qrcode/api/generate?url=https://public.memories.app/u/{userId}', mode: 'none',
-                        hint: 'Сгенерировать PNG QR-код для публичного URL (возвращает image/png).'
-                    },
-                    genDataUrl: {
-                        label: 'GenerateDataUrl', method: 'GET', service: 'qrcode', path: '/qrcode/api/generate-dataurl?url=https://public.memories.app/u/{userId}', mode: 'none',
-                        hint: 'Вернуть base64 data-url для QR (удобно для UI preview).'
-                    }
-                }
-            };
+  function escSh(s){ return s.replace(/'/g, `'\"'\"'`); }
 
-            const LS_JWT_KEY = 'memories.jwt';
-            const LS_PERSIST = 'memories.persist';
-            let currentTab = 'identity', currentEndpointKey = '';
+  function buildCurl(){
+    const m = method.value, u = ph(url.value);
+    const token = auth.value.trim();
+    const parts = [`curl -X '${m}' \\`, `  '${u}' \\`];
+    if (token) parts.push(`  -H 'Authorization: Bearer ${escSh(token)}' \\`);
 
-            // Build full URL from service + path using current ENV
-            function buildFullUrl(p) {
-                const base = getServiceBase(p.service || 'gateway');
-                if (p.path.startsWith('http://') || p.path.startsWith('https://')) return p.path;
-                return base.replace(/\/$/, '') + p.path;
-            }
+    if (jsonBlock.style.display !== 'none') {
+      parts.push(`  -H 'Content-Type: application/json' \\`);
+      if (json.value) parts.push(`  -d '${escSh(json.value)}'`);
+    } else if (formBlock.style.display !== 'none') {
+      const ownerId = document.getElementById('OwnerId').value;
+      const title = document.getElementById('Title').value;
+      const description = document.getElementById('Description').value;
+      const mediaType = document.getElementById('MediaType').value;
+      const accessLevel = document.getElementById('AccessLevel').value;
+      const tags = document.getElementById('Tags').value;
+      const fileName = document.getElementById('FileName').value;
 
-            function fillMethodList() {
-                method.innerHTML = '';
-                ['GET', 'POST', 'PUT', 'DELETE'].forEach(m => {
-                    const o = document.createElement('option'); o.value = m; o.textContent = m; method.appendChild(o);
-                });
-            }
+      const toF = (k,v)=> v ? `  -F '${k}=${escSh(v)}' \\` : '';
+      parts.push(toF('OwnerId', ownerId));
+      parts.push(toF('Title', title));
+      parts.push(toF('Description', description));
+      parts.push(toF('MediaType', mediaType));
+      parts.push(toF('AccessLevel', accessLevel));
+      if (tags) tags.split(',').map(t=>t.trim()).filter(Boolean).forEach(t=>parts.push(`  -F 'Tags=${escSh(t)}' \\`));
 
-            function fillEndpointList(tab) {
-                endpointSel.innerHTML = '';
-                Object.entries(endpoints[tab]).forEach(([k, v]) => {
-                    const o = document.createElement('option'); o.value = k; o.textContent = v.label; endpointSel.appendChild(o);
-                });
-                currentEndpointKey = Object.keys(endpoints[tab])[0];
-                endpointSel.value = currentEndpointKey;
-            }
+      if (fileInput.files?.length) {
+        for (const f of fileInput.files) {
+          parts.push(`  -F 'File=@${escSh(f.name)}' \\`);
+        }
+      } else {
+        parts.push(`  -F 'File=@<path-to-file1>' \\`);
+        parts.push(`  -F 'File=@<path-to-file2>' \\`);
+      }
 
-            function setMode(mode) {
-                const isJson = mode === 'json', isForm = mode === 'form';
-                jsonBlock.style.display = isJson ? '' : 'none';
-                formBlock.style.display = isForm ? '' : 'none';
-                updateCurl();
-            }
+      if (fileName) parts.push(`  -F 'FileName=${escSh(fileName)}' \\`);
+      if (parts[parts.length-1].endsWith('\\')) parts[parts.length-1] = parts[parts.length-1].slice(0,-2);
+    }
+    return parts.filter(Boolean).join('\n');
+  }
 
-            function applyPreset(tab, key) {
-                const p = endpoints[tab][key]; if (!p) return;
-                method.value = p.method;
-                const full = buildFullUrl(p);
-                url.value = full;
-                urlHint.textContent = p.hint || '';
-                setMode(p.mode);
-                if (p.mode === 'json') {
-                    json.value = typeof p.json === 'string' ? p.json : JSON.stringify(p.json || {}, null, 2);
-                }
-                if (p.mode === 'form') {
-                    document.getElementById('OwnerId').value = p.form?.OwnerId ?? '';
-                    document.getElementById('Title').value = p.form?.Title ?? '';
-                    document.getElementById('Description').value = p.form?.Description ?? '';
-                    document.getElementById('MediaType').value = p.form?.MediaType ?? 'Image';
-                    document.getElementById('AccessLevel').value = p.form?.AccessLevel ?? 'Private';
-                    document.getElementById('Tags').value = p.form?.Tags ?? '';
-                    document.getElementById('FileName').value = p.form?.FileName ?? '';
-                    fileInput.value = ''; filePreview.textContent = 'Файл не выбран';
-                }
-                updateCurl();
-            }
+  function updateCurl(){ curlBox.value = buildCurl(); }
 
-            function ph(u) {
-                return u
-                    .replace('{memoryId}', '00000000-0000-0000-0000-000000000001')
-                    .replace('{mediaId}', '00000000-0000-0000-0000-000000000002')
-                    .replace('{userId}', '00000000-0000-0000-0000-000000000003')
-                    .replace('{subjectId}', '00000000-0000-0000-0000-000000000004')
-                    .replace('{id}', '00000000-0000-0000-0000-000000000005');
-            }
+  async function sendRequest(){
+    sendBtn.disabled = true; statusEl.textContent = '…';
+    statusEl.className = 'pill ' + (method.value === 'GET' ? 'get' : 'post');
+    preview.style.display = 'none'; previewGrid.innerHTML = ''; previewToolbar.style.display = 'none'; lastMedia = [];
+    try{
+      const u = ph(url.value);
+      const token = auth.value.trim();
+      const headers = new Headers();
+      if (token) headers.set('Authorization', `Bearer ${token}`);
 
-            function escSh(s) { return s.replace(/'/g, `'\"'\"'`); }
+      let init = { method: method.value, headers };
+      if (jsonBlock.style.display !== 'none') {
+        headers.set('Content-Type', 'application/json');
+        init.body = json.value || '';
+      } else if (formBlock.style.display !== 'none') {
+        const fd = new FormData();
+        const ownerId = document.getElementById('OwnerId').value;
+        const title = document.getElementById('Title').value;
+        const description = document.getElementById('Description').value;
+        const mediaType = document.getElementById('MediaType').value;
+        const accessLevel = document.getElementById('AccessLevel').value;
+        const tags = document.getElementById('Tags').value;
+        const fileName = document.getElementById('FileName').value;
 
-            function buildCurl() {
-                const m = method.value, u = ph(url.value);
-                const token = auth.value.trim();
-                const parts = [`curl -X '${m}' \\`, `  '${u}' \\`];
-                if (token) parts.push(`  -H 'Authorization: Bearer ${escSh(token)}' \\`);
+        if (ownerId) fd.append('OwnerId', ownerId);
+        if (title) fd.append('Title', title);
+        if (description) fd.append('Description', description);
+        if (mediaType) fd.append('MediaType', mediaType);
+        if (accessLevel) fd.append('AccessLevel', accessLevel);
+        if (tags) tags.split(',').map(t=>t.trim()).filter(Boolean).forEach(t=>fd.append('Tags', t));
 
-                if (jsonBlock.style.display !== 'none') {
-                    parts.push(`  -H 'Content-Type: application/json' \\`);
-                    if (json.value) parts.push(`  -d '${escSh(json.value)}'`);
-                } else if (formBlock.style.display !== 'none') {
-                    const ownerId = document.getElementById('OwnerId').value;
-                    const title = document.getElementById('Title').value;
-                    const description = document.getElementById('Description').value;
-                    const mediaType = document.getElementById('MediaType').value;
-                    const accessLevel = document.getElementById('AccessLevel').value;
-                    const tags = document.getElementById('Tags').value;
-                    const fileName = document.getElementById('FileName').value;
+        if (fileInput.files?.length) {
+          for (const f of fileInput.files) {
+            fd.append('File', f, f.name || 'upload.bin'); // повторяемый ключ File
+          }
+        }
+        if (fileName) fd.append('FileName', fileName);
+        init.body = fd;
+      }
 
-                    const toF = (k, v) => v ? `  -F '${k}=${escSh(v)}' \\` : '';
-                    parts.push(toF('OwnerId', ownerId));
-                    parts.push(toF('Title', title));
-                    parts.push(toF('Description', description));
-                    parts.push(toF('MediaType', mediaType));
-                    parts.push(toF('AccessLevel', accessLevel));
-                    if (tags) tags.split(',').map(t => t.trim()).filter(Boolean).forEach(t => parts.push(`  -F 'Tags=${escSh(t)}' \\`));
-                    if (fileInput.files?.length) {
-                        const f = fileInput.files[0];
-                        parts.push(`  -F 'File=@${escSh(f.name)}' \\`);
-                    } else {
-                        parts.push(`  -F 'File=@<path-to-file>' \\`);
-                    }
-                    if (fileName) parts.push(`  -F 'FileName=${escSh(fileName)}' \\`);
-                    if (parts[parts.length - 1].endsWith('\\')) parts[parts.length - 1] = parts[parts.length - 1].slice(0, -2);
-                }
-                return parts.filter(Boolean).join('\n');
-            }
+      const res = await fetch(u, init);
+      statusEl.textContent = res.status + ' ' + res.statusText;
 
-            function updateCurl() { curlBox.value = buildCurl(); }
+      const hdrs = []; res.headers.forEach((v,k)=>hdrs.push(`${k}: ${v}`));
+      respHeaders.value = hdrs.join('\n');
 
-            async function sendRequest() {
-                sendBtn.disabled = true; statusEl.textContent = '…'; statusEl.className = 'pill ' + (method.value === 'GET' ? 'get' : 'post');
-                preview.style.display = 'none'; previewGrid.innerHTML = ''; previewToolbar.style.display = 'none';
-                try {
-                    const u = ph(url.value);
-                    const token = auth.value.trim();
-                    const headers = new Headers();
-                    if (token) headers.set('Authorization', `Bearer ${token}`);
+      const ct = res.headers.get('content-type') || '';
+      let text;
+      if (ct.includes('application/json')) {
+        const j = await res.json().catch(()=> ({}));
+        if (j && j.accessToken) { auth.value = j.accessToken; localStorage.setItem(LS_JWT_KEY, j.accessToken); }
+        text = JSON.stringify(j, null, 2);
+        tryRenderPreview(j);
+      } else if (ct.startsWith('image/')) {
+        const blob = await res.blob();
+        const dataUrl = await new Promise((resolve)=>{
+          const r = new FileReader(); r.onload = ()=>resolve(r.result); r.readAsDataURL(blob);
+        });
+        text = `<< binary image returned (${res.status}) >>`;
+        preview.style.display = 'block'; previewToolbar.style.display = 'flex';
+        previewGrid.innerHTML = `<div class="preview-item"><img src="${dataUrl}" alt="image"/><div class="meta">${res.status} ${res.statusText}</div></div>`;
+      } else {
+        text = await res.text();
+      }
+      respEl.textContent = text || '—'; hljs.highlightElement(respEl);
+    } catch (e){
+      statusEl.textContent = 'ERR';
+      respEl.textContent = String(e); hljs.highlightElement(respEl);
+    } finally {
+      sendBtn.disabled = false; updateCurl();
+    }
+  }
 
-                    let init = { method: method.value, headers };
-                    if (jsonBlock.style.display !== 'none') {
-                        headers.set('Content-Type', 'application/json');
-                        init.body = json.value || '';
-                    } else if (formBlock.style.display !== 'none') {
-                        const fd = new FormData();
-                        const ownerId = document.getElementById('OwnerId').value;
-                        const title = document.getElementById('Title').value;
-                        const description = document.getElementById('Description').value;
-                        const mediaType = document.getElementById('MediaType').value;
-                        const accessLevel = document.getElementById('AccessLevel').value;
-                        const tags = document.getElementById('Tags').value;
-                        const fileName = document.getElementById('FileName').value;
-                        if (ownerId) fd.append('OwnerId', ownerId);
-                        if (title) fd.append('Title', title);
-                        if (description) fd.append('Description', description);
-                        if (mediaType) fd.append('MediaType', mediaType);
-                        if (accessLevel) fd.append('AccessLevel', accessLevel);
-                        if (tags) tags.split(',').map(t => t.trim()).filter(Boolean).forEach(t => fd.append('Tags', t));
-                        if (fileInput.files?.length) fd.append('File', fileInput.files[0], fileInput.files[0].name || 'upload.bin');
-                        if (fileName) fd.append('FileName', fileName);
-                        init.body = fd;
-                    }
+  // === ПРАВКА: собираем медиа со всех items[], а не только из первого ===
+  function tryRenderPreview(obj){
+    let mf = [];
 
-                    const res = await fetch(u, init);
-                    statusEl.textContent = res.status + ' ' + res.statusText;
+    if (Array.isArray(obj?.mediaFiles)) {
+      // Ответ одного MemoryDto
+      mf = obj.mediaFiles;
+    } else if (Array.isArray(obj?.items)) {
+      // Ответ PagedResult<MemoryDto> — плоско собираем все mediaFiles
+      for (const it of obj.items) {
+        if (Array.isArray(it?.mediaFiles) && it.mediaFiles.length) {
+          const withMem = it.mediaFiles.map(m => ({ ...m, _memoryId: it.id }));
+          mf.push(...withMem);
+        }
+      }
+    }
 
-                    const hdrs = []; res.headers.forEach((v, k) => hdrs.push(`${k}: ${v}`)); respHeaders.value = hdrs.join('\n');
+    if (!Array.isArray(mf) || !mf.length) return;
 
-                    const ct = res.headers.get('content-type') || '';
-                    let text;
-                    if (ct.includes('application/json')) {
-                        const j = await res.json().catch(() => ({}));
-                        if (j && j.accessToken) { auth.value = j.accessToken; localStorage.setItem(LS_JWT_KEY, j.accessToken); }
-                        text = JSON.stringify(j, null, 2);
-                        tryRenderPreview(j);
-                    } else if (ct.startsWith('image/')) {
-                        // image response (e.g. QR PNG) -> show as dataURL in preview
-                        const blob = await res.blob();
-                        const dataUrl = await new Promise((resolve) => {
-                            const r = new FileReader();
-                            r.onload = () => resolve(r.result);
-                            r.readAsDataURL(blob);
-                        });
-                        text = `<< binary image returned (${res.status}) >>`;
-                        preview.style.display = 'block'; previewToolbar.style.display = 'flex';
-                        previewGrid.innerHTML = `<div class="preview-item"><img src="${dataUrl}" alt="image"/><div class="meta">${res.status} ${res.statusText}</div></div>`;
-                    } else {
-                        text = await res.text();
-                    }
-                    respEl.textContent = text || '—'; hljs.highlightElement(respEl);
-                } catch (e) {
-                    statusEl.textContent = 'ERR';
-                    respEl.textContent = String(e); hljs.highlightElement(respEl);
-                } finally {
-                    sendBtn.disabled = false; updateCurl();
-                }
-            }
+    // убрать дубли по id/url
+    const seen = new Set();
+    mf = mf.filter(m => {
+      const key = m.id || m.url;
+      if (!key) return true;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 
-            function tryRenderPreview(obj) {
-                const mf = (obj && obj.mediaFiles) ? obj.mediaFiles
-                    : (Array.isArray(obj?.items) && obj.items.length && obj.items[0]?.mediaFiles) ? obj.items[0].mediaFiles
-                        : [];
-                if (!Array.isArray(mf) || !mf.length) return;
+    lastMedia = mf;
+    preview.style.display = 'block'; previewToolbar.style.display = 'flex';
+    previewGrid.innerHTML = '';
 
-                preview.style.display = 'block'; previewToolbar.style.display = 'flex';
-                previewGrid.innerHTML = '';
-                for (const m of mf) {
-                    const item = document.createElement('div'); item.className = 'preview-item';
-                    let media = ''; const mt = (m.mediaType || '').toLowerCase();
-                    if (mt.includes('image')) {
-                        // data-full — адрес для полноразмерного открытия
-                        const src = m.url || '#';
-                        const alt = m.fileName || m.id || 'image';
-                        media = `<img src="${src}" alt="${alt}" class="js-thumb" data-full="${src}"/>`;
-                    } else if (mt.includes('video')) {
-                        media = `<video src="${m.url || '#'}" controls></video>`;
-                    } else if (mt.includes('audio')) {
-                        media = `<audio src="${m.url || '#'}" controls></audio>`;
-                    } else {
-                        media = `<a href="${m.url || '#'}" target="_blank" rel="noopener">Открыть файл</a>`;
-                    }
-                    item.innerHTML = `${media}<div class="meta">${m.fileName || ''}<br>${m.mediaType || ''}</div>`;
-                    previewGrid.appendChild(item);
-                }
-            }
+    for (const m of mf) {
+      const item = document.createElement('div'); item.className = 'preview-item';
+      const mt = (m.mediaType || '').toLowerCase();
+      let media = '';
+      if (mt.includes('image')) {
+        const src = m.url || '#';
+        const alt = m.fileName || m.id || 'image';
+        media = `<img src="${src}" alt="${alt}" class="js-thumb" data-full="${src}"/>`;
+      } else if (mt.includes('video')) {
+        media = `<video src="${m.url || '#'}" controls></video>`;
+      } else if (mt.includes('audio')) {
+        media = `<audio src="${m.url || '#'}" controls></audio>`;
+      } else {
+        media = `<a href="${m.url || '#'}" target="_blank" rel="noopener">Открыть файл</a>`;
+      }
+      const memMark = m._memoryId ? `<br class="tiny"/><span class="tiny">memoryId: ${m._memoryId}</span>` : '';
+      item.innerHTML = `${media}<div class="meta">${m.fileName || ''}<br>${m.mediaType || ''}${m.id ? `<br>ID: ${m.id}`:''}${memMark}</div>`;
+      previewGrid.appendChild(item);
+    }
+  }
 
-            // Делегирование клика по превью: раскрытие полноразмерного фото
-            previewGrid.addEventListener('click', (e) => {
-                const img = e.target.closest('img.js-thumb');
-                if (!img) return;
-                const full = img.dataset.full || img.src;
-                openLightbox(full, img.alt || '');
-            });
+  // open full image in lightbox
+  previewGrid.addEventListener('click', (e)=>{
+    const img = e.target.closest('img.js-thumb');
+    if (!img) return;
+    const full = img.dataset.full || img.src;
+    openLightbox(full, img.alt || '');
+  });
 
-            // events
-            sendBtn.addEventListener('click', sendRequest);
-            fillBtn.addEventListener('click', () => applyPreset(currentTab, currentEndpointKey));
-            endpointSel.addEventListener('change', () => { currentEndpointKey = endpointSel.value; applyPreset(currentTab, currentEndpointKey); });
-            tabs.addEventListener('click', e => {
-                const b = e.target.closest('[data-tab]'); if (!b) return;
-                [...tabs.children].forEach(x => x.classList.toggle('active', x === b));
-                currentTab = b.dataset.tab; fillEndpointList(currentTab); applyPreset(currentTab, Object.keys(endpoints[currentTab])[0]);
-            });
-            ['change', 'input'].forEach(ev => {
-                method.addEventListener(ev, updateCurl); url.addEventListener(ev, updateCurl); auth.addEventListener(ev, updateCurl); json.addEventListener(ev, updateCurl);
-            });
+  // Toolbar actions
+  openAllBtn.addEventListener('click', ()=>{
+    if (!lastMedia.length) return;
+    for (const m of lastMedia) { if (m.url) window.open(m.url, '_blank', 'noopener'); }
+  });
 
-            document.getElementById('copyJwt').addEventListener('click', () => navigator.clipboard.writeText(auth.value || ''));
-            document.getElementById('copyCurl').addEventListener('click', () => navigator.clipboard.writeText(curlBox.value || ''));
-            persistBodies.addEventListener('change', () => localStorage.setItem(LS_PERSIST, persistBodies.checked ? '1' : '0'));
-            fileInput.addEventListener('change', () => {
-                if (fileInput.files?.length) { const f = fileInput.files[0]; filePreview.textContent = `${f.name} (${f.type || 'binary'}, ${f.size} bytes)`; }
-                else filePreview.textContent = 'Файл не выбран';
-                updateCurl();
-            });
+  copyIdsBtn.addEventListener('click', async ()=>{
+    const ids = lastMedia.map(m=>m.id).filter(Boolean);
+    if (!ids.length) return;
+    await navigator.clipboard.writeText(ids.join('\n'));
+  });
 
-            // ENV change handling
-            envSelect.addEventListener('change', () => {
-                currentEnvKey = envSelect.value;
-                const env = ENV_PRESETS[currentEnvKey];
-                gatewayDisplay.textContent = env.gateway;
-                applyPreset(currentTab, currentEndpointKey);
-            });
+  downloadAllBtn.addEventListener('click', async ()=>{
+    if (!lastMedia.length) return;
+    dlHint.style.display = 'inline'; dlHint.textContent = 'Собираю zip…';
+    try{
+      const zip = new JSZip();
+      let idx = 0;
+      for (const m of lastMedia){
+        if (!m.url) continue;
+        const name = (m.fileName && m.fileName.trim()) ? m.fileName : `file_${++idx}`;
+        const resp = await fetch(m.url);
+        const blob = await resp.blob();
+        zip.file(name, blob);
+      }
+      const content = await zip.generateAsync({type:'blob'});
+      saveAs(content, `media_${Date.now()}.zip`);
+    } catch(e){
+      console.error(e);
+    } finally {
+      dlHint.style.display = 'none';
+      dlHint.textContent = '';
+    }
+  });
 
-            // Quick Login: switch to Identity → Login, apply preset and auto-send
-            quickLoginBtn.addEventListener('click', async () => {
-                const targetTabBtn = [...tabs.children].find(b => b.dataset.tab === 'identity');
-                if (targetTabBtn) targetTabBtn.click();
-                currentEndpointKey = 'login';
-                endpointSel.value = 'login';
-                applyPreset('identity', 'login');
-                try { await sendRequest(); } catch (e) { console.error(e); }
-            });
+  // events
+  sendBtn.addEventListener('click', sendRequest);
+  fillBtn.addEventListener('click', ()=>applyPreset(currentTab, currentEndpointKey));
+  endpointSel.addEventListener('change', ()=>{ currentEndpointKey = endpointSel.value; applyPreset(currentTab, currentEndpointKey); });
+  tabs.addEventListener('click', e=>{
+    const b = e.target.closest('[data-tab]'); if (!b) return;
+    [...tabs.children].forEach(x=>x.classList.toggle('active', x===b));
+    currentTab = b.dataset.tab; fillEndpointList(currentTab); applyPreset(currentTab, Object.keys(endpoints[currentTab])[0]);
+  });
+  ['change','input'].forEach(ev=>{
+    method.addEventListener(ev, updateCurl); url.addEventListener(ev, updateCurl);
+    auth.addEventListener(ev, updateCurl); json.addEventListener(ev, updateCurl);
+  });
 
-            // init
-            (function init() {
-                const savedJwt = localStorage.getItem(LS_JWT_KEY); if (savedJwt) auth.value = savedJwt;
-                persistBodies.checked = (localStorage.getItem(LS_PERSIST) === '1');
+  document.getElementById('copyJwt').addEventListener('click', ()=>navigator.clipboard.writeText(auth.value || ''));
+  document.getElementById('copyCurl').addEventListener('click', ()=>navigator.clipboard.writeText(curlBox.value || ''));
+  persistBodies.addEventListener('change', ()=>localStorage.setItem(LS_PERSIST, persistBodies.checked ? '1' : '0'));
 
-                fillMethodList();
+  fileInput.addEventListener('change', ()=>{
+    if (fileInput.files?.length) {
+      const items = [...fileInput.files].map(f => `${f.name} (${f.type || 'binary'}, ${f.size} bytes)`);
+      filePreview.textContent = `${fileInput.files.length} файл(ов):\n- ` + items.join('\n- ');
+    } else {
+      filePreview.textContent = 'Файлы не выбраны';
+    }
+    updateCurl();
+  });
 
-                envSelect.value = currentEnvKey;
-                gatewayDisplay.textContent = ENV_PRESETS[currentEnvKey].gateway;
+  // ENV change
+  envSelect.addEventListener('change', ()=>{
+    currentEnvKey = envSelect.value;
+    const env = ENV_PRESETS[currentEnvKey];
+    gatewayDisplay.textContent = env.gateway;
+    applyPreset(currentTab, currentEndpointKey);
+  });
 
-                currentTab = 'identity';
-                fillEndpointList('identity');
-                endpointSel.value = 'login'; currentEndpointKey = 'login';
-                applyPreset('identity', 'login');
+  // Quick Login
+  quickLoginBtn.addEventListener('click', async ()=>{
+    const targetTabBtn = [...tabs.children].find(b=>b.dataset.tab==='identity');
+    if (targetTabBtn) targetTabBtn.click();
+    currentEndpointKey = 'login';
+    endpointSel.value = 'login';
+    applyPreset('identity','login');
+    try { await sendRequest(); } catch(e){ console.error(e); }
+  });
 
-                [...tabs.children].forEach(x => x.classList.toggle('active', x.dataset.tab === 'identity'));
-            })();
-        })();
-    </script>
+  // init
+  (function init(){
+    const savedJwt = localStorage.getItem(LS_JWT_KEY); if (savedJwt) auth.value = savedJwt;
+    persistBodies.checked = (localStorage.getItem(LS_PERSIST) === '1');
+    fillMethodList();
+    envSelect.value = currentEnvKey;
+    gatewayDisplay.textContent = ENV_PRESETS[currentEnvKey].gateway;
+    currentTab = 'identity';
+    fillEndpointList('identity');
+    endpointSel.value = 'login'; currentEndpointKey = 'login';
+    applyPreset('identity','login');
+    [...tabs.children].forEach(x=>x.classList.toggle('active', x.dataset.tab === 'identity'));
+  })();
+})();
+</script>
 </body>
 </html>

@@ -4,6 +4,7 @@ using MemoryArchiveService.Application.Commands;
 using MemoryArchiveService.Application.DTOs;
 using MemoryArchiveService.Application.Interfaces;
 using MemoryArchiveService.Domain.Entities;
+using System.ComponentModel.DataAnnotations;
 
 namespace MemoryArchiveService.Application.Handlers;
 
@@ -28,54 +29,71 @@ public class CreateMemoryCommandHandler : IRequestHandler<CreateMemoryCommand, M
 
     public async Task<MemoryDto> Handle(CreateMemoryCommand request, CancellationToken ct)
     {
-        // Буферизуем входной поток, чтобы можно было безопасно читать его при загрузке
-        using var buffer = new MemoryStream();
-        await request.FileStream.CopyToAsync(buffer, ct);
-        buffer.Position = 0;
+        if (request.Files is null || request.Files.Count == 0)
+            throw new ValidationException("At least one File must be provided.");
 
-        // Грузим файл в S3 (Supabase)
-        var upload = await _storage.UploadAsync(
-            buffer,
-            request.FileName,
-            request.ContentType,
-            ct);
+        // Парсим и валидируем OwnerId
+        var ownerGuid = Guid.TryParse(request.OwnerId, out var ownerId)
+            ? ownerId
+            : throw new ArgumentException("Invalid OwnerId");
 
-        // Тип медиа
-        var mediaType = Enum.TryParse<MediaType>(request.MediaType, ignoreCase: true, out var parsedType)
-            ? parsedType
-            : MediaType.Image;
-
+        // Создаём Memory (метаданные)
         var memory = new Memory
         {
             Id = Guid.NewGuid(),
-            OwnerId = Guid.TryParse(request.OwnerId, out var ownerId)
-                ? ownerId
-                : throw new ArgumentException("Invalid OwnerId"),
+            OwnerId = ownerGuid,
             Title = request.Title,
             Description = request.Description,
             CreatedAt = DateTime.UtcNow,
-            AccessLevel = Enum.TryParse(request.AccessLevel, out AccessLevel level) ? level : AccessLevel.Private,
+            AccessLevel = Enum.TryParse(request.AccessLevel, true, out AccessLevel level) ? level : AccessLevel.Private,
             Tags = new List<Tag>(),
-            MediaFiles = new List<MediaFile>
-            {
-                new MediaFile
-                {
-                    Id = Guid.NewGuid(),
-                    FileName = request.FileName,
-                    Url = upload.Url,
-                    StorageUrl = upload.Url,
-                    MediaType = mediaType,
-                    OwnerId = request.OwnerId,
-                    CreatedAt = DateTime.UtcNow,
-                    Size = upload.Size
-                }
-            }
+            MediaFiles = new List<MediaFile>()
         };
 
-        // Теги
+        // Загрузка всех файлов
+        foreach (var incoming in request.Files)
+        {
+            if (incoming?.FileStream == null || string.IsNullOrWhiteSpace(incoming.FileName))
+                continue;
+
+            // Буферизуем входной поток (безопасно для повторного чтения на время аплоада)
+            await using var buffer = new MemoryStream();
+            await incoming.FileStream.CopyToAsync(buffer, ct);
+            buffer.Position = 0;
+
+            // Грузим в сторедж (Supabase/S3)
+            var upload = await _storage.UploadAsync(
+                buffer,
+                incoming.FileName,
+                string.IsNullOrWhiteSpace(incoming.ContentType) ? "application/octet-stream" : incoming.ContentType,
+                ct);
+
+            // Определяем доменный медиа-тип
+            var mediaType = Enum.TryParse<MediaType>(incoming.MediaType, ignoreCase: true, out var parsedType)
+                ? parsedType
+                : GuessMediaTypeFromContentType(incoming.ContentType);
+
+            var media = new MediaFile
+            {
+                Id = Guid.NewGuid(),
+                FileName = incoming.FileName,
+                Url = upload.Url,
+                StorageUrl = upload.Url,
+                MediaType = mediaType,
+                // В твоём коде здесь было string OwnerId = request.OwnerId; — оставим такую совместимость:
+                OwnerId = request.OwnerId, // если в сущности это string; если Guid — подставь ownerGuid
+                CreatedAt = DateTime.UtcNow,
+                Size = upload.Size,
+                MemoryId = memory.Id
+            };
+
+            memory.MediaFiles.Add(media);
+        }
+
+        // Теги (переиспользуем твою логику)
         if (request.Tags is { Count: > 0 })
         {
-            foreach (var tagName in request.Tags!)
+            foreach (var tagName in request.Tags)
             {
                 var tag = await _tags.GetByNameAsync(tagName, ct)
                           ?? new Tag { Id = Guid.NewGuid(), Name = tagName };
@@ -87,7 +105,7 @@ public class CreateMemoryCommandHandler : IRequestHandler<CreateMemoryCommand, M
 
         await _eventBus.PublishAsync(new { Event = "MemoryCreated", MemoryId = memory.Id }, ct);
 
-        // Мэп обратно в DTO с медиафайлами
+        // Мэппинг в DTO
         var mediaDtos = memory.MediaFiles.Select(m => new MediaFileDto
         {
             Id = m.Id,
@@ -112,5 +130,16 @@ public class CreateMemoryCommandHandler : IRequestHandler<CreateMemoryCommand, M
             MediaFiles = mediaDtos,
             MediaCount = mediaDtos.Count
         };
+    }
+
+    private static MediaType GuessMediaTypeFromContentType(string? contentType)
+    {
+        if (string.IsNullOrWhiteSpace(contentType)) return MediaType.Image;
+
+        if (contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase)) return MediaType.Image;
+        if (contentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase)) return MediaType.Video;
+        if (contentType.StartsWith("audio/", StringComparison.OrdinalIgnoreCase)) return MediaType.Audio;
+
+        return MediaType.Document;
     }
 }

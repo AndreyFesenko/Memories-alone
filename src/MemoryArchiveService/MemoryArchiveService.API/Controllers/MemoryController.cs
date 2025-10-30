@@ -1,4 +1,5 @@
 ﻿// src/MemoryArchiveService/MemoryArchiveService.API/Controllers/MemoryController.cs
+using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using MemoryArchiveService.API.Mapping;
@@ -12,6 +13,7 @@ namespace MemoryArchiveService.API.Controllers;
 
 [ApiController]
 [Route("api/memory")]
+[Produces("application/json")]
 public class MemoryController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -29,22 +31,26 @@ public class MemoryController : ControllerBase
     }
 
     /// <summary>
-    /// Создание нового воспоминания с файлом
+    /// Создание нового воспоминания с файлами (мультизагрузка)
     /// </summary>
     [HttpPost]
     [DisableRequestSizeLimit]
-    [ProducesResponseType(typeof(MemoryDto), StatusCodes.Status200OK)]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(MemoryDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Create([FromForm] CreateMemoryForm form, CancellationToken ct)
     {
-        if (form.File == null || form.File.Length == 0)
-            return BadRequest("Файл обязателен");
+        // мультизагрузка: ожидаем повторяющееся поле File => form.Files
+        if (form.Files is null || form.Files.Count == 0)
+            return BadRequest("Не переданы файлы. Ожидается повторяющееся multipart-поле 'File'.");
 
         var command = await form.MapToCommandAsync(ct);
         var result = await _mediator.Send(command, ct);
 
         NormalizeMediaUrls(result);
-        return Ok(result);
+
+        // 201 Created c Location на GetById
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
     /// <summary>
@@ -97,9 +103,33 @@ public class MemoryController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>
+    /// Удалить воспоминание
+    /// </summary>
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        var ok = await _mediator.Send(new DeleteMemoryCommand
+        {
+            Id = id,
+            RequesterId = TryGetUserId()
+        }, ct);
+
+        return ok ? NoContent() : NotFound();
+    }
+
+    private Guid? TryGetUserId()
+    {
+        var sub = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+        return Guid.TryParse(sub, out var id) ? id : (Guid?)null;
+    }
+
     private void NormalizeMediaUrls(MemoryDto? dto)
     {
         if (dto?.MediaFiles == null) return;
+
         foreach (var m in dto.MediaFiles)
         {
             // Отдаём в поле Url уже публичную ссылку

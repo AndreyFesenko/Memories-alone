@@ -1,4 +1,4 @@
-<!doctype html>
+<!doctype html> 
 <html lang="ru">
 <head>
     <meta charset="utf-8" />
@@ -17,9 +17,7 @@
             --accent: #22c55e
         }
 
-        * {
-            box-sizing: border-box
-        }
+        * { box-sizing: border-box }
 
         body {
             margin: 0;
@@ -40,23 +38,10 @@
             top: 0;
             z-index: 3
         }
+        header h1 { font-size: 16px; margin: 0; font-weight: 600 }
+        header .env { font-size: 12px; color: var(--muted) }
 
-            header h1 {
-                font-size: 16px;
-                margin: 0;
-                font-weight: 600
-            }
-
-            header .env {
-                font-size: 12px;
-                color: var(--muted)
-            }
-
-        .env-controls {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
+        .env-controls { display: flex; gap: 8px; align-items: center; }
 
         main {
             display: grid;
@@ -73,27 +58,16 @@
             border-radius: 12px;
             overflow: hidden
         }
-
-            .card h3 {
-                margin: 0;
-                padding: 12px 14px;
-                border-bottom: 1px solid #1f2937;
-                font-size: 13px;
-                color: #cbd5e1
-            }
-
-            .card .body {
-                padding: 12px 14px;
-                display: grid;
-                gap: 10px
-            }
-
-        label {
-            display: grid;
-            gap: 6px;
-            font-size: 12px;
+        .card h3 {
+            margin: 0;
+            padding: 12px 14px;
+            border-bottom: 1px solid #1f2937;
+            font-size: 13px;
             color: #cbd5e1
         }
+        .card .body { padding: 12px 14px; display: grid; gap: 10px }
+
+        label { display: grid; gap: 6px; font-size: 12px; color: #cbd5e1 }
 
         input[type="text"], input[type="url"], input[type="file"], select, textarea {
             width: 100%;
@@ -104,17 +78,9 @@
             padding: 9px 10px;
             font-size: 13px
         }
+        textarea { min-height: 120px; resize: vertical }
 
-        textarea {
-            min-height: 120px;
-            resize: vertical
-        }
-
-        .row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px
-        }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
 
         .btn {
             display: inline-flex;
@@ -128,28 +94,11 @@
             font-weight: 600;
             cursor: pointer
         }
+        .btn.secondary { background: #1f2937; color: #e5e7eb }
+        .btn.small { padding: 4px 8px; font-size: 11px }
+        .btn.ghost { background: #0b1220; border: 1px solid #1f2937; color: #cbd5e1 }
 
-            .btn.secondary {
-                background: #1f2937;
-                color: #e5e7eb
-            }
-
-            .btn.small {
-                padding: 4px 8px;
-                font-size: 11px
-            }
-
-            .btn.ghost {
-                background: #0b1220;
-                border: 1px solid #1f2937;
-                color: #cbd5e1
-            }
-
-        .tabs {
-            display: flex;
-            gap: 6px
-        }
-
+        .tabs { display: flex; gap: 6px }
         .tab {
             padding: 6px 10px;
             border-radius: 8px;
@@ -160,16 +109,9 @@
             font-size: 14px;
             font-weight: 700
         }
+        .tab.active { background: #1f2937 }
 
-            .tab.active {
-                background: #1f2937
-            }
-
-        pre, code {
-            font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
-            font-size: 12px
-        }
-
+        pre, code { font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace; font-size: 12px }
         pre {
             margin: 0;
             white-space: pre-wrap;
@@ -181,165 +123,70 @@
             padding: 12px 14px
         }
 
-        .pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 2px 8px;
-            border-radius: 999px;
-            font-weight: 600;
-            font-size: 11px
-        }
+        .pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-weight: 600; font-size: 11px }
+        .pill.get { background: #052e16; color: #86efac; border: 1px solid #166534 }
+        .pill.post { background: #111827; color: #93c5fd; border: 1px solid #1d4ed8 }
 
-            .pill.get {
-                background: #052e16;
-                color: #86efac;
-                border: 1px solid #166534
-            }
+        .muted { color: #9ca3af; font-size: 12px }
+        .divider { height: 1px; background: #1f2937; margin: 8px 0 }
+        .hint { font-size: 11px; color: #a3a3a3 }
+        .inline { display: flex; gap: 8px; align-items: center }
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
 
-            .pill.post {
-                background: #111827;
-                color: #93c5fd;
-                border: 1px solid #1d4ed8
-            }
-
-        .muted {
-            color: #9ca3af;
-            font-size: 12px
-        }
-
-        .divider {
-            height: 1px;
-            background: #1f2937;
-            margin: 8px 0
-        }
-
-        .hint {
-            font-size: 11px;
-            color: #a3a3a3
-        }
-
-        .inline {
-            display: flex;
-            gap: 8px;
-            align-items: center
-        }
-
-        .grid2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px
-        }
-
-        kbd {
-            background: #0b1220;
-            border: 1px solid #1f2937;
-            border-radius: 6px;
-            padding: 2px 6px;
-            font-size: 11px
-        }
+        kbd { background: #0b1220; border: 1px solid #1f2937; border-radius: 6px; padding: 2px 6px; font-size: 11px }
 
         .file-preview {
-            font-size: 12px;
-            color: #cbd5e1;
-            background: #0b1220;
-            border: 1px dashed #334155;
-            border-radius: 8px;
-            padding: 8px
+            font-size: 12px; color: #cbd5e1; background: #0b1220;
+            border: 1px dashed #334155; border-radius: 8px; padding: 8px
         }
 
-        .preview {
-            margin: 0;
-            padding: 12px 14px;
-            border-top: 1px solid #1f2937
-        }
+        .preview { margin: 0; padding: 12px 14px; border-top: 1px solid #1f2937 }
+        .preview .toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap }
+        .preview h4 { margin: 0 0 8px 0; font-size: 13px; color: #cbd5e1 }
 
-            .preview .toolbar {
-                display: flex;
-                gap: 8px;
-                align-items: center;
-                margin-bottom: 8px;
-                flex-wrap: wrap
-            }
-
-            .preview h4 {
-                margin: 0 0 8px 0;
-                font-size: 13px;
-                color: #cbd5e1
-            }
-
-        .preview-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill,minmax(160px,1fr));
-            gap: 8px
-        }
-
+        .preview-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(160px,1fr)); gap: 8px }
         .preview-item {
-            background: #0b1220;
-            border: 1px solid #334155;
-            border-radius: 10px;
-            padding: 8px;
-            overflow: hidden
+            background: #0b1220; border: 1px solid #334155; border-radius: 10px;
+            padding: 8px; overflow: hidden
         }
-
-            .preview-item img, .preview-item video {
-                width: 100%;
-                height: 130px;
-                object-fit: cover;
-                border-radius: 8px;
-                display: block
-            }
-
-            .preview-item audio {
-                width: 100%;
-                display: block
-            }
-
-            .preview-item .meta {
-                font-size: 11px;
-                color: #9ca3af;
-                margin-top: 6px;
-                word-break: break-word
-            }
-
-            .preview-item a {
-                text-decoration: none;
-                color: #93c5fd;
-                font-size: 12px
-            }
-
-        .tiny {
-            font-size: 11px;
-            color: #9ca3af
+        .preview-item img, .preview-item video {
+            width: 100%; height: 130px; object-fit: cover; border-radius: 8px; display: block; cursor: zoom-in;
         }
+        .preview-item audio { width: 100%; display: block }
+        .preview-item .meta { font-size: 11px; color: #9ca3af; margin-top: 6px; word-break: break-word }
+        .preview-item a { text-decoration: none; color: #93c5fd; font-size: 12px }
+
+        .tiny { font-size: 11px; color: #9ca3af }
 
         /* нижние секции (вне grid) */
-        .doc {
-            max-width: 1500px;
-            margin: 16px auto;
+        .doc { max-width: 1500px; margin: 16px auto; }
+        .doc details { background: #0b1220; border: 1px solid #1f2937; border-radius: 10px; padding: 8px 10px; }
+        .doc details + details { margin-top: 10px }
+        .doc summary { cursor: pointer; font-weight: 700; color: #cbd5e1 }
+        .mono { font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace; font-size: 12px }
+
+        /* === Lightbox (fullscreen image viewer) === */
+        .lightbox {
+            position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+            z-index: 50;
         }
-
-            .doc details {
-                background: #0b1220;
-                border: 1px solid #1f2937;
-                border-radius: 10px;
-                padding: 8px 10px;
-            }
-
-                .doc details + details {
-                    margin-top: 10px
-                }
-
-            .doc summary {
-                cursor: pointer;
-                font-weight: 700;
-                color: #cbd5e1
-            }
-
-        .mono {
-            font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
-            font-size: 12px
+        .lightbox.open { display: flex; }
+        .lightbox__backdrop {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(2px);
         }
+        .lightbox__panel {
+            position: relative; margin: 24px; max-width: 95vw; max-height: 95vh;
+        }
+        .lightbox__panel img {
+            display: block; max-width: 95vw; max-height: 90vh; border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,.6);
+        }
+        .lightbox__close {
+            position: absolute; top: -10px; right: -10px;
+            border-radius: 999px; padding: 6px 10px;
+            background: #0b1220; border: 1px solid #334155; color: #cbd5e1; cursor: pointer;
+        }
+        .lightbox__cap { margin-top: 8px; text-align: center; color: #9ca3af; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -602,6 +449,16 @@ GET /memory/api/memory/{memoryId}
     </section>
     <!-- END: documentation sections -->
 
+    <!-- Lightbox container -->
+    <div id="lightbox" class="lightbox" aria-hidden="true">
+        <div class="lightbox__backdrop" data-close="1"></div>
+        <figure class="lightbox__panel">
+            <button class="btn small ghost lightbox__close" type="button" title="Закрыть" data-close="1">✕</button>
+            <img id="lightboxImg" alt="">
+            <figcaption id="lightboxCap" class="lightbox__cap tiny"></figcaption>
+        </figure>
+    </div>
+
     <script>
         (() => {
             hljs.highlightAll();
@@ -623,6 +480,32 @@ GET /memory/api/memory/{memoryId}
                 tabs = document.getElementById('tabs'), persistBodies = document.getElementById('persistBodies'),
                 preview = document.getElementById('preview'), previewGrid = document.getElementById('previewGrid'),
                 previewToolbar = document.getElementById('previewToolbar');
+
+            /* ==== Lightbox refs ==== */
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImg = document.getElementById('lightboxImg');
+            const lightboxCap = document.getElementById('lightboxCap');
+
+            function openLightbox(src, caption) {
+                lightboxImg.src = src || '';
+                lightboxImg.alt = caption || '';
+                lightboxCap.textContent = caption || '';
+                lightbox.classList.add('open');
+                lightbox.setAttribute('aria-hidden', 'false');
+            }
+            function closeLightbox() {
+                lightbox.classList.remove('open');
+                lightbox.setAttribute('aria-hidden', 'true');
+                lightboxImg.src = '';
+                lightboxImg.alt = '';
+                lightboxCap.textContent = '';
+            }
+            lightbox.addEventListener('click', (e) => {
+                if (e.target.dataset.close) closeLightbox();
+            });
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && lightbox.classList.contains('open')) closeLightbox();
+            });
 
             // environment presets (gateway + optional service-specific bases)
             const ENV_PRESETS = {
@@ -1041,14 +924,30 @@ GET /memory/api/memory/{memoryId}
                 for (const m of mf) {
                     const item = document.createElement('div'); item.className = 'preview-item';
                     let media = ''; const mt = (m.mediaType || '').toLowerCase();
-                    if (mt.includes('image')) media = `<img src="${m.url || '#'}" alt="${m.fileName || m.id}" />`;
-                    else if (mt.includes('video')) media = `<video src="${m.url || '#'}" controls></video>`;
-                    else if (mt.includes('audio')) media = `<audio src="${m.url || '#'}" controls></audio>`;
-                    else media = `<a href="${m.url || '#'}" target="_blank">Открыть файл</a>`;
+                    if (mt.includes('image')) {
+                        // data-full — адрес для полноразмерного открытия
+                        const src = m.url || '#';
+                        const alt = m.fileName || m.id || 'image';
+                        media = `<img src="${src}" alt="${alt}" class="js-thumb" data-full="${src}"/>`;
+                    } else if (mt.includes('video')) {
+                        media = `<video src="${m.url || '#'}" controls></video>`;
+                    } else if (mt.includes('audio')) {
+                        media = `<audio src="${m.url || '#'}" controls></audio>`;
+                    } else {
+                        media = `<a href="${m.url || '#'}" target="_blank" rel="noopener">Открыть файл</a>`;
+                    }
                     item.innerHTML = `${media}<div class="meta">${m.fileName || ''}<br>${m.mediaType || ''}</div>`;
                     previewGrid.appendChild(item);
                 }
             }
+
+            // Делегирование клика по превью: раскрытие полноразмерного фото
+            previewGrid.addEventListener('click', (e) => {
+                const img = e.target.closest('img.js-thumb');
+                if (!img) return;
+                const full = img.dataset.full || img.src;
+                openLightbox(full, img.alt || '');
+            });
 
             // events
             sendBtn.addEventListener('click', sendRequest);
