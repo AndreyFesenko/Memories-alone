@@ -1,13 +1,18 @@
-﻿// C:\_C_Sharp\MyOtus_Prof\Memories_alone\src\APIGateway\APIGateway.API\Program.cs
+﻿// src/APIGateway/APIGateway.API/Program.cs
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
 using Serilog.Events;
 using Yarp.ReverseProxy;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// === Конфиг: ТОЛЬКО JSON (без ENV/CLI override) ===
+builder.Configuration.Sources.Clear();
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: false);
 
 // Serilog
 Log.Logger = new LoggerConfiguration()
@@ -52,6 +57,9 @@ builder.Services.AddHttpLogging(o =>
     o.ResponseBodyLogLimit = 0;
 });
 
+// Health-check для Render
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions
@@ -66,15 +74,17 @@ app.UseCors("AllowAll");
 app.UseWebSockets();
 app.UseRateLimiter();
 
-app.MapGet("/health/live", () => Results.Ok(new { status = "Live" }));
-app.MapGet("/health/ready", () => Results.Ok(new { status = "Ready" }));
+// Статика (до прокси, чтобы /, /api-docs, /openapi.json и ассеты отдавались локально)
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 // Прокси
 app.MapReverseProxy();
 
-// Статика
-app.UseDefaultFiles();
-app.UseStaticFiles();
+// Health endpoints
+app.MapGet("/health/live", () => Results.Ok(new { status = "Live" }));
+app.MapGet("/health/ready", () => Results.Ok(new { status = "Ready" }));
+app.MapHealthChecks("/health");
 
 // Явные маршруты для удобства
 app.MapGet("/api-docs", async ctx =>
@@ -82,6 +92,7 @@ app.MapGet("/api-docs", async ctx =>
     ctx.Response.ContentType = "text/html; charset=utf-8";
     await ctx.Response.SendFileAsync("wwwroot/index.html");
 });
+
 app.MapGet("/openapi.json", async ctx =>
 {
     ctx.Response.ContentType = "application/json; charset=utf-8";

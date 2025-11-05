@@ -1,7 +1,6 @@
-// C:\Users\user\Source\Repos\Memories-alone\src\NotificationService\NotificationService.API\Program.cs
+// src/NotificationService/NotificationService.API/Program.cs
 using MassTransit;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using NotificationService.Application;
 using NotificationService.Application.Consumers;
@@ -14,25 +13,31 @@ using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// JSON enums как строки
+// === Конфиг: ТОЛЬКО JSON (без ENV/CLI override) ===
+builder.Configuration.Sources.Clear();
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: false);
+
+// === JSON enums как строки ===
 builder.Services.AddControllers()
     .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
-// App services
+// === App services ===
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
-// ----------------- Redis: строка подключения (без IConnectionMultiplexer в DI) -----------------
+// === Redis backplane (SignalR) через connection string ===
 var redisCfg = builder.Configuration.GetSection("Redis");
-string redisConnString = $"{redisCfg["Host"]}:{redisCfg["Port"]},abortConnect=False"
-    + (redisCfg.GetValue<bool>("Ssl") ? ",ssl=True" : ",ssl=False")
-    + (!string.IsNullOrWhiteSpace(redisCfg["Password"]) ? $",password={redisCfg["Password"]}" : "");
+string redisConnString =
+    $"{redisCfg["Host"]}:{redisCfg["Port"]},abortConnect=False" +
+    (redisCfg.GetValue<bool>("Ssl") ? ",ssl=True" : ",ssl=False") +
+    (!string.IsNullOrWhiteSpace(redisCfg["Password"]) ? $",password={redisCfg["Password"]}" : "");
 
-// SignalR + Redis backplane через connection string (совместимо со всеми версиями)
 builder.Services.AddSignalR()
     .AddStackExchangeRedis(redisConnString);
 
-// CORS
+// === CORS ===
 builder.Services.AddCors(opts =>
 {
     opts.AddPolicy("AllowAll", p => p
@@ -42,7 +47,7 @@ builder.Services.AddCors(opts =>
         .SetIsOriginAllowed(_ => true));
 });
 
-// Rate Limiting (одна политика notifications + глобальный лимитер)
+// === Rate Limiting (глобальный + именованная политика 'notifications') ===
 builder.Services.AddRateLimiter(options =>
 {
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
@@ -73,10 +78,11 @@ builder.Services.AddRateLimiter(options =>
             }));
 });
 
-// OpenAPI + Scalar
+// === OpenAPI + Scalar ===
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 
-// ----------------- MassTransit + RabbitMQ -----------------
+// === MassTransit + RabbitMQ ===
 var rabbitCfg = builder.Configuration.GetSection("RabbitMq");
 builder.Services.AddMassTransit(x =>
 {
@@ -84,14 +90,18 @@ builder.Services.AddMassTransit(x =>
 
     x.UsingRabbitMq((context, cfg) =>
     {
-        var host = rabbitCfg["Host"] ?? throw new ArgumentNullException("RabbitMQ:Host is not set");
+        var host = rabbitCfg["Host"] ?? throw new ArgumentNullException("RabbitMq:Host is not set");
         var vhost = rabbitCfg["VirtualHost"] ?? "/";
         var user = rabbitCfg["User"] ?? "guest";
         var pass = rabbitCfg["Password"] ?? "guest";
         var queue = rabbitCfg["Queue"] ?? "notifications.queue";
         var exch = rabbitCfg["Exchange"] ?? "notifications";
 
-        cfg.Host(host, vhost, h => { h.Username(user); h.Password(pass); });
+        cfg.Host(host, vhost, h =>
+        {
+            h.Username(user);
+            h.Password(pass);
+        });
 
         cfg.ReceiveEndpoint(queue, e =>
         {
@@ -107,8 +117,9 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
-// ----------------- HealthChecks: Postgres / RabbitMQ / Redis — только строками -----------------
+// === HealthChecks: Postgres / RabbitMQ / Redis ===
 string Pg() => builder.Configuration.GetConnectionString("Default")!;
+
 string Amqp()
 {
     var host = rabbitCfg["Host"] ?? "localhost";
@@ -124,16 +135,15 @@ builder.Services.AddHealthChecks()
         factory: sp =>
         {
             var f = new RabbitMQ.Client.ConnectionFactory { Uri = new Uri(Amqp()) };
-            // если есть только async-метод:
+            // HealthCheck ожидает sync-фабрику — аккуратно оборачиваем async:
             return f.CreateConnectionAsync().GetAwaiter().GetResult();
-            
         },
         name: "rabbitmq",
         tags: new[] { "ready" }
     )
     .AddRedis(redisConnString, name: "redis", tags: new[] { "ready" });
 
-// Serilog
+// === Serilog ===
 builder.Host.UseSerilog((ctx, lc) =>
     lc.ReadFrom.Configuration(ctx.Configuration)
       .WriteTo.Console()
@@ -141,17 +151,19 @@ builder.Host.UseSerilog((ctx, lc) =>
 
 var app = builder.Build();
 
-// --------- Порядок middleware ---------
+// === Middleware порядок ===
 // Без UseHttpsRedirection в dev (чтобы не было 307 через Gateway)
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseCors("AllowAll");
 app.UseRateLimiter();
 app.UseAuthorization();
 
+// Endpoints
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
 
-// Health endpoints
+// Health endpoints (добавили /health для Render)
+app.MapHealthChecks("/health");
 app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions { Predicate = _ => false });
 app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") });
 

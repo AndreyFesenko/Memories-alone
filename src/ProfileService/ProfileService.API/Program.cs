@@ -1,7 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+﻿// src/ProfileService/ProfileService.API/Program.cs
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using ProfileService.Application;
@@ -11,6 +9,12 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// === Конфиг: ТОЛЬКО JSON (без ENV/CLI override) ===
+builder.Configuration.Sources.Clear();
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: false);
+
 // Слои
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
@@ -19,15 +23,14 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 var jwt = builder.Configuration.GetSection("Jwt");
 var issuer = jwt["Issuer"];
 var audience = jwt["Audience"];
-// поддержка обоих ключей конфигурации: Secret ИЛИ Key
-var secret = jwt["Secret"] ?? jwt["Key"];
-var authority = jwt["Authority"]; // на будущее (RS256/JWKS)
+var secret = jwt["Secret"] ?? jwt["Key"]; // поддержка обоих ключей
+var authority = jwt["Authority"];             // на будущее (RS256/JWKS)
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        // RS256 через Authority (если когда-то перейдёте на OIDC/JWKS)
+        // Вариант 1: RS256 через Authority (OIDC/JWKS)
         if (!string.IsNullOrWhiteSpace(authority))
         {
             options.Authority = authority;
@@ -41,7 +44,7 @@ builder.Services
             return;
         }
 
-        // HS256 по shared secret (наш текущий случай)
+        // Вариант 2: HS256 по shared secret
         if (string.IsNullOrWhiteSpace(secret))
             throw new InvalidOperationException("JWT secret is not configured. Set Jwt:Secret or Jwt:Key.");
 
@@ -55,7 +58,6 @@ builder.Services
             ValidateIssuer = !string.IsNullOrWhiteSpace(issuer),
             ValidIssuer = issuer,
 
-            // Валидируем аудиторию только если она указана в конфиге
             ValidateAudience = !string.IsNullOrWhiteSpace(audience),
             ValidAudience = audience,
 
@@ -85,6 +87,9 @@ builder.Services.AddSwaggerGen(c =>
     c.AddSecurityRequirement(new OpenApiSecurityRequirement { { jwtScheme, Array.Empty<string>() } });
 });
 
+// Health
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -97,5 +102,10 @@ if (app.Environment.IsDevelopment())
 app.UseRouting();
 app.UseAuthentication(); // важно: до UseAuthorization
 app.UseAuthorization();
+
 app.MapControllers();
+
+// Health для Render
+app.MapHealthChecks("/health");
+
 app.Run();

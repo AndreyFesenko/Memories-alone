@@ -1,6 +1,6 @@
-// src/IdentityService/IdentityService.API/Program.cs
-using IdentityService.Application;               // ваши DI-расширения
-using IdentityService.Infrastructure;            // ваши DI-расширения
+п»ї// src/IdentityService/IdentityService.API/Program.cs
+using IdentityService.Application;
+using IdentityService.Infrastructure;
 using IdentityService.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Routing;
@@ -14,6 +14,12 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// === РљРѕРЅС„РёРі: С‚РѕР»СЊРєРѕ JSON (Р±РµР· ENV/CLI override) ===
+builder.Configuration.Sources.Clear();
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: false);
+
 // ---- Serilog ----
 Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
@@ -21,7 +27,6 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day)
     .CreateLogger();
-
 builder.Host.UseSerilog();
 
 // ---- Config ----
@@ -38,7 +43,7 @@ builder.Services.AddControllers()
     .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddOpenApi(); // только OpenAPI JSON
+builder.Services.AddOpenApi(); // С‚РѕР»СЊРєРѕ OpenAPI JSON
 
 // ---- CORS (Dev) ----
 builder.Services.AddCors(options =>
@@ -65,9 +70,9 @@ builder.Services
             IssuerSigningKey = signingKey,
             ValidateLifetime = true,
 
-            // ВАЖНО: говорим, какие клеймы считать "именем" и "ролью"
-            NameClaimType = ClaimTypes.Name, // из sub (который мапится в NameIdentifier по умолчанию)
-            RoleClaimType = ClaimTypes.Role            // у тебя роли добавляются как ClaimTypes.Role
+            // Р’РђР–РќРћ: РіРѕРІРѕСЂРёРј, РєР°РєРёРµ РєР»РµР№РјС‹ СЃС‡РёС‚Р°С‚СЊ "РёРјРµРЅРµРј" Рё "СЂРѕР»СЊСЋ"
+            NameClaimType = ClaimTypes.Name,
+            RoleClaimType = ClaimTypes.Role
         };
     });
 
@@ -77,33 +82,30 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("AccessAnytimeOnly", p => p.RequireClaim("AccessMode", "Anytime"));
 });
 
-// ---- DI из ваших слоёв ----
+// ---- DI РёР· РІР°С€РёС… СЃР»РѕС‘РІ ----
 builder.Services.AddApplicationServices(cfg);
 builder.Services.AddInfrastructureServices(cfg);
 
-// ---- Миграции при старте ----
+// ---- РњРёРіСЂР°С†РёРё РїСЂРё СЃС‚Р°СЂС‚Рµ ----
 builder.Services.AddHostedService<DbInitHostedService>();
+
+// ---- Health ----
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
 app.UseSerilogRequestLogging();
 app.UseCors("AllowAll");
 
-// Просто логируем, какие endpoints смонтированы
-var eds = app.Services.GetRequiredService<EndpointDataSource>();
-foreach (var e in eds.Endpoints)
-{
-    var route = (e as RouteEndpoint)?.RoutePattern?.RawText ?? e.DisplayName;
-    Log.Information("Mapped endpoint: {Route}", route);
-}
-
-// Порядок важен: AuthN -> AuthZ
+// AuthN в†’ AuthZ
 app.UseAuthentication();
 app.UseAuthorization();
 
+// РљРѕРЅС‚СЂРѕР»Р»РµСЂС‹
 app.MapControllers();
 
-// ---- Health (простые, без внешних пакетов) ----
+// ---- Health endpoints ----
+app.MapHealthChecks("/health");
 app.MapGet("/health/live", () => Results.Ok(new { status = "Live" }));
 app.MapGet("/health/ready", async (MemoriesDbContext db) =>
 {
@@ -118,14 +120,13 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference(opts =>
     {
         opts.Title = "Identity Service";
-        // Scalar сам возьмёт /openapi.json по умолчанию, но путь выше уже явно смонтирован.
     });
 }
 
 app.Run();
 
 /// <summary>
-/// Инициализация БД/миграции при старте приложения.
+/// РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ Р‘Р”/РјРёРіСЂР°С†РёРё РїСЂРё СЃС‚Р°СЂС‚Рµ РїСЂРёР»РѕР¶РµРЅРёСЏ.
 /// </summary>
 public sealed class DbInitHostedService : IHostedService
 {
@@ -136,7 +137,16 @@ public sealed class DbInitHostedService : IHostedService
     {
         using var scope = _sp.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<MemoriesDbContext>();
-        await db.Database.MigrateAsync(cancellationToken);
+        try
+        {
+            Console.WriteLine("[DB] Applying migrations for IdentityService...");
+            await db.Database.MigrateAsync(cancellationToken);
+            Console.WriteLine("[DB] Migrations applied.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("[DB] Migration failed: " + ex.Message);
+        }
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

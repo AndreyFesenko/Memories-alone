@@ -1,4 +1,5 @@
-﻿using AuditLoggingService.Application;
+﻿// src/AuditLoggingService/AuditLoggingService.API/Program.cs
+using AuditLoggingService.Application;
 using AuditLoggingService.Application.Consumers;
 using AuditLoggingService.Infrastructure;
 using MassTransit;
@@ -9,6 +10,12 @@ using System.Net.Sockets;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// === Конфиг: ТОЛЬКО JSON (без ENV/CLI override) ===
+builder.Configuration.Sources.Clear();
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: false);
 
 // JSON enum as strings
 builder.Services.AddControllers()
@@ -69,7 +76,7 @@ builder.Services.AddMassTransit(x =>
             e.ConfigureConsumer<AuditLogMessageConsumer>(context);
         });
 
-        // Объявим DLQ без консьюмера — для корректной маршрутизации dead-letter-сообщений
+        // DLQ без консьюмера — для корректной маршрутизации dead-letter
         cfg.ReceiveEndpoint(dlq, e =>
         {
             e.PrefetchCount = 1;
@@ -97,12 +104,15 @@ builder.Host.UseSerilog((ctx, lc) =>
 
 var app = builder.Build();
 
-// Middleware & endpoints
-//app.UseHttpsRedirection();
+// Pipeline
 app.UseAuthorization();
 app.MapControllers();
 
 // Health endpoints
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = _ => true
+});
 app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
 {
     Predicate = _ => false

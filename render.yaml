@@ -30,8 +30,6 @@ services:
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
-      - key: ConnectionStrings__Default
-        sync: false
 
   # 3. ProfileService
   - type: web
@@ -48,8 +46,6 @@ services:
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
-      - key: ConnectionStrings__Default
-        sync: false
 
   # 4. MemoryArchiveService
   - type: web
@@ -66,14 +62,6 @@ services:
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
-      - key: ConnectionStrings__Default
-        sync: false
-      - key: Supabase__S3__Endpoint
-        sync: false
-      - key: Supabase__S3__AccessKey
-        sync: false
-      - key: Supabase__S3__SecretKey
-        sync: false
 
   # 5. NotificationService
   - type: web
@@ -90,24 +78,6 @@ services:
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
-      - key: ConnectionStrings__Default
-        sync: false
-      - key: RabbitMq__Host
-        sync: false
-      - key: RabbitMq__User
-        sync: false
-      - key: RabbitMq__Password
-        sync: false
-      - key: RabbitMq__Queue
-        sync: false
-      - key: Redis__Host
-        sync: false
-      - key: Redis__Port
-        sync: false
-      - key: Redis__Password
-        sync: false
-      - key: Redis__Ssl
-        sync: false
 
   # 6. AccessControlService
   - type: web
@@ -124,8 +94,6 @@ services:
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
-      - key: ConnectionStrings__Default
-        sync: false
 
   # 7. AuditLoggingService
   - type: web
@@ -142,16 +110,6 @@ services:
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
-      - key: ConnectionStrings__Default
-        sync: false
-      - key: RabbitMq__Host
-        sync: false
-      - key: RabbitMq__User
-        sync: false
-      - key: RabbitMq__Password
-        sync: false
-      - key: RabbitMq__Queue
-        sync: false
 
   # 8. ModerationService (NEW)
   - type: web
@@ -168,9 +126,6 @@ services:
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
-      - key: ConnectionStrings__Default
-        sync: false
-      # добавь свои переменные модерации при необходимости (например, ключи провайдера)
 
   # 9. PublicViewService (NEW)
   - type: web
@@ -187,8 +142,6 @@ services:
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
-      - key: ConnectionStrings__Default
-        sync: false
 
   # 10. QRCodeService (NEW)
   - type: web
@@ -205,5 +158,3 @@ services:
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
-      - key: ConnectionStrings__Default
-        sync: false

@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿// src/MemoryArchiveService/MemoryArchiveService.API/Program.cs
+using System.Text.Json.Serialization;
 using MemoryArchiveService.Application;
 using MemoryArchiveService.Infrastructure;
 using MemoryArchiveService.Infrastructure.Persistence;
@@ -9,7 +10,13 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Serilog
+// === Конфиг: только JSON (без ENV/CLI override) ===
+builder.Configuration.Sources.Clear();
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: false);
+
+// === Serilog ===
 Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
     .MinimumLevel.Information()
@@ -17,11 +24,11 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 builder.Host.UseSerilog();
 
-// MVC / JSON
+// === MVC / JSON ===
 builder.Services.AddControllers()
     .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
-// multipart ограничения
+// === multipart ограничения ===
 builder.Services.Configure<FormOptions>(o =>
 {
     o.MultipartBodyLengthLimit = 1024L * 1024 * 200; // 200 MB
@@ -29,22 +36,22 @@ builder.Services.Configure<FormOptions>(o =>
     o.MemoryBufferThreshold = 1024 * 64;
 });
 
-// CORS (dev)
+// === CORS (dev) ===
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowDev", p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 });
 
-// Health + OpenAPI JSON
+// === Health + OpenAPI JSON ===
 builder.Services.AddHealthChecks();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi(); // /openapi.json
 
-// DI: Application + Infrastructure
+// === DI: Application + Infrastructure ===
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
-// Auth
+// === Auth ===
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>
     {
@@ -62,7 +69,7 @@ builder.Services.AddAuthentication("Bearer")
 
 builder.Services.AddAuthorization();
 
-// Http logging
+// === Http logging ===
 builder.Services.AddHttpLogging(o =>
 {
     o.LoggingFields = HttpLoggingFields.RequestPropertiesAndHeaders |
@@ -77,13 +84,14 @@ app.UseSerilogRequestLogging();
 app.UseHttpLogging();
 app.UseCors("AllowDev");
 
-// *** ВАЖНО: аутентификация/авторизация должны быть ДО MapControllers ***
+// Аутентификация/авторизация ДО контроллеров
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
-// Простые health endpoints
+// === Health endpoints ===
+app.MapHealthChecks("/health");
 app.MapGet("/health/live", () => Results.Ok(new { status = "Live" }));
 app.MapGet("/health/ready", async (MemoryArchiveDbContext db) =>
 {
@@ -91,11 +99,11 @@ app.MapGet("/health/ready", async (MemoryArchiveDbContext db) =>
     return ok ? Results.Ok(new { status = "Ready" }) : Results.StatusCode(503);
 });
 
-// OpenAPI JSON + редирект
+// === OpenAPI JSON + редирект ===
 app.MapOpenApi("/openapi.json");
 app.MapGet("/", () => Results.Redirect("/openapi.json"));
 
-// Диагностика внешних подключений (асинхронно, без блокировки старта)
+// === Диагностика внешних подключений (асинхронно, без блокировки старта) ===
 _ = Task.Run(async () =>
 {
     using var scope = app.Services.CreateScope();
@@ -106,6 +114,10 @@ _ = Task.Run(async () =>
 
 app.Run();
 
+
+// ============================================================================
+// CloudChecks helper — асинхронная проверка PostgreSQL и Supabase S3
+// ============================================================================
 internal static class CloudChecks
 {
     public static async Task RunOnceAsync(IServiceProvider sp, IConfiguration cfg, CancellationToken ct)

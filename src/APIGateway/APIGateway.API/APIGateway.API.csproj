@@ -19,4 +19,12 @@
     <ProjectReference Include="..\APIGateway.Domain\APIGateway.Domain.csproj" />
     <ProjectReference Include="..\APIGateway.Infrastructure\APIGateway.Infrastructure.csproj" />
   </ItemGroup>
+  <ItemGroup>
+  <Content Remove="wwwroot\**\*.gz" />
+  <Content Remove="wwwroot\**\*.br" />
+  <None Include="wwwroot\**\*.*" Exclude="wwwroot\**\*.gz;wwwroot\**\*.br" />
+</ItemGroup>
+<PropertyGroup>
+  <CompressionEnabled>false</CompressionEnabled>
+</PropertyGroup>
 </Project>

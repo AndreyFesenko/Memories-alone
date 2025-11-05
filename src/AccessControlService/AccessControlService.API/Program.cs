@@ -9,8 +9,17 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// === Конфигурация: ТОЛЬКО JSON (без ENV/CLI override) ===
+builder.Configuration.Sources.Clear();
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: false);
+
 // MVC
 builder.Services.AddControllers();
+
+// Health-check для Render
+builder.Services.AddHealthChecks();
 
 // === JWT AUTH ===
 var jwt = builder.Configuration.GetSection("Jwt");
@@ -44,9 +53,9 @@ builder.Services
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromMinutes(2),
 
-            // очень важно: чем считаем "роль" и "имя"
-            RoleClaimType = ClaimTypes.Role,                 // http://schemas.microsoft.com/ws/2008/06/identity/claims/role
-            NameClaimType = ClaimTypes.NameIdentifier        // можно оставить NameIdentifier, если так удобнее
+            // нормализованные типы клеймов
+            RoleClaimType = ClaimTypes.Role,
+            NameClaimType = ClaimTypes.NameIdentifier
         };
 
         // Подробные логи + нормализация ролей в lowercase
@@ -124,7 +133,6 @@ builder.Services.AddAccessInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
-
 // ===== pipeline =====
 app.UseRouting();
 app.UseCors("Dev");
@@ -134,7 +142,6 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();            // /openapi.json
     app.MapScalarApiReference(); // /scalar
 }
-
 
 using (var scope = app.Services.CreateScope())
 {
@@ -155,6 +162,9 @@ using (var scope = app.Services.CreateScope())
 // Порядок важен: аутентификация -> авторизация -> контроллеры
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Health endpoint для Render
+app.MapHealthChecks("/health");
 
 app.MapControllers();
 
