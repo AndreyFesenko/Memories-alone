@@ -7,11 +7,13 @@ services:
     region: frankfurt
     branch: master
     plan: free
+    autoDeploy: true
     dockerfilePath: ./src/APIGateway/Dockerfile
     dockerContext: ./src
+    healthCheckPath: /health
     envVars:
-      - key: DOCKER_CONFIG_SECRET
-        value: user-gcr-docker-config
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
 
   # 2. IdentityService
   - type: web
@@ -21,11 +23,13 @@ services:
     region: frankfurt
     branch: master
     plan: free
+    autoDeploy: true
     dockerfilePath: ./src/IdentityService/Dockerfile
     dockerContext: ./src
+    healthCheckPath: /health
     envVars:
-      - key: DOCKER_CONFIG_SECRET
-        value: user-gcr-docker-config
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
       - key: ConnectionStrings__Default
         sync: false
 
@@ -37,11 +41,13 @@ services:
     region: frankfurt
     branch: master
     plan: free
+    autoDeploy: true
     dockerfilePath: ./src/ProfileService/Dockerfile
     dockerContext: ./src
+    healthCheckPath: /health
     envVars:
-      - key: DOCKER_CONFIG_SECRET
-        value: user-gcr-docker-config
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
       - key: ConnectionStrings__Default
         sync: false
 
@@ -53,11 +59,13 @@ services:
     region: frankfurt
     branch: master
     plan: free
+    autoDeploy: true
     dockerfilePath: ./src/MemoryArchiveService/Dockerfile
     dockerContext: ./src
+    healthCheckPath: /health
     envVars:
-      - key: DOCKER_CONFIG_SECRET
-        value: user-gcr-docker-config
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
       - key: ConnectionStrings__Default
         sync: false
       - key: Supabase__S3__Endpoint
@@ -75,11 +83,13 @@ services:
     region: frankfurt
     branch: master
     plan: free
+    autoDeploy: true
     dockerfilePath: ./src/NotificationService/Dockerfile
     dockerContext: ./src
+    healthCheckPath: /health
     envVars:
-      - key: DOCKER_CONFIG_SECRET
-        value: user-gcr-docker-config
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
       - key: ConnectionStrings__Default
         sync: false
       - key: RabbitMq__Host
@@ -107,11 +117,13 @@ services:
     region: frankfurt
     branch: master
     plan: free
+    autoDeploy: true
     dockerfilePath: ./src/AccessControlService/Dockerfile
     dockerContext: ./src
+    healthCheckPath: /health
     envVars:
-      - key: DOCKER_CONFIG_SECRET
-        value: user-gcr-docker-config
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
       - key: ConnectionStrings__Default
         sync: false
 
@@ -123,11 +135,13 @@ services:
     region: frankfurt
     branch: master
     plan: free
+    autoDeploy: true
     dockerfilePath: ./src/AuditLoggingService/Dockerfile
     dockerContext: ./src
+    healthCheckPath: /health
     envVars:
-      - key: DOCKER_CONFIG_SECRET
-        value: user-gcr-docker-config
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
       - key: ConnectionStrings__Default
         sync: false
       - key: RabbitMq__Host
@@ -137,4 +151,59 @@ services:
       - key: RabbitMq__Password
         sync: false
       - key: RabbitMq__Queue
+        sync: false
+
+  # 8. ModerationService (NEW)
+  - type: web
+    name: moderation-service
+    runtime: docker
+    repo: https://github.com/AndreyFesenko/Memories-alone
+    region: frankfurt
+    branch: master
+    plan: free
+    autoDeploy: true
+    dockerfilePath: ./src/ModerationService/Dockerfile
+    dockerContext: ./src
+    healthCheckPath: /health
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__Default
+        sync: false
+      # добавь свои переменные модерации при необходимости (например, ключи провайдера)
+
+  # 9. PublicViewService (NEW)
+  - type: web
+    name: public-view-service
+    runtime: docker
+    repo: https://github.com/AndreyFesenko/Memories-alone
+    region: frankfurt
+    branch: master
+    plan: free
+    autoDeploy: true
+    dockerfilePath: ./src/PublicViewService/Dockerfile
+    dockerContext: ./src
+    healthCheckPath: /health
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__Default
+        sync: false
+
+  # 10. QRCodeService (NEW)
+  - type: web
+    name: qrcode-service
+    runtime: docker
+    repo: https://github.com/AndreyFesenko/Memories-alone
+    region: frankfurt
+    branch: master
+    plan: free
+    autoDeploy: true
+    dockerfilePath: ./src/QRCodeService/Dockerfile
+    dockerContext: ./src
+    healthCheckPath: /health
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__Default
         sync: false
