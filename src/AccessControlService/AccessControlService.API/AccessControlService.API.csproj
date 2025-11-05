@@ -3,19 +3,13 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+	  <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
   </PropertyGroup>
-  <ItemGroup>
-    <!-- Ссылки на слои -->
-    <ProjectReference Include="..\AccessControlService.Infrastructure\AccessControlService.Infrastructure.csproj" />
-    <ProjectReference Include="..\AccessControlService.Domain\AccessControlService.Domain.csproj" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
-    <!-- NuGet пакеты -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Scalar.AspNetCore" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" VersionOverride="9.0.9" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\AccessControlService.Infrastructure\AccessControlService.Infrastructure.csproj" />
+		<ProjectReference Include="..\AccessControlService.Domain\AccessControlService.Domain.csproj" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.9" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.9" />
+		<PackageReference Include="Scalar.AspNetCore" Version="2.8.6" />
+	</ItemGroup>
 </Project>
