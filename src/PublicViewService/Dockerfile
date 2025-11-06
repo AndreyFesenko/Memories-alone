@@ -2,7 +2,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 COPY . .
-ARG PROJECT_REL=src/PublicViewService/PublicViewService.API.csproj
+ARG PROJECT_REL=PublicViewService/PublicViewService.API.csproj
 RUN dotnet restore "$PROJECT_REL"
 RUN dotnet publish "$PROJECT_REL" -c Release -o /app/publish /p:UseAppHost=false
 

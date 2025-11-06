@@ -6,7 +6,7 @@ WORKDIR /src
 COPY . .
 
 # ВАЖНО: путь к csproj от корня репо
-ARG PROJECT_REL=src/QRCodeService/QRCodeService.API.csproj
+ARG PROJECT_REL=QRCodeService/QRCodeService.API.csproj
 
 RUN dotnet restore "$PROJECT_REL"
 RUN dotnet publish "$PROJECT_REL" -c Release -o /app/publish /p:UseAppHost=false

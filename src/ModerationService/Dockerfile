@@ -2,7 +2,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 COPY . .
-ARG PROJECT_REL=src/ModerationService/ModerationService.API.csproj
+ARG PROJECT_REL=ModerationService/ModerationService.API.csproj
 RUN dotnet restore "$PROJECT_REL"
 RUN dotnet publish "$PROJECT_REL" -c Release -o /app/publish /p:UseAppHost=false
 
