@@ -1,4 +1,4 @@
-//C:\_C_Sharp\MyOtus_Prof\Memories_alone\src\IdentityService\IdentityService.Application\Interfaces\IUserRepository.cs
+//C:\_C_Sharp\MyOtus_Prof\Memories-alone\src\IdentityService\IdentityService.Application\Interfaces\IUserRepository.cs
 using IdentityService.Domain.Entities;
 
 namespace IdentityService.Application.Interfaces;

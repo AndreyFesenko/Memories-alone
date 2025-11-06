@@ -1,4 +1,4 @@
-// C:\_C_Sharp\MyOtus_Prof\Memories_alone\src\IdentityService\IdentityService.API\Controllers\AuthController.cs
+// C:\_C_Sharp\MyOtus_Prof\Memories-alone\src\IdentityService\IdentityService.API\Controllers\AuthController.cs
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;

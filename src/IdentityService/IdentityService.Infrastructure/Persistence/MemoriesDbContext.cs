@@ -1,4 +1,4 @@
-// C:\_C_Sharp\MyOtus_Prof\Memories_alone\src\IdentityService\IdentityService.Infrastructure\Persistence\MemoriesDbContext.cs
+// C:\_C_Sharp\MyOtus_Prof\Memories-alone\src\IdentityService\IdentityService.Infrastructure\Persistence\MemoriesDbContext.cs
 using Microsoft.EntityFrameworkCore;
 using IdentityService.Domain.Entities;
 

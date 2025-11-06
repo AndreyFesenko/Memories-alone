@@ -3,16 +3,17 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
-    <PackageReference Include="Scalar.AspNetCore" />
-    <PackageReference Include="Serilog.AspNetCore" />
-    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" />
-    <PackageReference Include="Yarp.ReverseProxy" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" VersionOverride="9.0.9" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.9" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.8.6" />
+    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="9.0.4" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="9.0.4" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="9.0.4" />
+    <PackageReference Include="Yarp.ReverseProxy" Version="2.3.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.9" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\APIGateway.Application\APIGateway.Application.csproj" />
@@ -20,11 +21,14 @@
     <ProjectReference Include="..\APIGateway.Infrastructure\APIGateway.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>
-  <Content Remove="wwwroot\**\*.gz" />
-  <Content Remove="wwwroot\**\*.br" />
-  <None Include="wwwroot\**\*.*" Exclude="wwwroot\**\*.gz;wwwroot\**\*.br" />
-</ItemGroup>
-<PropertyGroup>
-  <CompressionEnabled>false</CompressionEnabled>
-</PropertyGroup>
+    <Content Remove="wwwroot\**\*.gz" />
+    <Content Remove="wwwroot\**\*.br" />
+    <None Include="wwwroot\**\*.*" Exclude="wwwroot\**\*.gz;wwwroot\**\*.br" />
+  </ItemGroup>
+  <PropertyGroup>
+    <CompressionEnabled>false</CompressionEnabled>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
 </Project>
